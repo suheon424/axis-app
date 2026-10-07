@@ -17,6 +17,7 @@ abstract final class AppColors {
   static const skipText = Color(0xFF939393);
   static const searchBg = Color(0xFFF4F5FA);
   static const searchBorder = Color(0xFFC1C1C1);
+  static const gray03 = Color(0xFFCCD1DD);
   static const icon = Color(0xFF33363D);
 }
 

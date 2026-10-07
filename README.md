@@ -19,7 +19,7 @@ flutter test           # 화면 이동 테스트
 | 04 회원가입 | `lib/screens/signup_screen.dart` | 회원가입 하기 → 05 |
 | 05 / 08 추가 정보 | `lib/screens/profile_setup_screen.dart` | 준비시간 → 06, 주소 → 07, mbti → 09 |
 | 06 준비시간 선택 시트 | `lib/screens/selection_sheets.dart` | 칩 선택 후 시작하기 → 05에 값 표시 |
-| 07 주소 입력 | `lib/screens/address_search_screen.dart` | 입력 후 완료 → 05에 값 표시 |
+| 07 위치 찾기 | `lib/screens/address_search_screen.dart` | 검색어 입력 후 돋보기·완료 → 05에 값 표시 (음성 검색, 내위치, 지도에서 찾기는 준비 중 안내) |
 | 09 MBTI 선택 시트 | `lib/screens/selection_sheets.dart` | 칩 선택 후 시작하기 → 05에 값 표시 |
 
 Figma 프로토타입에는 각 화면 왼쪽 위 화살표의 "뒤로" 동작만 연결되어 있어서, 나머지 이동은 버튼 문구를 기준으로 연결했습니다.
