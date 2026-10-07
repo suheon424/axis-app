@@ -20,6 +20,14 @@ class _SignupScreenState extends State<SignupScreen> {
   final _pwConfirm = TextEditingController();
   bool _termsAgreed = true;
   bool _marketingAgreed = false;
+  bool _submitting = false;
+
+  /// 테스트용 기본값. 빈 칸으로 회원가입 하기를 누르면 이 값이 채워진다.
+  static const _testDefaults = (
+    nickname: '수현',
+    email: 'h4s2h4@hansung.ac.kr',
+    password: '0000',
+  );
 
   @override
   void dispose() {
@@ -33,14 +41,39 @@ class _SignupScreenState extends State<SignupScreen> {
     if (_nickname.text.trim().isEmpty) return '닉네임을 입력해 주세요.';
     final email = _email.text.trim();
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) return '이메일 형식을 확인해 주세요.';
-    if (_pw.text.length < 6) return '비밀번호는 6자 이상으로 입력해 주세요.';
+    if (_pw.text.length < 4) return '비밀번호는 4자 이상으로 입력해 주세요.';
     if (_pw.text != _pwConfirm.text) return '비밀번호가 서로 달라요.';
     if (!_termsAgreed) return '서비스 이용약관에 동의해 주세요.';
     return null;
   }
 
-  void _submit() {
+  /// 비어 있는 칸만 테스트용 기본값으로 채운다. 하나라도 채웠으면 true.
+  bool _fillEmptyWithTestDefaults() {
+    var filled = false;
+    void fill(TextEditingController c, String value) {
+      if (c.text.trim().isEmpty) {
+        c.text = value;
+        filled = true;
+      }
+    }
+
+    fill(_nickname, _testDefaults.nickname);
+    fill(_email, _testDefaults.email);
+    fill(_pw, _testDefaults.password);
+    fill(_pwConfirm, _testDefaults.password);
+    return filled;
+  }
+
+  Future<void> _submit() async {
+    if (_submitting) return;
     FocusScope.of(context).unfocus();
+    if (_fillEmptyWithTestDefaults()) {
+      // 채워진 값이 눈에 보이도록 잠깐 보여준 뒤 넘어간다.
+      _submitting = true;
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+      _submitting = false;
+      if (!mounted) return;
+    }
     final error = _validate();
     if (error != null) {
       ScaffoldMessenger.of(context)

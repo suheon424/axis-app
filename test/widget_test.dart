@@ -53,4 +53,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('ENFP'), findsOneWidget);
   });
+
+  testWidgets('회원가입에서 빈 칸으로 누르면 테스트 값이 채워져 넘어간다', (tester) async {
+    await tester.pumpWidget(const AxisApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('가입하기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('회원가입 하기'));
+    await tester.pump();
+    expect(find.text('h4s2h4@hansung.ac.kr'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('반가워요 수현님!'), findsOneWidget);
+  });
 }
