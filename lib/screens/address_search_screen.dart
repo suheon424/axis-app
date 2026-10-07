@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../data/address_suggestions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/buttons.dart';
 
-/// 07 · 위치 찾기 화면. 검색창에 장소나 주소를 입력하고 검색(키보드 완료 또는 돋보기)하면
-/// 이전 화면으로 주소를 돌려준다.
+/// 07 · 위치 찾기 화면. 검색창에 입력하면 아래에 관련 주소가 관련순으로 뜨고, 하나를 고르거나
+/// 검색(키보드 완료 또는 돋보기)하면 이전 화면으로 주소를 돌려준다.
 class AddressSearchScreen extends StatefulWidget {
   const AddressSearchScreen({super.key, this.initial});
 
@@ -17,7 +18,18 @@ class AddressSearchScreen extends StatefulWidget {
 }
 
 class _AddressSearchScreenState extends State<AddressSearchScreen> {
-  late final _controller = TextEditingController(text: widget.initial);
+  late final _controller = TextEditingController(text: widget.initial)..addListener(_onQueryChanged);
+  late String _query = _controller.text.trim();
+  late List<AddressSuggestion> _results = searchAddresses(_query);
+
+  void _onQueryChanged() {
+    final query = _controller.text.trim();
+    if (query == _query) return;
+    setState(() {
+      _query = query;
+      _results = searchAddresses(query);
+    });
+  }
 
   @override
   void dispose() {
@@ -88,13 +100,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                       onTap: () => _notice('음성 검색은 준비 중이에요.'),
                     ),
                     Container(width: 1, height: 19, color: AppColors.gray03),
-                    _IconTap(
-                      tooltip: '검색',
-                      asset: 'assets/icons/ic_search.svg',
-                      width: 18,
-                      height: 18,
-                      onTap: _submit,
-                    ),
+                    _IconTap(tooltip: '검색', asset: 'assets/icons/ic_search.svg', width: 18, height: 18, onTap: _submit),
                   ],
                 ),
               ),
@@ -121,9 +127,108 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                   ],
                 ),
               ),
+              Expanded(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: _query.isEmpty
+                      ? const SizedBox.shrink()
+                      : _results.isEmpty
+                      ? _EmptyResult(key: const ValueKey('empty'), query: _query)
+                      : ListView.builder(
+                          key: const ValueKey('results'),
+                          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                          itemCount: _results.length,
+                          itemBuilder: (context, i) => _SuggestionTile(
+                            suggestion: _results[i],
+                            query: _query,
+                            onTap: () => Navigator.of(context).pop(_results[i].address),
+                          ),
+                        ),
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 자동완성 한 줄: 장소 이름과 도로명 주소. 입력한 글자는 파란색으로 강조한다.
+class _SuggestionTile extends StatelessWidget {
+  const _SuggestionTile({required this.suggestion, required this.query, required this.onTap});
+
+  final AddressSuggestion suggestion;
+  final String query;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding, vertical: 14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.gray03)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text.rich(
+              _highlight(
+                suggestion.name,
+                query,
+                const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray07),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text.rich(_highlight(suggestion.address, query, const TextStyle(fontSize: 13, color: AppColors.subText))),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// [text] 안에서 검색어(띄어쓴 단어 각각)와 같은 부분을 파란색으로 칠한다.
+TextSpan _highlight(String text, String query, TextStyle style) {
+  final tokens = query.toLowerCase().split(RegExp(r'\s+')).where((t) => t.isNotEmpty).toList();
+  final lower = text.toLowerCase();
+  final marked = List<bool>.filled(text.length, false);
+  for (final token in tokens) {
+    for (var i = lower.indexOf(token); i >= 0; i = lower.indexOf(token, i + token.length)) {
+      marked.fillRange(i, i + token.length, true);
+    }
+  }
+  final spans = <TextSpan>[];
+  var start = 0;
+  for (var i = 1; i <= text.length; i++) {
+    if (i == text.length || marked[i] != marked[start]) {
+      spans.add(
+        TextSpan(
+          text: text.substring(start, i),
+          style: marked[start] ? const TextStyle(color: AppColors.primary) : null,
+        ),
+      );
+      start = i;
+    }
+  }
+  return TextSpan(style: style, children: spans);
+}
+
+class _EmptyResult extends StatelessWidget {
+  const _EmptyResult({super.key, required this.query});
+
+  final String query;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 40, AppSizes.sidePadding, 0),
+      child: Text(
+        "'$query' 검색 결과가 없어요.\n검색 버튼을 누르면 입력한 그대로 등록돼요.",
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
       ),
     );
   }
@@ -161,12 +266,7 @@ class _IconTap extends StatelessWidget {
 }
 
 class _QuickAction extends StatelessWidget {
-  const _QuickAction({
-    required this.asset,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
+  const _QuickAction({required this.asset, required this.label, required this.color, required this.onTap});
 
   final String asset;
   final String label;
