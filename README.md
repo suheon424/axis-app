@@ -8,7 +8,12 @@ Figma 「클로드 개발」 파일의 화면 01~06을 Flutter(iOS · Android)�
 flutter pub get
 flutter run            # 연결된 iPhone/Android 기기나 시뮬레이터에서 실행
 flutter test           # 화면 이동 테스트
+./tool/build_web.sh    # GitHub Pages용 웹 빌드(build/web)
 ```
+
+웹 테스트 링크(https://suheon424.github.io/axis-app/)는 `build/web` 내용을 `gh-pages` 브랜치에 올려 배포합니다.
+`web/sw.js`가 한 번 받은 앱 파일을 휴대폰에 저장해 두어, 홈 화면에 추가한 앱이 두 번째부터 빨리 열립니다.
+빌드 스크립트가 배포마다 새 빌드 번호를 넣으므로 새 버전을 올리면 저장된 파일도 바뀝니다.
 
 ## 화면 흐름
 
