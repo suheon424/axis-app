@@ -73,11 +73,14 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
               Container(
                 height: 50,
                 decoration: const BoxDecoration(border: Border(bottom: divider)),
-                padding: const EdgeInsets.only(left: 8, right: 8),
+                padding: const EdgeInsets.only(left: 12, right: 6),
                 child: Row(
                   children: [
                     IconButton(
                       tooltip: '뒤로',
+                      // 기기마다 버튼 크기가 달라지지 않게 40으로 고정(아이콘 왼쪽 20, 입력 시작 56).
+                      constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+                      padding: EdgeInsets.zero,
                       onPressed: () => Navigator.of(context).maybePop(),
                       icon: SvgPicture.asset(
                         'assets/icons/ic_arrow_left.svg',
@@ -86,6 +89,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                         colorFilter: const ColorFilter.mode(AppColors.icon, BlendMode.srcIn),
                       ),
                     ),
+                    const SizedBox(width: 4),
                     Expanded(
                       child: TextField(
                         controller: _controller,
@@ -239,11 +243,11 @@ class _SearchTips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 72, AppSizes.sidePadding, 24),
+      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 24, AppSizes.sidePadding, 24),
       children: [
         const Text(
           '이렇게 검색해 보세요',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray07),
+          style: TextStyle(fontSize: 16, height: 1.2, fontWeight: FontWeight.w700, color: AppColors.gray07),
         ),
         const SizedBox(height: 16),
         Container(
@@ -256,10 +260,10 @@ class _SearchTips extends StatelessWidget {
                 if (i > 0) const SizedBox(height: 14),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.gray07),
+                  style: const TextStyle(fontSize: 14, height: 1.2, fontWeight: FontWeight.w500, color: AppColors.gray07),
                 ),
                 const SizedBox(height: 2),
-                Text(example, style: const TextStyle(fontSize: 13, color: AppColors.primary)),
+                Text(example, style: const TextStyle(fontSize: 13, height: 1.2, color: AppColors.primary)),
               ],
             ],
           ),
@@ -267,7 +271,7 @@ class _SearchTips extends StatelessWidget {
         const SizedBox(height: 16),
         const Text(
           '집 주소는 출발 시간 계산에만 사용되며,\n다른 사람에게 공개되지 않아요.',
-          style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.caption),
+          style: TextStyle(fontSize: 13, height: 1.2, color: AppColors.caption),
         ),
       ],
     );
@@ -315,7 +319,7 @@ class _IconTap extends StatelessWidget {
         onTap: onTap,
         radius: 20,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: SvgPicture.asset(asset, width: width, height: height),
         ),
       ),
