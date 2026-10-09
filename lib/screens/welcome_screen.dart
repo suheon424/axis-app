@@ -131,6 +131,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                     end: 0.89,
                     child: BrandButton(
                       label: '가입하기',
+                      gradient: welcomeButtonGradient,
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const SignupScreen()),
                       ),

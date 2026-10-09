@@ -19,11 +19,23 @@ abstract final class AppColors {
   static const searchBorder = Color(0xFFC1C1C1);
   static const gray03 = Color(0xFFCCD1DD);
   static const icon = Color(0xFF33363D);
+
+  // 2026-10 개선안 토큰
+  static const gray02 = Color(0xFFEDEEF6);
+  static const error = Color(0xFFE00000); // cube_color06
+  static const blue01 = Color(0xFFD3EBFF); // bule01: 선택된 칩·옵션 배경
+  static const text = Color(0xFF191F28); // 입력값
+  static const body = Color(0xFF636B78); // 본문 보조 문구
+  static const caption = Color(0xFF8A919E); // 안내·도움말
+  static const line = Color(0xFFC4CAD3); // 값이 있는 입력창 밑줄
+  static const divider = Color(0xFFE4E7EC);
+  static const checkboxBorder = Color(0xFFB8BEC8);
+  static const stepperBg = Color(0xFFF4F5F8);
 }
 
 /// 디자인의 공통 수치.
 abstract final class AppSizes {
-  static const buttonHeight = 50.0; // --bt_height
+  static const buttonHeight = 52.0; // Button/Primary
   static const sidePadding = 20.0;
   static const navHeight = 40.0;
 }
@@ -38,9 +50,29 @@ const softBlueBackground = BoxDecoration(
   ),
 );
 
-/// Figma의 conic-gradient 버튼 채움을 근사한 그라디언트.
-/// 왼쪽은 남색, 가운데 오른쪽에 어두운 사선, 오른쪽 끝은 밝은 파랑(디자인 픽셀 값을 샘플링해 맞춤).
+/// Figma Button/Primary의 conic-gradient 채움을 근사한 그라디언트.
+/// 왼쪽은 파랑, 오른쪽 3/4 지점에 어두운 사선, 그 뒤로 밝은 파랑(디자인 픽셀 값을 샘플링해 맞춤).
 const brandButtonGradient = LinearGradient(
+  begin: Alignment(-1, -4.67),
+  end: Alignment(1, 4.67),
+  colors: [
+    Color(0xFF004FD6),
+    Color(0xFF004DD2),
+    Color(0xFF004BCC),
+    Color(0xFF0046BF),
+    Color(0xFF0040B3),
+    Color(0xFF003CAA),
+    Color(0xFF004CD2),
+    Color(0xFF005EFE),
+    Color(0xFF0562FE),
+    Color(0xFF0763FE),
+  ],
+  stops: [0.0, 0.2, 0.5, 0.62, 0.67, 0.7, 0.73, 0.76, 0.87, 1.0],
+);
+
+/// 01 첫 화면 "가입하기" 버튼의 conic-gradient 채움을 근사한 그라디언트.
+/// 왼쪽은 남색, 가운데 오른쪽에 어두운 사선, 오른쪽 끝은 밝은 파랑(디자인 픽셀 값을 샘플링해 맞춤).
+const welcomeButtonGradient = LinearGradient(
   begin: Alignment(-0.857, 2.0),
   end: Alignment(0.286, -6.0),
   colors: [

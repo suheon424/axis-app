@@ -7,8 +7,8 @@ import '../widgets/form_widgets.dart';
 import 'home_screen.dart';
 import 'signup_screen.dart';
 
-/// 02 · 로그인(빈 상태) / 03 · 로그인(입력 완료 상태).
-/// 두 프레임은 같은 화면의 상태 차이라서 하나로 구현하고, 입력에 따라 02 → 03으로 애니메이션된다.
+/// 02 · 로그인(빈 값) / 03 · 로그인(입력 중 · 입력 완료).
+/// 세 프레임은 같은 화면의 상태 차이라서 하나로 구현했다. 둘 다 입력해야 로그인 버튼이 활성화된다.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -50,26 +50,27 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return FormPage(
       title: '로그인',
-      bottom: BrandButton(label: '로그인 하기', enabled: _canSubmit, onPressed: _submit),
+      bottom: BrandButton(label: '로그인', enabled: _canSubmit, onPressed: _submit),
       children: [
-        const PageHeading('axis 플래너와 함께\n계획을 완성 할 준비 되셨나요?'),
-        const SizedBox(height: 60),
-        LabeledUnderlineField(
-          label: '아이디',
-          hint: '이메일 아이디를 입력해 주세요.',
+        const PageHeading('axis 플래너와 함께\n계획을 완성 할 준비 되셨나요?', height: 1.34),
+        const SizedBox(height: 51),
+        AxisTextField(
+          label: '이메일',
           controller: _id,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
         ),
-        const SizedBox(height: 20),
-        LabeledUnderlineField(
+        const SizedBox(height: 24),
+        AxisTextField(
           label: '비밀번호',
-          hint: '비밀번호를 입력해 주세요.',
           controller: _pw,
           obscure: true,
           textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (_canSubmit) _submit();
+          },
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 26),
         Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -80,8 +81,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ..showSnackBar(const SnackBar(content: Text('비밀번호 찾기는 준비 중이에요.')));
               }),
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 14),
-                child: Text('|', style: TextStyle(fontSize: 14.37, color: AppColors.muted)),
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('|', style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted)),
               ),
               _LinkText('회원가입', onTap: () {
                 Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const SignupScreen()));
@@ -104,7 +105,7 @@ class _LinkText extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Text(text, style: const TextStyle(fontSize: 14.37, color: AppColors.muted)),
+      child: Text(text, style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted)),
     );
   }
 }

@@ -12,7 +12,7 @@ class FormPage extends StatelessWidget {
     required this.title,
     required this.children,
     required this.bottom,
-    this.bottomGap = 30,
+    this.bottomGap = 24,
   });
 
   final String title;
@@ -41,7 +41,7 @@ class FormPage extends StatelessWidget {
                   AxisNavBar(title: title),
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 46, AppSizes.sidePadding, 24),
+                      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 36, AppSizes.sidePadding, 24),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
                     ),
                   ),
@@ -66,27 +66,28 @@ class FormPage extends StatelessWidget {
 
 /// 화면 상단 큰 제목.
 class PageHeading extends StatelessWidget {
-  const PageHeading(this.text, {super.key, this.weight = FontWeight.w700});
+  const PageHeading(this.text, {super.key, this.height = 1.4});
 
   final String text;
-  final FontWeight weight;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(fontSize: 23, height: 1.4, fontWeight: weight, letterSpacing: -0.46, color: Colors.black),
+      style: TextStyle(fontSize: 22, height: height, fontWeight: FontWeight.w700, color: Colors.black),
     );
   }
 }
 
 class PageSubheading extends StatelessWidget {
-  const PageSubheading(this.text, {super.key});
+  const PageSubheading(this.text, {super.key, this.color = AppColors.subText});
 
   final String text;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.subText));
+    return Text(text, style: TextStyle(fontSize: 14, height: 1.5, color: color));
   }
 }

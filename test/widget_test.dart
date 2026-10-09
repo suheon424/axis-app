@@ -1,5 +1,8 @@
 import 'package:axis_app/main.dart';
+import 'package:axis_app/screens/address_detail_screen.dart';
 import 'package:axis_app/screens/address_search_screen.dart';
+import 'package:axis_app/screens/character_screen.dart';
+import 'package:axis_app/screens/home_screen.dart';
 import 'package:axis_app/screens/login_screen.dart';
 import 'package:axis_app/screens/profile_setup_screen.dart';
 import 'package:axis_app/screens/signup_screen.dart';
@@ -27,7 +30,7 @@ void main() {
     expect(find.byType(LoginScreen), findsNothing);
   });
 
-  testWidgets('회원가입 후 추가 정보에서 MBTI를 고른다', (tester) async {
+  testWidgets('회원가입 후 MBTI를 고르고 캐릭터 화면을 거쳐 홈으로 간다', (tester) async {
     await tester.pumpWidget(const AxisApp());
     await tester.pumpAndSettle();
 
@@ -40,19 +43,34 @@ void main() {
     await tester.enterText(fields.at(1), 'suhyun@example.com');
     await tester.enterText(fields.at(2), 'secret1');
     await tester.enterText(fields.at(3), 'secret1');
-    await tester.tap(find.text('회원가입 하기'));
+    await tester.tap(find.text('[필수] 서비스 이용약관 동의'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('가입하기'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProfileSetupScreen), findsOneWidget);
     expect(find.text('반가워요 수현님!'), findsOneWidget);
 
-    await tester.tap(find.text('mbti 성향을 입력해주세요.').last);
+    await tester.tap(find.text('MBTI').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('ENFP'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('시작하기').last);
+    for (final letter in ['E', 'N', 'F', 'P']) {
+      await tester.tap(find.text(letter).first);
+      await tester.pump();
+    }
     await tester.pumpAndSettle();
     expect(find.text('ENFP'), findsOneWidget);
+    await tester.tap(find.text('선택 완료'));
+    await tester.pumpAndSettle();
+    expect(find.text('ENFP'), findsOneWidget);
+
+    await tester.tap(find.text('나중에 입력할게요'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CharacterScreen), findsOneWidget);
+    expect(find.text('수현 님'), findsOneWidget);
+
+    await tester.tap(find.text('시작하기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('회원가입에서 빈 칸으로 누르면 테스트 값이 채워져 넘어간다', (tester) async {
@@ -61,7 +79,7 @@ void main() {
 
     await tester.tap(find.text('가입하기'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('회원가입 하기'));
+    await tester.tap(find.text('가입하기'));
     await tester.pump();
     expect(find.text('h4s2h4@hansung.ac.kr'), findsOneWidget);
 
@@ -71,7 +89,7 @@ void main() {
     expect(find.text('반가워요 수현님!'), findsOneWidget);
   });
 
-  testWidgets('위치 찾기에서 입력하면 관련 주소가 뜨고 고르면 돌려준다', (tester) async {
+  testWidgets('주소 검색에서 고르고 상세 주소를 붙여 돌려준다', (tester) async {
     String? picked;
     await tester.pumpWidget(
       MaterialApp(
@@ -88,6 +106,7 @@ void main() {
     );
     await tester.tap(find.text('열기'));
     await tester.pumpAndSettle();
+    expect(find.text('이렇게 검색해 보세요'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), '성북');
     await tester.pumpAndSettle();
@@ -101,6 +120,11 @@ void main() {
 
     await tester.tap(find.text('한성대학교', findRichText: true));
     await tester.pumpAndSettle();
-    expect(picked, '서울 성북구 삼선교로16길 116');
+    expect(find.byType(AddressDetailScreen), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '3층');
+    await tester.tap(find.text('이 주소로 등록'));
+    await tester.pumpAndSettle();
+    expect(picked, '서울 성북구 삼선교로16길 116, 3층');
   });
 }

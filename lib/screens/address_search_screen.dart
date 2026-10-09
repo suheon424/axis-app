@@ -5,9 +5,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../data/address_suggestions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/buttons.dart';
+import 'address_detail_screen.dart';
 
-/// 07 · 위치 찾기 화면. 검색창에 입력하면 아래에 관련 주소가 관련순으로 뜨고, 하나를 고르거나
-/// 검색(키보드 완료 또는 돋보기)하면 이전 화면으로 주소를 돌려준다.
+/// 5-3 · 주소 검색 화면. 검색창에 입력하면 아래에 관련 주소가 관련순으로 뜨고, 하나를 고르거나
+/// 검색(키보드 완료 또는 돋보기)하면 상세 주소 입력 화면으로 넘어간다. 거기서 등록한 주소를
+/// 이전 화면으로 돌려준다.
 class AddressSearchScreen extends StatefulWidget {
   const AddressSearchScreen({super.key, this.initial});
 
@@ -40,7 +42,15 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
   void _submit([String? value]) {
     final text = (value ?? _controller.text).trim();
     if (text.isEmpty) return;
-    Navigator.of(context).pop(text);
+    _openDetail(AddressSuggestion(text, text));
+  }
+
+  Future<void> _openDetail(AddressSuggestion picked) async {
+    FocusScope.of(context).unfocus();
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => AddressDetailScreen(suggestion: picked)),
+    );
+    if (result != null && mounted) Navigator.of(context).pop(result);
   }
 
   void _notice(String message) {
@@ -131,7 +141,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 180),
                   child: _query.isEmpty
-                      ? const SizedBox.shrink()
+                      ? const _SearchTips(key: ValueKey('tips'))
                       : _results.isEmpty
                       ? _EmptyResult(key: const ValueKey('empty'), query: _query)
                       : ListView.builder(
@@ -141,7 +151,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                           itemBuilder: (context, i) => _SuggestionTile(
                             suggestion: _results[i],
                             query: _query,
-                            onTap: () => Navigator.of(context).pop(_results[i].address),
+                            onTap: () => _openDetail(_results[i]),
                           ),
                         ),
                 ),
@@ -216,6 +226,54 @@ TextSpan _highlight(String text, String query, TextStyle style) {
   return TextSpan(style: style, children: spans);
 }
 
+/// 검색어가 없을 때 보여 주는 검색 요령.
+class _SearchTips extends StatelessWidget {
+  const _SearchTips({super.key});
+
+  static const _tips = [
+    ('도로명 + 건물번호', '예) 삼선교로16길 116'),
+    ('동/읍/면 + 번지', '예) 삼선동 2가 389'),
+    ('건물명, 아파트명', '예) 한성대학교'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 72, AppSizes.sidePadding, 24),
+      children: [
+        const Text(
+          '이렇게 검색해 보세요',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray07),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final (i, (title, example)) in _tips.indexed) ...[
+                if (i > 0) const SizedBox(height: 14),
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.gray07),
+                ),
+                const SizedBox(height: 2),
+                Text(example, style: const TextStyle(fontSize: 13, color: AppColors.primary)),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          '집 주소는 출발 시간 계산에만 사용되며,\n다른 사람에게 공개되지 않아요.',
+          style: TextStyle(fontSize: 13, height: 1.5, color: AppColors.caption),
+        ),
+      ],
+    );
+  }
+}
+
 class _EmptyResult extends StatelessWidget {
   const _EmptyResult({super.key, required this.query});
 
@@ -226,7 +284,7 @@ class _EmptyResult extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 40, AppSizes.sidePadding, 0),
       child: Text(
-        "'$query' 검색 결과가 없어요.\n검색 버튼을 누르면 입력한 그대로 등록돼요.",
+        "'$query' 검색 결과가 없어요.\n검색 버튼을 누르면 입력한 그대로 쓸 수 있어요.",
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted),
       ),

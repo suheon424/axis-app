@@ -40,22 +40,25 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-/// 파란 그라디언트 메인 버튼. [enabled]가 false면 회색으로 바뀐다(로그인 화면 02 → 03).
+/// Button/Primary: 파란 그라디언트 메인 버튼(높이 52, 글자 17 Bold, 굴곡 8).
+/// 필수 입력이 끝나지 않았으면 [enabled]를 false로 두어 회색(Disabled)으로 보인다.
 class BrandButton extends StatelessWidget {
   const BrandButton({
     super.key,
     required this.label,
     required this.onPressed,
     this.enabled = true,
-    this.fontSize = 16,
-    this.fontWeight = FontWeight.w700,
+    this.onDisabledPressed,
+    this.gradient = brandButtonGradient,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool enabled;
-  final double fontSize;
-  final FontWeight fontWeight;
+
+  /// 비활성 상태에서 눌렀을 때 동작(테스트용 자동 입력 등). 없으면 눌러도 아무 일 없다.
+  final VoidCallback? onDisabledPressed;
+  final Gradient gradient;
 
   @override
   Widget build(BuildContext context) {
@@ -63,8 +66,10 @@ class BrandButton extends StatelessWidget {
       button: true,
       enabled: enabled,
       label: label,
+      excludeSemantics: true,
+      onTap: enabled ? onPressed : onDisabledPressed,
       child: Pressable(
-        onTap: enabled ? onPressed : null,
+        onTap: enabled ? onPressed : onDisabledPressed,
         child: SizedBox(
           height: AppSizes.buttonHeight,
           width: double.infinity,
@@ -73,7 +78,7 @@ class BrandButton extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                const DecoratedBox(decoration: BoxDecoration(gradient: brandButtonGradient)),
+                DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
                 AnimatedOpacity(
                   opacity: enabled ? 0 : 1,
                   duration: const Duration(milliseconds: 250),
@@ -82,7 +87,7 @@ class BrandButton extends StatelessWidget {
                 Center(
                   child: Text(
                     label,
-                    style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: fontWeight),
+                    style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -94,7 +99,41 @@ class BrandButton extends StatelessWidget {
   }
 }
 
-/// 회색 보조 버튼(건너뛰기).
+/// 흰 바탕 + 테두리 보조 버튼(MBTI 시트의 "잘 모르겠어요").
+class OutlineButton extends StatelessWidget {
+  const OutlineButton({super.key, required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: Pressable(
+        onTap: onPressed,
+        child: Container(
+          height: AppSizes.buttonHeight,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.chipBorder),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.gray05, fontSize: 17, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 회색으로 채운 보조 버튼(06 프로필의 "다음에 설정하기").
 class SecondaryButton extends StatelessWidget {
   const SecondaryButton({super.key, required this.label, required this.onPressed});
 
@@ -103,15 +142,59 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Pressable(
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
       onTap: onPressed,
-      child: Container(
-        height: AppSizes.buttonHeight,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(color: AppColors.skipBg, borderRadius: BorderRadius.circular(8)),
-        child: Text(
-          label,
-          style: const TextStyle(color: AppColors.skipText, fontSize: 16, fontWeight: FontWeight.w700),
+      child: Pressable(
+        onTap: onPressed,
+        child: Container(
+          height: AppSizes.buttonHeight,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: AppColors.skipBg, borderRadius: BorderRadius.circular(8)),
+          child: Text(
+            label,
+            style: const TextStyle(color: AppColors.skipText, fontSize: 17, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Button/Text: 밑줄 글자 버튼(높이 40). 건너뛰기 같은 보조 행동에 쓴다.
+class TextLinkButton extends StatelessWidget {
+  const TextLinkButton({super.key, required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: Pressable(
+        onTap: onPressed,
+        child: SizedBox(
+          height: 40,
+          width: double.infinity,
+          child: Center(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.body,
+                decoration: TextDecoration.underline,
+                decorationColor: AppColors.body,
+              ),
+            ),
+          ),
         ),
       ),
     );
