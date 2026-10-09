@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base href="/axis-app/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="axis 플래너 앱 테스트 화면">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>axis 앱 미리보기</title>
+  <style>
+    html, body { height: 100%; }
+    body { margin: 0; background: #0b1220; display: flex; justify-content: center; }
+    #app { position: relative; width: 100%; max-width: 430px; height: 100%; background: #000; overflow: hidden; }
+    @media (min-width: 600px) and (min-height: 760px) {
+      body { align-items: center; }
+      #app { height: min(900px, 94%); border-radius: 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+    }
+    #loading { position: absolute; inset: 0; display: grid; place-items: center; color: #8a94a8; font: 14px/1.4 system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="app"><div id="loading">앱을 불러오는 중…</div></div>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
