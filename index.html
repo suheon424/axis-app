@@ -13,8 +13,9 @@
   <!-- default여야 표시줄 바탕이 theme-color를 따른다. iOS는 홈 화면에 추가할 때 이 값을 읽으므로 바꾸면 다시 추가해야 한다. -->
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="axis">
-  <!-- 첫 화면이 어두워 검정으로 시작하고, 앱이 화면마다 흰색·검정으로 바꾼다(lib/widgets/status_bar_tone.dart). -->
-  <meta name="theme-color" content="#000000">
+  <!-- 첫 화면이 어두워 검정으로 시작한다. id를 flutterweb-theme로 두어야 플러터가 새 태그를 덧붙이지 않고
+       이 태그 색을 화면마다 바꾼다(각 화면의 lightScreenOverlay / darkScreenOverlay). -->
+  <meta id="flutterweb-theme" name="theme-color" content="#000000">
   <!-- 아이콘을 바꾸면 파일 이름도 바꿔야 휴대폰·브라우저에 남은 예전 아이콘 대신 새 아이콘을 받는다. -->
   <link rel="apple-touch-icon" sizes="180x180" href="icons/axis-180.png">
   <link rel="icon" type="image/png" href="icons/axis-64.png">
