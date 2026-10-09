@@ -36,7 +36,7 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     final s = widget.suggestion;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: lightScreenOverlay,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: GestureDetector(

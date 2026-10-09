@@ -52,7 +52,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: darkScreenOverlay,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Stack(

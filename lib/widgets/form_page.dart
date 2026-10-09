@@ -26,7 +26,7 @@ class FormPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: lightScreenOverlay,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: GestureDetector(

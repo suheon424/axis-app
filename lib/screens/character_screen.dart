@@ -49,7 +49,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
     final safeBottom = MediaQuery.paddingOf(context).bottom;
     final name = widget.nickname.isEmpty ? '액시스' : widget.nickname;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: lightScreenOverlay.copyWith(statusBarColor: AppColors.searchBg),
       child: Scaffold(
         backgroundColor: AppColors.searchBg,
         body: Column(

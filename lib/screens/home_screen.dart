@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../theme/app_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../widgets/buttons.dart';
@@ -14,7 +16,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: darkScreenOverlay,
       child: Scaffold(
         body: Stack(
           fit: StackFit.expand,

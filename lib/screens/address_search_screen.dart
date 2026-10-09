@@ -63,7 +63,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
   Widget build(BuildContext context) {
     const divider = BorderSide(color: AppColors.gray03);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.dark,
+      value: lightScreenOverlay.copyWith(statusBarColor: AppColors.searchBg),
       child: Scaffold(
         backgroundColor: AppColors.searchBg,
         body: SafeArea(

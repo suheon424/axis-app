@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Figma 변수(gray01~09, cube_color02 등)를 그대로 옮긴 색상 토큰.
 abstract final class AppColors {
@@ -34,6 +35,21 @@ abstract final class AppColors {
 }
 
 /// 디자인의 공통 수치.
+/// 흰 화면: 상단 표시줄을 흰 바탕·검정 글씨로. 웹에서는 statusBarColor가 theme-color가 되어
+/// 홈 화면에 추가한 앱의 표시줄 바탕도 화면마다 바뀐다.
+const lightScreenOverlay = SystemUiOverlayStyle(
+  statusBarColor: Colors.white,
+  statusBarIconBrightness: Brightness.dark,
+  statusBarBrightness: Brightness.light,
+);
+
+/// 어두운 화면(첫 화면 등): 검정 바탕·흰 글씨.
+const darkScreenOverlay = SystemUiOverlayStyle(
+  statusBarColor: Colors.black,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+);
+
 abstract final class AppSizes {
   static const buttonHeight = 52.0; // Button/Primary
   static const sidePadding = 20.0;
