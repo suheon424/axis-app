@@ -23,6 +23,8 @@ flutter:
     - assets/images/
     - assets/images/characters/
     - assets/icons/
+    - assets/icons/tab/
+    - assets/images/main/
   fonts:
     - family: Pretendard
       fonts:

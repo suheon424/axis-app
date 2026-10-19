@@ -50,6 +50,16 @@ const darkScreenOverlay = SystemUiOverlayStyle(
   statusBarBrightness: Brightness.dark,
 );
 
+/// 카테고리(큐브) 색. 피그마 cube_color01~06.
+abstract final class CubeColors {
+  static const yellow = Color(0xFFEDAA00); // cube_color01 · Study
+  static const blue = Color(0xFF0057ED); // cube_color02 · Todo
+  static const green = Color(0xFF009156); // cube_color03 · Travel
+  static const gray = Color(0xFFAFAFAF); // cube_color04 · Workout
+  static const orange = Color(0xFFFF6002); // cube_color05 · Expenses
+  static const red = Color(0xFFE00000); // cube_color06 · Routine
+}
+
 abstract final class AppSizes {
   static const buttonHeight = 52.0; // Button/Primary
   static const sidePadding = 20.0;
