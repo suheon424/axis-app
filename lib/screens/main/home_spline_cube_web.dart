@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'dart:ui_web' as ui_web;
 
 import 'package:flutter/material.dart';
@@ -26,6 +27,8 @@ void _ensureViewerScript() {
     ..type = 'module'
     ..src = splineViewerScript;
   web.document.head!.appendChild(script);
+  final hide = web.document.createElement('script') as web.HTMLScriptElement..text = splineHideLogoScript;
+  web.document.head!.appendChild(hide);
 }
 
 int _nextViewId = 0;
@@ -69,7 +72,9 @@ class _SplineHtmlViewState extends State<_SplineHtmlView> {
       'load-complete',
       ((web.Event _) {
         _hideLogo(el);
-        Timer(const Duration(milliseconds: 500), () => _hideLogo(el));
+        for (final ms in const [100, 500, 1500, 3000]) {
+          Timer(Duration(milliseconds: ms), () => _hideLogo(el));
+        }
         if (mounted) widget.onLoaded();
       }).toJS,
     );
@@ -110,7 +115,7 @@ class _SplineHtmlViewState extends State<_SplineHtmlView> {
 
   void _hideLogo(web.HTMLElement el) {
     try {
-      el.shadowRoot?.querySelector('#logo')?.remove();
+      globalContext.callMethod('axisHideSplineLogo'.toJS, el);
     } catch (_) {}
   }
 
