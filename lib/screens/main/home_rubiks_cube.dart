@@ -110,7 +110,8 @@ class _RubiksCubeState extends State<RubiksCube> with SingleTickerProviderStateM
       _yaw += dyaw * k * (_velocity.distance < 1 ? 1 : 0.15);
       _pitch += (RubiksCube.restPitch - _pitch) * k * (_velocity.distance < 1 ? 1 : 0.15);
     });
-    final settled = _velocity.distance < 0.01 &&
+    final settled =
+        _velocity.distance < 0.01 &&
         _wrap(RubiksCube.restYaw - _yaw).abs() < 0.001 &&
         (RubiksCube.restPitch - _pitch).abs() < 0.001;
     if (settled) {
@@ -226,6 +227,7 @@ class _CubePainter extends CustomPainter {
   static const _half = 66.0;
   static const _camera = 9.0; // 큐브 반변의 몇 배 거리에서 보는지(원근감)
   static const _light = _V(-0.35, 0.6, 0.72);
+  static const _halfway = _V(-0.19, 0.33, 0.92); // 빛과 시선(0,0,1)의 중간 방향
 
   _V _rotate(_V p) {
     final cy = math.cos(yaw), sy = math.sin(yaw);
@@ -245,29 +247,59 @@ class _CubePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
-    final body = Paint()..color = const Color(0xFF111111);
     final defs = [
-      (_front, faces.front), (_back, faces.back), (_right, faces.right),
-      (_left, faces.left), (_top, faces.top), (_bottom, faces.bottom),
+      (_front, faces.front),
+      (_back, faces.back),
+      (_right, faces.right),
+      (_left, faces.left),
+      (_top, faces.top),
+      (_bottom, faces.bottom),
     ];
     for (final (def, colors) in defs) {
       final n = _rotate(def.n);
       if (n.z <= 0.001) continue; // 볼록한 큐브라 앞을 향한 면끼리는 겹치지 않는다.
-      final shade = 0.74 + 0.26 * math.max(0.0, n.dot(_light) / 1.0);
+      final diffuse = 0.7 + 0.3 * math.max(0.0, n.dot(_light));
+      final spec = math.pow(math.max(0.0, n.dot(_halfway)), 6).toDouble();
+
+      // 메탈릭: 면 대각선을 따라 반사광 띠를 두고, 면의 방향에 따라 띠가 미끄러지게 한다.
+      // 큐브를 돌리면 빛 반사가 면 위를 지나간다.
+      final a = _project(_rotate(def.n + def.u * -1 + def.v * -1), c);
+      final b = _project(_rotate(def.n + def.u + def.v), c);
+      final t = 0.5 + 1.1 * (n.x * 0.75 - n.y * 0.55);
+      final mid = Offset.lerp(a, b, t)!;
+      final half = (b - a) * 0.5;
+      Shader sheen(List<Color> colors) => LinearGradient(
+        colors: colors,
+        stops: const [0, 0.38, 0.5, 0.62, 1],
+      ).createShader(Rect.fromPoints(mid - half, mid + half));
+      Paint metal(Color base, double gloss) => Paint()
+        ..shader = sheen([
+          Color.lerp(Colors.black, base, diffuse * 0.42)!,
+          Color.lerp(Colors.black, base, diffuse * 0.95)!,
+          Color.lerp(Color.lerp(Colors.black, base, diffuse)!, Colors.white, gloss * (0.4 + 0.45 * spec))!,
+          Color.lerp(Colors.black, base, diffuse * 0.95)!,
+          Color.lerp(Colors.black, base, diffuse * 0.42)!,
+        ]);
 
       // 면 바탕(검정 몸통). 좌표는 큐브 반변을 1로 둔다.
-      canvas.drawPath(_roundedQuad(def, 0, 0, 2, 2, 0.08, c), body);
+      canvas.drawPath(_roundedQuad(def, 0, 0, 2, 2, 0.08, c), metal(const Color(0xFF3A3A40), 0.5));
 
       for (var i = 0; i < 9; i++) {
         final row = i ~/ 3, col = i % 3;
-        final base = colors[i];
-        final color = Color.lerp(Colors.black, base, shade)!;
         const cell = 2 / 3, inset = 0.055;
-        final path = _roundedQuad(def, col * cell + inset, row * cell + inset, cell - 2 * inset, cell - 2 * inset, 0.07, c);
-        canvas.drawPath(path, Paint()..color = color);
+        final x = col * cell + inset, y = row * cell + inset, w = cell - 2 * inset;
+        canvas.drawPath(_roundedQuad(def, x, y, w, w, 0.07, c), metal(colors[i], 1));
+        // 칸 가장자리의 얇은 반사(모서리 깎인 면).
+        canvas.drawPath(
+          _roundedQuad(def, x, y, w, w, 0.07, c),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = Colors.white.withValues(alpha: 0.12 + 0.25 * spec),
+        );
         // 윗부분에 살짝 광택.
-        final gloss = _roundedQuad(def, col * cell + inset * 1.8, row * cell + inset * 1.8, cell - 3.6 * inset, (cell - 2 * inset) * 0.42, 0.05, c);
-        canvas.drawPath(gloss, Paint()..color = Colors.white.withValues(alpha: 0.10 * shade));
+        final gloss = _roundedQuad(def, x + inset * 0.8, y + inset * 0.8, w - 1.6 * inset, w * 0.4, 0.05, c);
+        canvas.drawPath(gloss, Paint()..color = Colors.white.withValues(alpha: 0.06 + 0.1 * spec));
       }
     }
   }
