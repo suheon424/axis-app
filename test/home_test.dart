@@ -2,7 +2,7 @@ import 'package:axis_app/screens/home_screen.dart';
 import 'package:axis_app/screens/main/achievement_screen.dart';
 import 'package:axis_app/screens/main/add_schedule_screen.dart';
 import 'package:axis_app/screens/main/calendar_screen.dart';
-import 'package:axis_app/screens/main/home_rubiks_cube.dart';
+import 'package:axis_app/screens/main/home_spline_cube.dart';
 import 'package:axis_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 Widget _app(Widget home) => MaterialApp(theme: buildAppTheme(), home: home);
 
 double _fingerOpacity(WidgetTester tester) =>
-    tester.widget<AnimatedOpacity>(find.byKey(RubiksCube.fingerKey)).opacity;
+    tester.widget<AnimatedOpacity>(find.byKey(SplineCube.fingerKey)).opacity;
 
 void main() {
   setUp(() {
@@ -98,10 +98,12 @@ void main() {
     await tester.pumpWidget(_app(const AchievementScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(RubiksCube.cubeKey), findsOneWidget);
+    // 테스트 환경(데스크톱)에서는 장면 대신 피그마 큐브 그림이 보인다.
+    expect(find.byKey(SplineCube.imageKey), findsOneWidget);
+    expect(find.byKey(SplineCube.sceneKey), findsNothing);
     expect(_fingerOpacity(tester), 1);
 
-    final gesture = await tester.startGesture(tester.getCenter(find.byKey(RubiksCube.cubeKey)));
+    final gesture = await tester.startGesture(tester.getCenter(find.byKey(SplineCube.imageKey)));
     await tester.pumpAndSettle();
     expect(_fingerOpacity(tester), 0);
 
@@ -112,5 +114,11 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
     expect(_fingerOpacity(tester), 1);
+  });
+
+  testWidgets('SplineCube: 주소가 비면 그림만 보인다', (tester) async {
+    await tester.pumpWidget(_app(const Scaffold(body: SplineCube(url: ''))));
+    expect(find.byKey(SplineCube.imageKey), findsOneWidget);
+    expect(find.byKey(SplineCube.sceneKey), findsNothing);
   });
 }

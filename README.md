@@ -28,7 +28,7 @@ flutter test           # 화면 이동 테스트
 | 5-3 주소 검색 | `lib/screens/address_search_screen.dart` | 검색 요령 안내, 입력하면 관련 주소 목록, 고르면 상세 주소 입력으로 |
 | 5-3 상세 주소 입력 | `lib/screens/address_detail_screen.dart` | 동·호수를 붙여 이 주소로 등록 → 05에 값 표시 |
 | 06 프로필 캐릭터 | `lib/screens/character_screen.dart` | 배경색 8가지·캐릭터 12종 선택, 시작하기 → 07_01 홈 |
-| 07_01 홈 / 07_02 달성률 | `lib/screens/home_screen.dart`, `lib/screens/main/achievement_screen.dart` | 목록·달성률 전환, 카테고리 카드 → 07_03/07_04, + → 07_10. 달성률 큐브는 앱이 직접 그리는 3D 큐브(`home_rubiks_cube.dart`), 끌면 돌고 놓으면 제자리로 돌아옴, 누르는 동안 손가락 버튼 숨김 |
+| 07_01 홈 / 07_02 달성률 | `lib/screens/home_screen.dart`, `lib/screens/main/achievement_screen.dart` | 목록·달성률 전환, 카테고리 카드 → 07_03/07_04, + → 07_10. 달성률 큐브는 Spline 3D(`home_spline_cube.dart`의 `splineSceneUrl`), 누르는 동안 손가락 버튼 숨김 |
 | 07_03 코치마크 / 07_04 캘린더 | `lib/screens/main/calendar_screen.dart` | 처음 들어오면 코치마크 4단계, 날짜 → 07_05, 길게 누르면 미리보기 |
 | 07_05~07_08 일정 목록 | `lib/screens/main/schedule_list_screen.dart` | J모드 전환·제안 펼침, 6개 체크 시 칭호 팝업, 항목 → 상세 시트 → 더보기 → 삭제, 틀어진 일정 맞추기 → AI 분석·제안, 지도 탭 → 07_09 |
 | 07_09 지도 | `lib/screens/main/map_screen.dart` | 크게 보기, 장소 상세 시트, 동선 최적화하기 → AI 동선 분석·제안 |
