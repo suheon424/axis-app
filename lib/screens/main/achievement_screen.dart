@@ -5,10 +5,10 @@ import '../../theme/app_theme.dart';
 import '../../widgets/main_chrome.dart';
 import '../home_screen.dart';
 import 'calendar_screen.dart';
-import 'home_spline_cube.dart';
+import 'home_rubiks_cube.dart';
 import 'home_widgets.dart';
 
-/// 07_02 달성률. 목록/달성률 토글의 달성률 쪽. 가운데 큐브는 Spline 3D 장면([SplineCube]).
+/// 07_02 달성률. 목록/달성률 토글의 달성률 쪽. 가운데 큐브는 앱이 직접 그리는 3D 큐브([RubiksCube]).
 class AchievementScreen extends StatelessWidget {
   const AchievementScreen({super.key, this.nickname = ''});
 
@@ -64,7 +64,7 @@ class AchievementScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, height: 1.5, color: Color(0xFFB0B8C1)),
                         ),
-                        const Expanded(child: SplineCube()),
+                        const Expanded(child: RubiksCube()),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
                           child: _StatsCard(),
