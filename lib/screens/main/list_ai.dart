@@ -139,7 +139,8 @@ class _ListAiAnalyzingState extends State<ListAiAnalyzing> with TickerProviderSt
                       onTap: () => Navigator.of(context).pop(),
                       child: Container(
                         width: 160,
-                        height: 44,
+                        constraints: const BoxConstraints(minHeight: 44),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
@@ -377,7 +378,8 @@ class _ListAiSuggestionScreenState extends State<ListAiSuggestionScreen> {
                   onTap: () => Navigator.of(context).pop(false),
                   child: Container(
                     width: 128,
-                    height: 52,
+                    constraints: const BoxConstraints(minHeight: 52),
+                    padding: const EdgeInsets.symmetric(vertical: 13.5),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -401,7 +403,7 @@ class _ListAiSuggestionScreenState extends State<ListAiSuggestionScreen> {
           const Center(
             child: Text(
               'AI 제안은 참고용이에요. 바꾼 뒤에도 언제든 되돌릴 수 있어요.',
-              style: TextStyle(fontSize: 11, color: Color(0xFF8B95A1)),
+              style: TextStyle(fontSize: 12, color: Color(0xFF8B95A1)),
             ),
           ),
         ],
@@ -511,7 +513,7 @@ class _Preview extends StatelessWidget {
                 const SizedBox(width: 6),
                 const Text(
                   '지금 PM 12:50',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFE5484D)),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFE5484D)),
                 ),
                 const SizedBox(width: 6),
                 const Expanded(
@@ -561,7 +563,7 @@ class _Preview extends StatelessWidget {
           if (icon != null) ...[SvgPicture.asset(icon, width: 10, height: 10), const SizedBox(width: 3)],
           Text(
             text,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg),
           ),
         ],
       ),

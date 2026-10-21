@@ -101,7 +101,7 @@ class _TabItem extends StatelessWidget {
               Text(
                 tab.label,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: light
                       ? (selected ? const Color(0xFF181920) : const Color(0xFF8B95A1))

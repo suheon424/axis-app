@@ -276,7 +276,8 @@ class _CoachCard extends StatelessWidget {
                   onTap: onNext,
                   child: Container(
                     width: 96,
-                    height: 44,
+                    constraints: const BoxConstraints(minHeight: 44),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
                     child: Text(

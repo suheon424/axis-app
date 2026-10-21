@@ -208,7 +208,8 @@ class _MapAiAnalysisScreenState extends State<MapAiAnalysisScreen> with TickerPr
                           onTap: _cancel,
                           child: Container(
                             width: 160,
-                            height: 44,
+                            constraints: const BoxConstraints(minHeight: 44),
+                            padding: const EdgeInsets.symmetric(vertical: 11),
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(8),
@@ -441,14 +442,14 @@ class _TimeCallout extends StatelessWidget {
           Text(
             'PM 07:30',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: Color(0xFF8B95A1),
               decoration: TextDecoration.lineThrough,
               decorationColor: Color(0xFF8B95A1),
             ),
           ),
           SizedBox(width: 4),
-          Text('→', style: TextStyle(fontSize: 11, color: Color(0xFF8B95A1))),
+          Text('→', style: TextStyle(fontSize: 12, color: Color(0xFF8B95A1))),
           SizedBox(width: 4),
           Text(
             'PM 04:30',
@@ -683,7 +684,7 @@ class _SuggestionCard extends StatelessWidget {
           const Center(
             child: Text(
               'AI 제안은 참고용이에요. 바꾼 뒤에도 언제든 되돌릴 수 있어요.',
-              style: TextStyle(fontSize: 11, color: MapColors.textSub),
+              style: TextStyle(fontSize: 12, color: MapColors.textSub),
             ),
           ),
         ],

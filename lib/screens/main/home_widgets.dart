@@ -71,7 +71,8 @@ class _Segment extends StatelessWidget {
         onTap: selected ? null : onTap,
         child: Container(
           width: 66,
-          height: 28,
+          constraints: const BoxConstraints(minHeight: 28),
+          padding: const EdgeInsets.symmetric(vertical: 4.5),
           alignment: Alignment.center,
           decoration: selected
               ? BoxDecoration(

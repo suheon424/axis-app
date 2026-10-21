@@ -207,9 +207,9 @@ class _MenuItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          height: 48,
+          constraints: const BoxConstraints(minHeight: 48),
           alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Text(
             label,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: color),
@@ -300,7 +300,8 @@ class _DialogButton extends StatelessWidget {
       child: Pressable(
         onTap: onTap,
         child: Container(
-          height: 48,
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(vertical: 12.5),
           width: double.infinity,
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -424,8 +425,8 @@ class _ListBadgePopupState extends State<ListBadgePopup> {
                               child: Pressable(
                                 onTap: () => _register(context),
                                 child: Container(
-                                  height: 32,
-                                  padding: const EdgeInsets.symmetric(horizontal: 9.6),
+                                  constraints: const BoxConstraints(minHeight: 32),
+                                  padding: const EdgeInsets.symmetric(horizontal: 9.6, vertical: 4.5),
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: AppColors.primary,

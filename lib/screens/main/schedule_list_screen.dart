@@ -398,7 +398,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           onTap: onTap,
           child: Container(
             width: 175,
-            height: 40, // 아래 회색 선 1과 합쳐 탭 높이 41(피그마)
+            constraints: const BoxConstraints(minHeight: 40), // 아래 회색 선 1과 합쳐 탭 높이 41(피그마)
+            padding: const EdgeInsets.symmetric(vertical: 9.5),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: selected ? AppColors.gray07 : Colors.transparent, width: 2)),
@@ -457,8 +458,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
         onTap: toggle,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          height: 25,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          constraints: const BoxConstraints(minHeight: 25),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: _jMode ? AppColors.primary : AppColors.gray02,
@@ -505,9 +506,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           ),
       ],
       child: Container(
-        height: 25,
-        constraints: const BoxConstraints(minWidth: 55),
-        padding: const EdgeInsets.only(left: 7, right: 5),
+        constraints: const BoxConstraints(minHeight: 25, minWidth: 55),
+        padding: const EdgeInsets.only(left: 7, right: 5, top: 2, bottom: 2),
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.gray03),
           borderRadius: BorderRadius.circular(4),
@@ -635,8 +635,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                             child: GestureDetector(
                               onTap: toggleTag,
                               child: Container(
-                                height: 19,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                constraints: const BoxConstraints(minHeight: 19),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0.5),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: tag.background,
@@ -780,8 +780,8 @@ class _ActionChip extends StatelessWidget {
       child: Pressable(
         onTap: onTap,
         child: Container(
-          height: 30,
-          padding: EdgeInsets.symmetric(horizontal: horizontal),
+          constraints: const BoxConstraints(minHeight: 30),
+          padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 6),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white,

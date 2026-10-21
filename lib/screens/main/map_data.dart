@@ -297,7 +297,7 @@ class MapPin extends StatelessWidget {
           : Text(
               '${stop.number}',
               style: TextStyle(
-                fontSize: big ? 12 : 10,
+                fontSize: 12,
                 height: 1,
                 fontWeight: big ? FontWeight.w700 : FontWeight.w600,
                 color: Colors.white,

@@ -152,8 +152,8 @@ class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProvider
               left: 26,
               bottom: bottom + 113 + 10,
               child: Container(
-                height: 22,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                constraints: const BoxConstraints(minHeight: 22),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: const Color(0xBF1F2126), borderRadius: BorderRadius.circular(100)),
                 child: Text(
@@ -198,8 +198,8 @@ class _DateChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      constraints: const BoxConstraints(minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
@@ -319,8 +319,8 @@ class _DirectionsButton extends StatelessWidget {
         onTap: go,
         scale: 0.94,
         child: Container(
-          height: 32,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: const BoxConstraints(minHeight: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
           alignment: Alignment.center,
           decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
           child: const Text(
