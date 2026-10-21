@@ -148,7 +148,7 @@ void main() {
     expect(find.byType(ListAiSuggestionScreen), findsNothing);
   });
 
-  testWidgets('지도 탭을 누르면 지도 화면으로 간다', (tester) async {
+  testWidgets('지도 탭을 누르면 같은 화면에서 지도 탭으로 바뀐다', (tester) async {
     // 지도 화면 자체의 레이아웃 경고(테스트 글꼴)는 이 이동 테스트와 무관하므로 무시한다.
     final original = FlutterError.onError;
     FlutterError.onError = (details) {
@@ -160,6 +160,7 @@ void main() {
     await tester.tap(find.text('지도'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
-    expect(find.byType(MapScreen), findsOneWidget);
+    expect(find.byType(MapTab), findsOneWidget);
+    expect(find.byType(ScheduleListScreen), findsOneWidget);
   });
 }

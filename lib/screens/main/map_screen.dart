@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../theme/app_theme.dart';
 import '../../widgets/buttons.dart';
-import '../../widgets/form_widgets.dart';
-import '../../widgets/main_chrome.dart';
 import 'add_schedule_screen.dart';
 import 'map_ai_screen.dart';
 import 'map_data.dart';
 import 'map_full_screen.dart';
-import 'week_strip.dart';
 
-/// 07_09 지도: 전체 일정의 "지도" 탭. 주간 달력 아래 하루 동선 지도와 일정 목록.
-/// ScheduleListScreen에서 push로 연다.
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+/// 07_09 지도 탭. 일정 목록(07_05) 화면 안에서 목록 탭과 바꿔 보여 준다(따로 화면을 열지 않는다).
+/// 지도(267) 위로 그날 일정 시트가 겹친다. 동선 최적화 버튼은 화면 쪽에 떠 있고 [MapTabState.openOptimize]를 부른다.
+class MapTab extends StatefulWidget {
+  const MapTab({super.key, required this.day});
+
+  /// 고른 날(11월). 23일에만 일정이 있다.
+  final int day;
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MapTab> createState() => MapTabState();
 }
 
 const _dayNumbers = [22, 23, 24, 25, 26, 27, 28];
@@ -34,12 +33,12 @@ const _smallPins = {
   's5': Offset(148, 186),
 };
 
-class _MapScreenState extends State<MapScreen> {
-  int _day = 23;
+class MapTabState extends State<MapTab> {
   bool _optimized = false;
   String? _selectedId = 's1';
 
   MapDay get _plan => MapDay.of(optimized: _optimized);
+  int get _day => widget.day;
   bool get _hasPlan => _day == 23;
 
   void _toast(String text) {
@@ -74,7 +73,8 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _openOptimize() {
+  /// 화면에 떠 있는 "동선 최적화하기" 버튼이 부른다.
+  void openOptimize() {
     if (!_hasPlan) {
       _toast('이 날은 최적화할 동선이 없어요.');
       return;
@@ -110,77 +110,6 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay.copyWith(statusBarColor: const Color(0xFFF4F5FA)),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF4F5FA),
-        body: Column(
-          children: [
-            Expanded(
-              child: SafeArea(
-                bottom: false,
-                child: Stack(
-                  children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 17),
-                          _NavBar(onAdd: _openAddSchedule),
-                          const SizedBox(height: 13),
-                          // 피그마 07_09: 회색 바탕 위 흰 달력 카드, 10 간격, 위로 그림자 진 탭·지도.
-                          Container(
-                            padding: const EdgeInsets.only(top: 14, bottom: 20),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, 2))],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const _Banner(),
-                                const SizedBox(height: 44),
-                                _MonthRow(onMove: () => _toast('다른 달은 준비 중이에요.')),
-                                const SizedBox(height: 19),
-                                WeekStrip(selected: _day, onSelect: (d) => setState(() => _day = d)),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          DecoratedBox(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 10, offset: Offset(0, -4))],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _ModeTabs(onList: () => Navigator.of(context).maybePop()),
-                                _buildMapAndSheet(),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 24,
-                      child: Center(child: _OptimizeButton(onTap: _openOptimize)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const AxisTabBar(current: MainTab.home, light: true),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMapAndSheet() {
     final plan = _plan;
     return Stack(
       clipBehavior: Clip.none,
@@ -232,172 +161,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 }
 
-// ── 상단 ──────────────────────────────────────────────────────────────
-
-class _NavBar extends StatelessWidget {
-  const _NavBar({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: AppSizes.navHeight,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Text(
-            '전체 일정',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.gray06),
-          ),
-          const Positioned(left: 2, child: BackArrowButton()),
-          Positioned(
-            right: 5,
-            child: IconButton(
-              tooltip: '일정 추가',
-              onPressed: onAdd,
-              icon: SvgPicture.asset('assets/icons/map_plus.svg', width: 24, height: 24),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Banner extends StatelessWidget {
-  const _Banner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        gradient: const LinearGradient(colors: [AppColors.blue01, Color(0xFFEFF8FF)], stops: [0, 0.56]),
-      ),
-      child: const Row(
-        children: [
-          Text(
-            '황수현 님',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.gray09),
-          ),
-          SizedBox(width: 16),
-          Flexible(
-            child: Text(
-              '지난달보다 달성률이 높아요. 잘 실천하고 있어요!',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MonthRow extends StatelessWidget {
-  const _MonthRow({required this.onMove});
-
-  final VoidCallback onMove;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget arrow({required bool next}) => Semantics(
-      button: true,
-      label: next ? '다음 달' : '이전 달',
-      excludeSemantics: true,
-      onTap: onMove,
-      child: Pressable(
-        onTap: onMove,
-        scale: 0.9,
-        child: Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: AppColors.gray02, borderRadius: BorderRadius.circular(6)),
-          child: Transform.flip(
-            flipX: next,
-            child: SvgPicture.asset(
-              'assets/icons/map_cal_arrow.svg',
-              width: 20.8,
-              height: 20.8,
-              colorFilter: next ? const ColorFilter.mode(AppColors.gray04, BlendMode.srcIn) : null,
-            ),
-          ),
-        ),
-      ),
-    );
-    return Padding(
-      padding: const EdgeInsets.only(left: 23),
-      child: Row(
-        children: [
-          arrow(next: false),
-          const SizedBox(width: 16),
-          const Text(
-            '2026년 11월',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.gray09),
-          ),
-          const SizedBox(width: 16),
-          arrow(next: true),
-        ],
-      ),
-    );
-  }
-}
-
-/// 목록 | 지도 전환 탭. 지도가 선택된 상태.
-class _ModeTabs extends StatelessWidget {
-  const _ModeTabs({required this.onList});
-
-  final VoidCallback onList;
-
-  @override
-  Widget build(BuildContext context) {
-    Widget tab(String label, bool on, VoidCallback? onTap) => Semantics(
-      button: true,
-      selected: on,
-      label: label,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          width: 175,
-          height: 40,
-          alignment: Alignment.center,
-          // 일정 목록(07_05) 탭과 같은 모양: 높이 41(선 포함), 고른 탭 밑줄 2.
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: on ? AppColors.gray07 : Colors.transparent, width: 2)),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              height: 21 / 16,
-              fontWeight: FontWeight.w600,
-              color: on ? AppColors.gray07 : AppColors.gray03,
-            ),
-          ),
-        ),
-      ),
-    );
-    return Container(
-      height: 41,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: AppColors.gray03)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [tab('목록', false, onList), tab('지도', true, null)],
-      ),
-    );
-  }
-}
+// ── 지도 버튼 ──────────────────────────────────────────────────────────
 
 class _ZoomButton extends StatelessWidget {
   const _ZoomButton({required this.onTap});
@@ -863,8 +627,8 @@ class _DashedBorderPainter extends CustomPainter {
 }
 
 /// 하단에 떠 있는 "동선 최적화하기" 알약 버튼(뒤에 파란 빛 번짐).
-class _OptimizeButton extends StatelessWidget {
-  const _OptimizeButton({required this.onTap});
+class MapOptimizeButton extends StatelessWidget {
+  const MapOptimizeButton({super.key, required this.onTap});
 
   final VoidCallback onTap;
 

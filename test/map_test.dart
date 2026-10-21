@@ -2,30 +2,19 @@ import 'package:axis_app/screens/main/map_ai_screen.dart';
 import 'package:axis_app/screens/main/map_data.dart';
 import 'package:axis_app/screens/main/map_full_screen.dart';
 import 'package:axis_app/screens/main/map_screen.dart';
+import 'package:axis_app/screens/main/schedule_list_screen.dart';
 import 'package:axis_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Widget _app() => MaterialApp(
-  theme: buildAppTheme(),
-  home: Builder(
-    builder: (context) => Scaffold(
-      body: Center(
-        child: TextButton(
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MapScreen())),
-          child: const Text('open'),
-        ),
-      ),
-    ),
-  ),
-);
-
+/// 일정 목록(07_05)에서 지도 탭을 누른다. 같은 화면 안에서 탭만 바뀐다.
 Future<void> _openMap(WidgetTester tester) async {
-  await tester.pumpWidget(_app());
-  await tester.tap(find.text('open'));
+  await tester.pumpWidget(MaterialApp(theme: buildAppTheme(), home: const ScheduleListScreen()));
   await _settle(tester);
-  expect(find.byType(MapScreen), findsOneWidget);
+  await tester.tap(find.text('지도'));
+  await _settle(tester);
+  expect(find.byType(MapTab), findsOneWidget);
 }
 
 /// 반복 애니메이션(선택 핀 고리)이 있어 pumpAndSettle 대신 일정 시간만 흘린다.
@@ -51,18 +40,19 @@ void main() {
     view.devicePixelRatio = 3;
   });
 
-  testWidgets('지도 화면이 일정 목록과 요약을 보여 주고 뒤로 돌아간다', (tester) async {
+  testWidgets('지도 탭은 같은 화면에서 일정 요약을 보여 주고 목록 탭으로 돌아간다', (tester) async {
     await _openMap(tester);
-    await _settle(tester);
-    expect(find.text('전체 일정'), findsOneWidget);
+    expect(find.text('Todo'), findsOneWidget);
+    expect(find.text('전체 일정'), findsNothing);
     expect(find.text('일정 6건'), findsOneWidget);
     expect(find.text('약 1시간 · 17.5km'), findsOneWidget);
     expect(find.text('회사 출근'), findsOneWidget);
     expect(find.text('준비 설정 시간(20분)'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('뒤로'));
+    await tester.tap(find.text('목록'));
     await _settle(tester);
-    expect(find.byType(MapScreen), findsNothing);
+    expect(find.byType(MapTab), findsNothing);
+    expect(find.text('J모드'), findsOneWidget);
   });
 
   testWidgets('일정 카드를 누르면 장소 상세 시트가 열리고 닫힌다', (tester) async {

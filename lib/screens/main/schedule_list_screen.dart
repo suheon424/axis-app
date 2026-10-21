@@ -41,6 +41,10 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
   _Filter _filter = _Filter.all;
   int _selectedDay = _scheduleDay;
   int? _openSwipeId;
+
+  /// 아래 카드의 목록/지도 탭. 지도도 같은 화면에서 탭만 바꾼다(07_09).
+  bool _mapTab = false;
+  final _mapKey = GlobalKey<MapTabState>();
   final Set<int> _expanded = {};
   bool _badgeShown = false;
 
@@ -155,20 +159,35 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onTap: _openSwipeId == null ? null : () => setState(() => _openSwipeId = null),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 10),
-                  _nav(),
-                  const SizedBox(height: 14),
-                  _calendarCard(),
-                  const SizedBox(height: 10),
-                  _listSection(),
-                  const SizedBox(height: 16),
-                  ListFixButton(onTap: _runAi),
-                  const SizedBox(height: 40),
-                ],
-              ),
+            child: Stack(
+              children: [
+                SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      _nav(),
+                      const SizedBox(height: 14),
+                      _calendarCard(),
+                      const SizedBox(height: 10),
+                      if (_mapTab)
+                        _mapSection()
+                      else ...[
+                        _listSection(),
+                        const SizedBox(height: 16),
+                        ListFixButton(onTap: _runAi),
+                        const SizedBox(height: 40),
+                      ],
+                    ],
+                  ),
+                ),
+                if (_mapTab)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 24,
+                    child: Center(child: MapOptimizeButton(onTap: () => _mapKey.currentState?.openOptimize())),
+                  ),
+              ],
             ),
           ),
         ),
@@ -269,6 +288,23 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
               }),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ───────────────────────── 아래 카드(지도 탭): 탭 · 지도 · 그날 일정 시트
+  Widget _mapSection() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 10, offset: Offset(0, -4))],
+      ),
+      child: Column(
+        children: [
+          _tabs(),
+          MapTab(key: _mapKey, day: _selectedDay),
         ],
       ),
     );
@@ -390,8 +426,17 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          tab('목록', true, null),
-          tab('지도', false, () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MapScreen()))),
+          tab('목록', !_mapTab, _mapTab ? () => setState(() => _mapTab = false) : null),
+          tab(
+            '지도',
+            _mapTab,
+            _mapTab
+                ? null
+                : () => setState(() {
+                    _mapTab = true;
+                    _openSwipeId = null;
+                  }),
+          ),
         ],
       ),
     );
