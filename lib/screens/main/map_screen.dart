@@ -10,6 +10,7 @@ import 'add_schedule_screen.dart';
 import 'map_ai_screen.dart';
 import 'map_data.dart';
 import 'map_full_screen.dart';
+import 'week_strip.dart';
 
 /// 07_09 지도: 전체 일정의 "지도" 탭. 주간 달력 아래 하루 동선 지도와 일정 목록.
 /// ScheduleListScreen에서 push로 연다.
@@ -141,7 +142,7 @@ class _MapScreenState extends State<MapScreen> {
                                 const SizedBox(height: 44),
                                 _MonthRow(onMove: () => _toast('다른 달은 준비 중이에요.')),
                                 const SizedBox(height: 19),
-                                _WeekCalendar(selected: _day, onSelect: (d) => setState(() => _day = d)),
+                                WeekStrip(selected: _day, onSelect: (d) => setState(() => _day = d)),
                               ],
                             ),
                           ),
@@ -342,155 +343,6 @@ class _MonthRow extends StatelessWidget {
           const SizedBox(width: 16),
           arrow(next: true),
         ],
-      ),
-    );
-  }
-}
-
-class _WeekCalendar extends StatelessWidget {
-  const _WeekCalendar({required this.selected, required this.onSelect});
-
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          for (var i = 0; i < 7; i++)
-            _DayColumn(
-              weekday: _weekdayNames[i],
-              day: _dayNumbers[i],
-              selected: _dayNumbers[i] == selected,
-              hasPlan: _dayNumbers[i] == 23,
-              onTap: () => onSelect(_dayNumbers[i]),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DayColumn extends StatelessWidget {
-  const _DayColumn({
-    required this.weekday,
-    required this.day,
-    required this.selected,
-    required this.hasPlan,
-    required this.onTap,
-  });
-
-  final String weekday;
-  final int day;
-  final bool selected;
-  final bool hasPlan;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: '11월 $day일 $weekday요일',
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox(
-          width: 46.57,
-          height: 87,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // 선택된 요일 기둥(52폭)은 칸(46.57)보다 조금 넓다.
-              Positioned(
-                left: (46.57 - 52) / 2,
-                top: 0,
-                width: 52,
-                height: 87,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOut,
-                  decoration: BoxDecoration(
-                    color: selected ? AppColors.gray09 : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              Column(
-                children: [
-                  const SizedBox(height: 7),
-                  SizedBox(
-                    height: 20,
-                    child: Center(
-                      child: Text(
-                        weekday,
-                        style: TextStyle(fontSize: 12, color: selected ? Colors.white : const Color(0xFFA3A7B2)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: selected ? const Color(0xFFCCDDFB) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Stack(
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        Positioned(
-                          left: 5,
-                          top: 5,
-                          child: Text(
-                            '$day',
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.2,
-                              letterSpacing: -1,
-                              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                              color: selected ? Colors.black : AppColors.gray04,
-                            ),
-                          ),
-                        ),
-                        if (hasPlan) ...[
-                          Positioned(
-                            left: 31,
-                            top: 5,
-                            child: Container(
-                              width: 4,
-                              height: 4,
-                              decoration: const BoxDecoration(color: CubeColors.red, shape: BoxShape.circle),
-                            ),
-                          ),
-                          if (selected)
-                            Positioned(
-                              left: 21,
-                              top: 32,
-                              child: Container(
-                                width: 24,
-                                height: 1.6,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(1),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

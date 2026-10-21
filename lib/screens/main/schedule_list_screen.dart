@@ -11,6 +11,7 @@ import 'list_data.dart';
 import 'list_parts.dart';
 import 'list_sheets.dart';
 import 'map_screen.dart';
+import 'week_strip.dart';
 
 /// 07_05 일정 목록(Todo). 헤더의 "J모드" 칩으로 07_06 J모드(시간 + AI 꼬리표)와 오간다.
 /// - 체크박스로 완료 표시, 6개를 모두 체크하면 배지 획득 팝업(pop_07_05).
@@ -258,134 +259,17 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Padding(padding: const EdgeInsets.fromLTRB(20, 16, 20, 20), child: _week()),
+          Padding(
+            padding: const EdgeInsets.only(top: 9, bottom: 13),
+            child: WeekStrip(
+              selected: _selectedDay,
+              onSelect: (d) => setState(() {
+                _selectedDay = d;
+                _openSwipeId = null;
+              }),
+            ),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _week() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cell = constraints.maxWidth / 7;
-        final selected = _selectedDay - 22;
-        return SizedBox(
-          height: 80,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // 고른 요일을 감싸는 검은 기둥(52 × 87)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                left: cell * selected + cell / 2 - 26,
-                top: -7,
-                child: Container(
-                  width: 52,
-                  height: 87,
-                  decoration: BoxDecoration(color: AppColors.gray09, borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      for (var i = 0; i < 7; i++)
-                        SizedBox(
-                          width: cell,
-                          height: 20,
-                          child: Center(
-                            child: Text(
-                              _weekdays[i],
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: i == selected ? Colors.white : const Color(0xFFA3A7B2),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      for (var i = 0; i < 7; i++)
-                        SizedBox(
-                          width: cell,
-                          height: 50,
-                          child: Center(child: _dayCell(22 + i)),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _dayCell(int day) {
-    final selected = day == _selectedDay;
-    final hasSchedule = day == _scheduleDay;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: '11월 $day일',
-      excludeSemantics: true,
-      onTap: () => setState(() => _selectedDay = day),
-      child: GestureDetector(
-        onTap: () => setState(() {
-          _selectedDay = day;
-          _openSwipeId = null;
-        }),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: selected ? const Color(0xFFCCDDFB) : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Stack(
-            children: [
-              // 숫자는 요일 글자와 같은 세로줄에 오도록 칸 가운데에 둔다.
-              Center(
-                child: Text(
-                  '$day',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    letterSpacing: -1,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                    color: selected ? Colors.black : AppColors.gray04,
-                  ),
-                ),
-              ),
-              if (hasSchedule)
-                Positioned(
-                  left: 31,
-                  top: 5,
-                  child: Container(
-                    width: 4,
-                    height: 4,
-                    decoration: const BoxDecoration(color: CubeColors.red, shape: BoxShape.circle),
-                  ),
-                ),
-              if (hasSchedule && selected)
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  top: 31,
-                  child: Container(
-                    height: 1.56,
-                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(1)),
-                  ),
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
