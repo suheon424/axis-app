@@ -64,12 +64,23 @@ class AchievementScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, height: 1.5, color: Color(0xFFB0B8C1)),
                         ),
-                        const Expanded(child: SplineCube()),
+                        // 피그마 07_01 홈_달성률: 설명 아래 273 높이에 큐브, 바로 밑에 맞춘 조각 카드.
+                        // 화면이 작으면 큐브 칸이 줄어든다. 남는 자리는 아래로 둔다.
+                        const Flexible(
+                          child: SizedBox(
+                            height: 273,
+                            child: SplineCube(
+                              imageOffset: Offset(0, -20.5),
+                              fingerOffset: Offset(0, 4.5),
+                              sceneOffset: Offset(5, -26.5),
+                            ),
+                          ),
+                        ),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
                           child: _StatsCard(),
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 11),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
                           child: _NextPieceCard(

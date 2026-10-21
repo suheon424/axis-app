@@ -78,7 +78,8 @@ class _CalCoachmarkOverlayState extends State<CalCoachmarkOverlay> with SingleTi
   Rect _hole(int i, Size size) {
     final t = _targets![i] ?? Rect.fromCenter(center: size.center(Offset.zero), width: 0, height: 0);
     if (widget.steps[i].isCell) return Rect.fromCenter(center: t.center, width: 55, height: 55);
-    return Rect.fromLTRB(8, t.top - 2, size.width - 8, t.top + 48);
+    // 피그마 3/4: 범례(38) 위로 7, 아래로 5 넓힌 374×50.
+    return Rect.fromLTRB(8, t.top - 7, size.width - 8, t.bottom + 5);
   }
 
   void _next() {

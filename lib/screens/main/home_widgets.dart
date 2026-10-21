@@ -104,6 +104,7 @@ class HomeTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      width: double.infinity, // 가운데 정렬 Column 안에서도 화면 폭을 차지해야 로고가 잘리지 않는다.
       height: 48,
       child: Stack(
         alignment: Alignment.center,

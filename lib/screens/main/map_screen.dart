@@ -110,9 +110,9 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay,
+      value: lightScreenOverlay.copyWith(statusBarColor: const Color(0xFFF4F5FA)),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF4F5FA),
         body: Column(
           children: [
             Expanded(
@@ -126,15 +126,39 @@ class _MapScreenState extends State<MapScreen> {
                         children: [
                           const SizedBox(height: 17),
                           _NavBar(onAdd: _openAddSchedule),
-                          const SizedBox(height: 27),
-                          const _Banner(),
-                          const SizedBox(height: 44),
-                          _MonthRow(onMove: () => _toast('다른 달은 준비 중이에요.')),
-                          const SizedBox(height: 19),
-                          _WeekCalendar(selected: _day, onSelect: (d) => setState(() => _day = d)),
-                          const SizedBox(height: 30),
-                          _ModeTabs(onList: () => Navigator.of(context).maybePop()),
-                          _buildMapAndSheet(),
+                          const SizedBox(height: 13),
+                          // 피그마 07_09: 회색 바탕 위 흰 달력 카드, 10 간격, 위로 그림자 진 탭·지도.
+                          Container(
+                            padding: const EdgeInsets.only(top: 14, bottom: 20),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, 2))],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const _Banner(),
+                                const SizedBox(height: 44),
+                                _MonthRow(onMove: () => _toast('다른 달은 준비 중이에요.')),
+                                const SizedBox(height: 19),
+                                _WeekCalendar(selected: _day, onSelect: (d) => setState(() => _day = d)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          DecoratedBox(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 10, offset: Offset(0, -4))],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _ModeTabs(onList: () => Navigator.of(context).maybePop()),
+                                _buildMapAndSheet(),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -493,15 +517,15 @@ class _ModeTabs extends StatelessWidget {
           width: 175,
           height: 40,
           alignment: Alignment.center,
-          decoration: on
-              ? const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: AppColors.gray07, width: 3)),
-                )
-              : null,
+          // 일정 목록(07_05) 탭과 같은 모양: 높이 41(선 포함), 고른 탭 밑줄 2.
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: on ? AppColors.gray07 : Colors.transparent, width: 2)),
+          ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 16,
+              height: 21 / 16,
               fontWeight: FontWeight.w600,
               color: on ? AppColors.gray07 : AppColors.gray03,
             ),

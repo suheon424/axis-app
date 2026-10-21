@@ -278,7 +278,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
-                left: cell * selected + cell / 2 - 26 + 2,
+                left: cell * selected + cell / 2 - 26,
                 top: -7,
                 child: Container(
                   width: 52,
@@ -350,11 +350,11 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           ),
           child: Stack(
             children: [
-              Positioned(
-                left: 5,
-                top: 4,
+              // 숫자는 요일 글자와 같은 세로줄에 오도록 칸 가운데에 둔다.
+              Center(
                 child: Text(
                   '$day',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
                     letterSpacing: -1,
@@ -375,8 +375,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                 ),
               if (hasSchedule && selected)
                 Positioned(
-                  left: 20,
-                  right: 0,
+                  left: 12,
+                  right: 12,
                   top: 31,
                   child: Container(
                     height: 1.56,
@@ -478,7 +478,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           onTap: onTap,
           child: Container(
             width: 175,
-            padding: const EdgeInsets.symmetric(vertical: 15),
+            height: 40, // 아래 회색 선 1과 합쳐 탭 높이 41(피그마)
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(color: selected ? AppColors.gray07 : Colors.transparent, width: 2)),
@@ -499,6 +499,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
 
     return Container(
       width: double.infinity,
+      height: 41,
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.gray03)),
       ),
