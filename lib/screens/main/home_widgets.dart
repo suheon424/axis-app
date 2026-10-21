@@ -129,7 +129,7 @@ class HomeTopBar extends StatelessWidget {
   }
 }
 
-/// 단계 바: 끝낸 칸은 빛나는 파랑, 남은 칸은 반투명 흰색.
+/// 단계 바: 끝낸 칸은 파랑, 남은 칸은 반투명 흰색.
 class HomeStepBar extends StatelessWidget {
   const HomeStepBar({
     super.key,
@@ -157,7 +157,6 @@ class HomeStepBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i < done ? AppColors.primary : todoColor,
                 borderRadius: BorderRadius.circular(100),
-                boxShadow: i < done ? const [BoxShadow(color: Color(0xCC3D7BFF), blurRadius: 8)] : null,
               ),
             ),
           ),

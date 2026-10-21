@@ -70,9 +70,9 @@ class AchievementScreen extends StatelessWidget {
                           child: SizedBox(
                             height: 273,
                             child: SplineCube(
-                              imageOffset: Offset(0, -20.5),
-                              fingerOffset: Offset(0, 4.5),
-                              sceneOffset: Offset(5, -26.5),
+                              imageOffset: Offset(0, -10.5),
+                              fingerOffset: Offset(0, 14.5),
+                              sceneOffset: Offset(5, -16.5),
                             ),
                           ),
                         ),
