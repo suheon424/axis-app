@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../theme/app_theme.dart';
-import '../../widgets/buttons.dart';
-import '../../widgets/main_chrome.dart';
+import '../../widgets/kit/kit.dart';
 import 'add_schedule_screen.dart';
 import 'list_ai.dart';
 import 'list_data.dart';
@@ -13,13 +10,22 @@ import 'list_sheets.dart';
 import 'map_screen.dart';
 import 'week_strip.dart';
 
-/// 07_05 일정 목록(Todo). 헤더의 "J모드" 칩으로 07_06 J모드(시간 + AI 꼬리표)와 오간다.
+/// 07_05 일정 목록(Todo). 머리글의 "J모드" 칩으로 07_06 J모드(시간 + AI 꼬리표)와 오간다.
 /// - 체크박스로 완료 표시, 6개를 모두 체크하면 배지 획득 팝업(pop_07_05).
+/// - 일정이 없는 날은 빈 상태(07_05 빈 상태) + "일정 추가하기".
+/// - J모드에서 꼬리표를 누르면 제안이 펼쳐진다(07_07).
+/// - 일정을 왼쪽으로 밀면 "이동 · 삭제"(07_07 이동/삭제).
 /// - 일정을 누르면 상세 시트(07_08) → 더보기(07_08-1) → 삭제 확인(07_08-2).
-/// - 일정을 왼쪽으로 밀면 날짜 변경 · 삭제(07_07).
-/// - "틀어진 일정 맞추기" → AI 분석 중(07_05-1) → AI 일정 제안(07_05-2).
+/// - "틀어진 일정 맞추기" → AI 분석 중(07_05-1) → AI 일정 제안(07_05-2) → 맞추기 완료 토스트(07_06 완료).
+/// - 목록 / 지도 탭: 지도는 같은 화면 안에서 [MapTab]으로 바꿔 보여 준다.
 class ScheduleListScreen extends StatefulWidget {
-  const ScheduleListScreen({super.key});
+  const ScheduleListScreen({super.key, this.initialJMode = false, this.empty = false});
+
+  /// J모드를 켠 채로 연다(07_06 확인용).
+  final bool initialJMode;
+
+  /// 23일 일정을 비운 채로 연다(07_05 빈 상태 확인용).
+  final bool empty;
 
   @override
   State<ScheduleListScreen> createState() => _ScheduleListScreenState();
@@ -32,19 +38,27 @@ extension on _Filter {
 }
 
 class _ScheduleListScreenState extends State<ScheduleListScreen> {
-  static const _bg = Color(0xFFF4F5FA);
   static const _weekdays = ['일', '월', '화', '수', '목', '금', '토'];
   static const _scheduleDay = 23;
 
-  final List<ListSchedule> _items = listSampleSchedules();
-  bool _jMode = false;
+  /// 23일 말고는 피그마 07_05의 고정 상태.
+  static const _otherDays = {
+    22: AxisDayState.empty,
+    24: AxisDayState.today,
+    25: AxisDayState.empty,
+    26: AxisDayState.scheduled,
+    27: AxisDayState.inProgress,
+    28: AxisDayState.done,
+  };
+
+  late final List<ListSchedule> _items = widget.empty ? [] : listSampleSchedules();
+  late bool _jMode = widget.initialJMode;
   _Filter _filter = _Filter.all;
   int _selectedDay = _scheduleDay;
   int? _openSwipeId;
-
-  /// 아래 카드의 목록/지도 탭. 지도도 같은 화면에서 탭만 바꾼다(07_09).
   bool _mapTab = false;
   final _mapKey = GlobalKey<MapTabState>();
+  final _filterKey = GlobalKey();
   final Set<int> _expanded = {};
   bool _badgeShown = false;
 
@@ -56,10 +70,19 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     _Filter.done => _dayItems.where((e) => e.done).toList(),
   };
 
-  void _toast(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+  AxisDayState _dayState(int day) {
+    if (day != _scheduleDay) return _otherDays[day] ?? AxisDayState.empty;
+    final done = _items.where((e) => e.done).length;
+    if (_items.isEmpty) return AxisDayState.today;
+    if (done == 0) return AxisDayState.scheduled;
+    if (done == _items.length) return AxisDayState.done;
+    return AxisDayState.inProgress;
+  }
+
+  void _toast(String message) => showAxisToast(context, message, bottom: 82);
+
+  void _closeSwipe() {
+    if (_openSwipeId != null) setState(() => _openSwipeId = null);
   }
 
   void _toggle(ListSchedule item) {
@@ -76,13 +99,22 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     }
   }
 
+  void _openAdd([ListSchedule? item]) {
+    _closeSwipe();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AddScheduleScreen(initialTitle: item?.title, initialDate: DateTime(2026, 11, _selectedDay)),
+      ),
+    );
+  }
+
   Future<void> _openDetail(ListSchedule item) async {
-    setState(() => _openSwipeId = null);
+    _closeSwipe();
     final action = await showListDetailSheet(context, item);
     if (!mounted || action == null) return;
     switch (action) {
       case ListSheetAction.edit:
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddScheduleScreen()));
+        _openAdd(item);
       case ListSheetAction.changeDate:
         await _changeDate(item);
       case ListSheetAction.delete:
@@ -91,7 +123,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
   }
 
   Future<void> _changeDate(ListSchedule item) async {
-    setState(() => _openSwipeId = null);
+    _closeSwipe();
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime(2026, 11, _scheduleDay),
@@ -102,79 +134,125 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
       confirmText: '옮기기',
     );
     if (!mounted || picked == null) return;
-    if (picked.month == 11 && picked.day == _scheduleDay && picked.year == 2026) return;
+    if (picked == DateTime(2026, 11, _scheduleDay)) return;
     setState(() => _items.remove(item));
-    _toast('‘${item.title}’을(를) ${picked.month}월 ${picked.day}일로 옮겼어요.');
+    _toast('‘${item.title}’을(를) ${picked.month}월 ${picked.day}일로 옮겼어요');
   }
 
   Future<void> _confirmDelete(ListSchedule item) async {
-    setState(() => _openSwipeId = null);
+    _closeSwipe();
     final scope = await showListDeleteDialog(context);
     if (!mounted || scope == null) return;
     setState(() {
       _items.remove(item);
       _expanded.remove(item.id);
     });
-    _toast(scope == ListDeleteScope.onlyThis ? '‘${item.title}’ 일정을 삭제했어요.' : '‘${item.title}’ 이후 일정을 모두 삭제했어요.');
+    _toast(scope == ListDeleteScope.onlyThis ? '‘${item.title}’ 일정을 삭제했어요' : '‘${item.title}’ 이후 일정을 모두 삭제했어요');
   }
 
   Future<void> _runAi() async {
-    setState(() => _openSwipeId = null);
+    _closeSwipe();
     final finished = await showListAiAnalyzing(context);
     if (!mounted || finished != true) return;
     final apply = await Navigator.of(context)
         .push<bool>(MaterialPageRoute(builder: (_) => const ListAiSuggestionScreen()));
     if (!mounted || apply != true) return;
     setState(() {
+      _jMode = true;
       ListSchedule? byId(int id) => _items.where((e) => e.id == id).firstOrNull;
       final lunch = byId(3);
       final bill = byId(6);
-      if (lunch != null) {
-        lunch
-          ..time = 'PM 01:00'
-          ..endTime = 'PM 02:00';
-      }
+      lunch
+        ?..time = '01:00 PM'
+        ..endTime = '02:00 PM';
       if (bill != null) {
         bill
-          ..time = 'PM 02:35'
-          ..endTime = 'PM 02:45';
+          ..time = '02:35 PM'
+          ..endTime = '02:45 PM';
         // 관리비 납부를 팀 점심 바로 뒤로 옮긴다.
         _items.remove(bill);
         final at = lunch == null ? _items.length : _items.indexOf(lunch) + 1;
         _items.insert(at, bill);
       }
     });
-    _toast('제안대로 일정을 맞췄어요.');
+    final left = _items.where((e) => !e.done).length;
+    _toast('남은 일정 $left개를 다시 맞췄어요');
+  }
+
+  Future<void> _pickFilter() async {
+    final box = _filterKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
+    final rect = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+    final picked = await showMenu<_Filter>(
+      context: context,
+      position: RelativeRect.fromRect(rect.shift(Offset(0, rect.height + 4)), Offset.zero & overlay.size),
+      color: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(color: AppColors.gray02),
+      ),
+      items: [
+        for (final f in _Filter.values)
+          PopupMenuItem(
+            value: f,
+            height: 44,
+            child: Text(
+              f.label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: f == _filter ? FontWeight.w600 : FontWeight.w500,
+                color: f == _filter ? AppColors.brand : AppColors.gray07,
+              ),
+            ),
+          ),
+      ],
+    );
+    if (picked != null && mounted) setState(() => _filter = picked);
   }
 
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay.copyWith(statusBarColor: _bg),
+      value: lightScreenOverlay.copyWith(statusBarColor: AppColors.gray01),
       child: Scaffold(
-        backgroundColor: _bg,
-        bottomNavigationBar: const AxisTabBar(current: MainTab.home, light: true),
+        backgroundColor: AppColors.gray01,
+        bottomNavigationBar: const AxisTabBar(current: MainTab.home),
         body: SafeArea(
           bottom: false,
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
-            onTap: _openSwipeId == null ? null : () => setState(() => _openSwipeId = null),
+            onTap: _openSwipeId == null ? null : _closeSwipe,
             child: Stack(
               children: [
                 SingleChildScrollView(
                   child: Column(
                     children: [
                       const SizedBox(height: 10),
-                      _nav(),
+                      AxisBackTitleBar(
+                        title: 'Todo',
+                        actions: [AxisIconButton(icon: KitIcon.navPlus, tooltip: '일정 추가', onPressed: _openAdd)],
+                      ),
                       const SizedBox(height: 14),
                       _calendarCard(),
                       const SizedBox(height: 10),
+                      AxisSegmentedTabs(
+                        labels: const ['목록', '지도'],
+                        selected: _mapTab ? 1 : 0,
+                        onChanged: (i) => setState(() {
+                          _mapTab = i == 1;
+                          _openSwipeId = null;
+                        }),
+                      ),
                       if (_mapTab)
-                        _mapSection()
+                        ColoredBox(
+                          color: Colors.white,
+                          child: MapTab(key: _mapKey, day: _selectedDay),
+                        )
                       else ...[
                         _listSection(),
-                        const SizedBox(height: 16),
-                        ListFixButton(onTap: _runAi),
+                        if (_dayItems.isNotEmpty) ...[const SizedBox(height: 40), ListFixButton(onTap: _runAi)],
                         const SizedBox(height: 40),
                       ],
                     ],
@@ -195,335 +273,91 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     );
   }
 
-  Widget _nav() {
-    return SizedBox(
-      height: 40,
-      width: double.infinity,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Text(
-            'Todo',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.black),
-          ),
-          Positioned(
-            left: 4,
-            child: ListIconButton(
-              asset: 'assets/icons/ic_arrow_left.svg',
-              label: '뒤로',
-              onTap: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-          Positioned(
-            right: 7,
-            child: ListIconButton(
-              asset: 'assets/icons/list_plus.svg',
-              label: '일정 추가',
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddScheduleScreen())),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ───────────────────────── 위 카드: 인사 배너 · 월 · 주간 달력
+  // ───────────────────────── 위 카드: 월 머리글 · 한 주 달력
   Widget _calendarCard() {
     return Container(
       color: Colors.white,
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 7, bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              gradient: const LinearGradient(colors: [AppColors.blue01, Color(0xFFEFF8FF)], stops: [0, 0.56]),
-            ),
-            child: const Row(
-              children: [
-                Text(
-                  '황수현 님',
-                  style: TextStyle(fontSize: 12, height: 2, fontWeight: FontWeight.w700, color: AppColors.gray09),
-                ),
-                SizedBox(width: 16),
-                Flexible(
-                  child: Text(
-                    '지난달보다 달성률이 높아요. 잘 실천하고 있어요!',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 34),
           Padding(
-            padding: const EdgeInsets.only(left: 23),
-            child: Row(
-              children: [
-                SvgPicture.asset('assets/icons/list_cal_prev.svg', width: 26, height: 26),
-                const SizedBox(width: 16),
-                const Text(
-                  '2026년 11월',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.gray09),
-                ),
-                const SizedBox(width: 16),
-                SvgPicture.asset('assets/icons/list_cal_next.svg', width: 26, height: 26),
-              ],
-            ),
+            padding: const EdgeInsets.only(left: 11),
+            child: AxisMonthHeader(title: '2026년 11월', onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요')),
           ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.only(top: 9, bottom: 13),
-            child: WeekStrip(
-              selected: _selectedDay,
-              onSelect: (d) => setState(() {
-                _selectedDay = d;
-                _openSwipeId = null;
-              }),
-            ),
+          const SizedBox(height: 6),
+          WeekStrip(
+            selected: _selectedDay,
+            stateOf: _dayState,
+            onSelect: (d) => setState(() {
+              _selectedDay = d;
+              _openSwipeId = null;
+            }),
           ),
         ],
       ),
     );
   }
 
-  // ───────────────────────── 아래 카드(지도 탭): 탭 · 지도 · 그날 일정 시트
-  Widget _mapSection() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 10, offset: Offset(0, -4))],
-      ),
-      child: Column(
-        children: [
-          _tabs(),
-          MapTab(key: _mapKey, day: _selectedDay),
-        ],
-      ),
-    );
-  }
-
-  // ───────────────────────── 아래 카드: 목록/지도 탭 · 헤더 · 일정
+  // ───────────────────────── 아래 카드: 날짜 머리글 · 일정
   Widget _listSection() {
     final visible = _visible;
     final weekday = _weekdays[(_selectedDay - 22) % 7];
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Color(0x1A000000), blurRadius: 10, offset: Offset(0, -4))],
-      ),
-      padding: const EdgeInsets.only(bottom: 16),
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
       child: Column(
         children: [
-          _tabs(),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.bottomLeft,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '$_selectedDay일 ($weekday)',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.gray09),
-                        ),
-                        const SizedBox(width: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text(
-                            '일정 ${_dayItems.length}건',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primary),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _jChip(),
-                const SizedBox(width: 8),
-                _filterDropdown(),
-              ],
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: AppColors.gray05)),
+            ),
+            child: KeyedSubtree(
+              key: _filterKey,
+              child: AxisScheduleDayHeader(
+                title: '11월 $_selectedDay일 $weekday요일',
+                countLabel: '일정 ${_dayItems.length}개',
+                jMode: _jMode,
+                onJModeTap: () => setState(() {
+                  _jMode = !_jMode;
+                  _openSwipeId = null;
+                }),
+                filterLabel: _filter.label,
+                onFilterTap: _pickFilter,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
           AnimatedSize(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
-            child: visible.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
-                    child: Text('이 날은 일정이 없어요', style: TextStyle(fontSize: 14, color: AppColors.caption)),
-                  )
-                : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: _jMode ? 16 : 20),
-                    child: Column(
-                      children: [
-                        for (var i = 0; i < visible.length; i++)
-                          _row(visible[i], _items.indexOf(visible[i]) + 1, isLast: i == visible.length - 1),
-                      ],
+            child: _dayItems.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 50, 0, 50),
+                    child: AxisEmptyState(
+                      icon: KitIcon.navPlus,
+                      title: '이날은 아직 일정이 없어요',
+                      description: '일정을 추가하면 출발 시간과 동선을\n알아서 맞춰 드려요.',
+                      actionLabel: '일정 추가하기',
+                      onAction: _openAdd,
                     ),
+                  )
+                : visible.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40),
+                    child: Text('${_filter.label} 일정이 없어요', style: AxisText.body),
+                  )
+                : Column(
+                    children: [
+                      for (var i = 0; i < visible.length; i++)
+                        _row(visible[i], _items.indexOf(visible[i]) + 1, isLast: i == visible.length - 1),
+                    ],
                   ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _tabs() {
-    Widget tab(String label, bool selected, VoidCallback? onTap) {
-      return Semantics(
-        button: true,
-        selected: selected,
-        label: label,
-        excludeSemantics: true,
-        onTap: onTap,
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: Container(
-            width: 175,
-            constraints: const BoxConstraints(minHeight: 40), // 아래 회색 선 1과 합쳐 탭 높이 41(피그마)
-            padding: const EdgeInsets.symmetric(vertical: 9.5),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: selected ? AppColors.gray07 : Colors.transparent, width: 2)),
-            ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                height: 21 / 16,
-                fontWeight: FontWeight.w600,
-                color: selected ? AppColors.gray07 : AppColors.gray03,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      height: 41,
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.gray03)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          tab('목록', !_mapTab, _mapTab ? () => setState(() => _mapTab = false) : null),
-          tab(
-            '지도',
-            _mapTab,
-            _mapTab
-                ? null
-                : () => setState(() {
-                    _mapTab = true;
-                    _openSwipeId = null;
-                  }),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _jChip() {
-    void toggle() => setState(() {
-      _jMode = !_jMode;
-      _openSwipeId = null;
-    });
-    return Semantics(
-      button: true,
-      toggled: _jMode,
-      label: 'J모드',
-      excludeSemantics: true,
-      onTap: toggle,
-      child: Pressable(
-        onTap: toggle,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          constraints: const BoxConstraints(minHeight: 25),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _jMode ? AppColors.primary : AppColors.gray02,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            'J모드',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: _jMode ? Colors.white : AppColors.gray07,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _filterDropdown() {
-    return PopupMenuButton<_Filter>(
-      tooltip: '보기 필터',
-      initialValue: _filter,
-      onSelected: (f) => setState(() => _filter = f),
-      position: PopupMenuPosition.under,
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: AppColors.divider),
-      ),
-      itemBuilder: (_) => [
-        for (final f in _Filter.values)
-          PopupMenuItem(
-            value: f,
-            height: 40,
-            child: Text(
-              f.label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: f == _filter ? FontWeight.w700 : FontWeight.w500,
-                color: f == _filter ? AppColors.primary : AppColors.gray07,
-              ),
-            ),
-          ),
-      ],
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 25, minWidth: 55),
-        padding: const EdgeInsets.only(left: 7, right: 5, top: 2, bottom: 2),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.gray03),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              _filter.label,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.gray07),
-            ),
-            const SizedBox(width: 2),
-            SvgPicture.asset('assets/icons/list_dropdown.svg', width: 15, height: 15),
-          ],
-        ),
       ),
     );
   }
@@ -533,14 +367,17 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
       key: ValueKey('row-${item.id}'),
       open: _openSwipeId == item.id,
       onOpenChanged: (open) => setState(() => _openSwipeId = open ? item.id : null),
-      onChangeDate: () => _changeDate(item),
+      onMove: () => _changeDate(item),
       onDelete: () => _confirmDelete(item),
       showDivider: !isLast,
-      child: _jMode ? _jRowContent(item, number) : _rowContent(item, number),
+      child: _rowContent(item, number),
     );
   }
 
   Widget _rowContent(ListSchedule item, int number) {
+    final tag = _jMode ? item.tag : null;
+    final expanded = tag != null && _expanded.contains(item.id);
+    void toggleTag() => setState(() => expanded ? _expanded.remove(item.id) : _expanded.add(item.id));
     return Semantics(
       button: true,
       label: '${item.title} 상세 보기',
@@ -548,72 +385,32 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => _openDetail(item),
-        child: SizedBox(
-          height: 48,
-          child: Row(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 17,
-                child: Text(
-                  '$number',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.primary),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  item.title,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.gray09),
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(13, 0),
-                child: ListCheckbox(checked: item.done, label: item.title, onTap: () => _toggle(item)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _jRowContent(ListSchedule item, int number) {
-    final tag = item.tag;
-    final expanded = tag != null && _expanded.contains(item.id);
-    void toggleTag() => setState(() => expanded ? _expanded.remove(item.id) : _expanded.add(item.id));
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => _openDetail(item),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 48,
-              child: Row(
+              Row(
                 children: [
                   SizedBox(
                     width: 17,
                     child: Text(
                       '$number',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.primary),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        letterSpacing: -0.32,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.brand,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 9),
-                  SizedBox(
-                    width: 56,
-                    child: Text(
-                      item.time,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.visible,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF919191)),
-                    ),
-                  ),
-                  const SizedBox(width: 9),
+                  if (_jMode) ...[
+                    SizedBox(width: 56, child: Text(item.time, maxLines: 1, softWrap: false, style: AxisText.caption)),
+                    const SizedBox(width: 7),
+                  ],
                   Expanded(
                     child: Row(
                       children: [
@@ -621,7 +418,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                           child: Text(
                             item.title,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+                            style: AxisText.rowTitle.copyWith(color: Colors.black, letterSpacing: -0.32),
                           ),
                         ),
                         if (tag != null) ...[
@@ -633,24 +430,11 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                             excludeSemantics: true,
                             onTap: toggleTag,
                             child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
                               onTap: toggleTag,
-                              child: Container(
-                                constraints: const BoxConstraints(minHeight: 19),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0.5),
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: tag.background,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  tag.label,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    height: 1.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: tag.color,
-                                  ),
-                                ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: AxisTag(tag.label, tone: tag.tone),
                               ),
                             ),
                           ),
@@ -659,24 +443,25 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                     ),
                   ),
                   Transform.translate(
-                    offset: const Offset(13, 0),
-                    child: ListCheckbox(checked: item.done, label: item.title, jMode: true, onTap: () => _toggle(item)),
+                    offset: const Offset(12, 0),
+                    child: ListCheckbox(checked: item.done, label: item.title, onTap: () => _toggle(item)),
                   ),
                 ],
               ),
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.topCenter,
-              child: expanded ? _suggestionPanel(item, tag) : const SizedBox(width: double.infinity),
-            ),
-          ],
+              AnimatedSize(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: expanded ? _suggestionPanel(item, tag) : const SizedBox(width: double.infinity),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  /// 07_07 펼친 제안(Pace · Plan B): 꼬리표 이름 + 그라디언트 문구 + 행동 버튼.
   Widget _suggestionPanel(ListSchedule item, ListTag tag) {
     final pace = tag.kind == ListTagKind.pace;
     void primary() {
@@ -687,7 +472,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           item.tag = null;
         }
       });
-      _toast(pace ? '출발 10분 전에 알려드릴게요.' : '플랜 B로 바꿨어요: 회의 전 기획안 마무리하기');
+      _toast(pace ? '출발 10분 전에 알려드릴게요' : '플랜 B로 바꿨어요');
     }
 
     void dismiss() => setState(() {
@@ -696,7 +481,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     });
 
     return Container(
-      margin: const EdgeInsets.only(left: 27, right: 6, bottom: 16),
+      margin: const EdgeInsets.only(left: 26, right: 1, top: 4, bottom: 10),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       decoration: BoxDecoration(
         color: tag.background,
@@ -711,7 +496,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
         children: [
           Text(
             tag.label,
-            style: TextStyle(fontSize: 12, height: 1.5, fontWeight: FontWeight.w600, color: tag.color),
+            style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: tag.color),
           ),
           SizedBox(width: pace ? 19 : 15),
           Expanded(
@@ -721,24 +506,19 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                 ListGradientText(
                   tag.message,
                   colors: [tag.color, tag.gradientEnd],
-                  style: const TextStyle(fontSize: 12, height: 1.5, letterSpacing: 0.2, fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 12, height: 1.36, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
-                      child: _ActionChip(
-                        label: tag.actions.first,
-                        color: tag.color,
-                        border: tag.color.withValues(alpha: 0.5),
-                        onTap: primary,
-                      ),
+                      child: _ActionChip(label: tag.actions.first, color: tag.color, onTap: primary),
                     ),
                     if (tag.actions.length > 1) ...[
                       const SizedBox(width: 6),
                       _ActionChip(
                         label: tag.actions[1],
-                        color: const Color(0xFF8B95A1),
+                        color: AppColors.gray06,
                         border: AppColors.divider,
                         onTap: dismiss,
                         horizontal: 24,
@@ -755,57 +535,47 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
   }
 }
 
+/// 제안 패널 안의 작은 흰 버튼(굴곡 8, 최소 높이 30, 12 SemiBold).
 class _ActionChip extends StatelessWidget {
-  const _ActionChip({
-    required this.label,
-    required this.color,
-    required this.border,
-    required this.onTap,
-    this.horizontal = 12,
-  });
+  const _ActionChip({required this.label, required this.color, required this.onTap, this.border, this.horizontal = 12});
 
   final String label;
   final Color color;
-  final Color border;
+  final Color? border;
   final VoidCallback onTap;
   final double horizontal;
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
+    return PressBuilder(
+      semanticLabel: label,
       onTap: onTap,
-      child: Pressable(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 30),
-          padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 6),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: border),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
-          ),
+      builder: (context, pressed) => Container(
+        constraints: const BoxConstraints(minHeight: 30),
+        padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 6),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: pressed ? AppColors.gray01 : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: border ?? color.withValues(alpha: 0.5)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: color),
         ),
       ),
     );
   }
 }
 
-/// 왼쪽으로 밀면 "날짜 변경 · 삭제"가 드러나는 일정 줄(07_07 Swipe).
+/// 왼쪽으로 밀면 "이동 · 삭제"가 드러나는 일정 줄(07_07 이동/삭제).
 class _SwipeRow extends StatefulWidget {
   const _SwipeRow({
     super.key,
     required this.child,
     required this.open,
     required this.onOpenChanged,
-    required this.onChangeDate,
+    required this.onMove,
     required this.onDelete,
     required this.showDivider,
   });
@@ -813,7 +583,7 @@ class _SwipeRow extends StatefulWidget {
   final Widget child;
   final bool open;
   final ValueChanged<bool> onOpenChanged;
-  final VoidCallback onChangeDate;
+  final VoidCallback onMove;
   final VoidCallback onDelete;
   final bool showDivider;
 
@@ -822,7 +592,7 @@ class _SwipeRow extends StatefulWidget {
 }
 
 class _SwipeRowState extends State<_SwipeRow> {
-  static const _actionsWidth = 160.0;
+  static const _actionsWidth = ListSwipeActions.width;
   double? _drag;
 
   double get _offset => _drag ?? (widget.open ? -_actionsWidth : 0);
@@ -836,33 +606,24 @@ class _SwipeRowState extends State<_SwipeRow> {
       onHorizontalDragUpdate: (d) =>
           setState(() => _drag = ((_drag ?? 0) + d.delta.dx).clamp(-_actionsWidth - 24, 0.0)),
       onHorizontalDragEnd: (d) {
-        final open = (_drag ?? 0) < -_actionsWidth / 2 || d.primaryVelocity! < -300;
-        final close = d.primaryVelocity! > 300;
+        final v = d.primaryVelocity ?? 0;
+        final open = (_drag ?? 0) < -_actionsWidth / 2 || v < -300;
         setState(() => _drag = null);
-        widget.onOpenChanged(open && !close);
+        widget.onOpenChanged(open && v <= 300);
       },
       child: Container(
         decoration: BoxDecoration(
-          border: widget.showDivider && !revealed ? const Border(bottom: BorderSide(color: AppColors.gray02)) : null,
+          border: widget.showDivider && !revealed ? const Border(bottom: BorderSide(color: AppColors.gray01)) : null,
         ),
         child: ClipRect(
           child: Stack(
             children: [
               if (revealed)
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: const Color(0xFFF4F5FA),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _action('날짜 변경', AppColors.gray06, widget.onChangeDate),
-                          _action('삭제', CubeColors.red, widget.onDelete),
-                        ],
-                      ),
-                    ),
-                  ),
+                Positioned(
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  child: ListSwipeActions(onMove: widget.onMove, onDelete: widget.onDelete),
                 ),
               AnimatedContainer(
                 duration: _drag == null ? const Duration(milliseconds: 220) : Duration.zero,
@@ -872,33 +633,12 @@ class _SwipeRowState extends State<_SwipeRow> {
                   color: Colors.white,
                   // 밀려난 줄은 회색 바탕 + 왼쪽 가장자리의 옅은 그림자
                   gradient: revealed
-                      ? const LinearGradient(colors: [Color(0xFFE8E9EE), Color(0xFFF4F5FA)], stops: [0, 0.045])
+                      ? const LinearGradient(colors: [Color(0xFFE8E9EE), AppColors.gray01], stops: [0, 0.045])
                       : null,
                 ),
                 child: widget.child,
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _action(String label, Color color, VoidCallback onTap) {
-    return Semantics(
-      button: true,
-      label: label,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 80,
-          color: color,
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
           ),
         ),
       ),

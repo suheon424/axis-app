@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../theme/app_theme.dart';
-import '../../widgets/buttons.dart';
-import 'list_parts.dart';
+import '../../widgets/kit/kit.dart';
 
-/// 07_05-1 AI 일정 분석 중. 약 2초 동안 진행한 뒤 true를 돌려주고, 취소하면 null.
-Future<bool?> showListAiAnalyzing(BuildContext context, {Duration duration = const Duration(milliseconds: 2200)}) {
+/// 07_05-1 AI 일정 분석 중. 목록 위에 어두운 덮개를 깔고 [duration] 동안 단계를 진행한 뒤 true,
+/// "맞추기 취소"면 null을 돌려준다.
+Future<bool?> showListAiAnalyzing(BuildContext context, {Duration duration = const Duration(milliseconds: 2400)}) {
   return showGeneralDialog<bool>(
     context: context,
     barrierDismissible: false,
@@ -27,7 +25,10 @@ class ListAiAnalyzing extends StatefulWidget {
   State<ListAiAnalyzing> createState() => _ListAiAnalyzingState();
 }
 
-class _ListAiAnalyzingState extends State<ListAiAnalyzing> with TickerProviderStateMixin {
+class _ListAiAnalyzingState extends State<ListAiAnalyzing> with SingleTickerProviderStateMixin {
+  /// 화면에 보여 주는 예상 소요 시간(초).
+  static const _estimate = 10;
+
   late final AnimationController _progress = AnimationController(vsync: this, duration: widget.duration)
     ..addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
@@ -37,600 +38,391 @@ class _ListAiAnalyzingState extends State<ListAiAnalyzing> with TickerProviderSt
       }
     })
     ..forward();
-  late final AnimationController _spin = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
-    ..repeat();
 
   @override
   void dispose() {
     _progress.dispose();
-    _spin.dispose();
     super.dispose();
   }
 
+  AxisStepState _state(double p, double start, double end) {
+    if (p >= end) return AxisStepState.done;
+    if (p >= start) return AxisStepState.now;
+    return AxisStepState.todo;
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: darkScreenOverlay.copyWith(statusBarColor: const Color(0xFF0B0D12)),
+      value: darkScreenOverlay.copyWith(statusBarColor: Colors.transparent),
       child: Material(
         type: MaterialType.transparency,
-        child: AnimatedBuilder(
-          animation: Listenable.merge([_progress, _spin]),
-          builder: (context, _) {
-            final p = Curves.easeInOut.transform(_progress.value);
-            final percent = (p * 100).round();
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox.square(
-                    dimension: 132,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(colors: [Color(0x8C8B7BFF), Color(0x003D8BFF)]),
-                          ),
-                          child: SizedBox.expand(),
-                        ),
-                        SizedBox.square(
-                          dimension: 112,
-                          child: ListAiRing(turns: _spin.value, progress: p),
-                        ),
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: const BoxDecoration(color: Color(0xFF141826), shape: BoxShape.circle),
-                        ),
-                        const ListAiOrb(size: 56),
-                      ],
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 35),
+            child: AnimatedBuilder(
+              animation: _progress,
+              builder: (context, _) {
+                final p = Curves.easeInOut.transform(_progress.value);
+                final percent = (p * 100).round();
+                final left = (_estimate * (1 - p)).ceil();
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const AxisAiOrb(size: 80, pulse: true),
+                    const SizedBox(height: 32),
+                    const Text(
+                      '틀어진 일정을 다시 맞추고 있어요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700, color: Colors.white),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'AI가 틀어진 일정을 맞추고 있어요… $percent%',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                    const SizedBox(height: 4),
+                    Text(
+                      left > 0 ? '$percent% · $left초 정도 걸려요' : '$percent% · 거의 다 됐어요',
+                      style: TextStyle(fontSize: 12, height: 1.4, color: Colors.white.withValues(alpha: 0.7)),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          AxisStepItem(label: '오늘 일정 6개 불러오기', state: _state(p, 0, 0.2)),
+                          const SizedBox(height: 12),
+                          AxisStepItem(label: '완료한 일정 2개 확인', state: _state(p, 0.2, 0.45)),
+                          const SizedBox(height: 12),
+                          AxisStepItem(label: '늦어진 시간 계산 · 1시간 40분', state: _state(p, 0.45, 0.75)),
+                          const SizedBox(height: 12),
+                          AxisStepItem(label: '남은 일정 4개 다시 배치', state: _state(p, 0.75, 1.0)),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    '일정이 많을수록 조금 더 걸릴 수 있어요',
-                    style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
-                  ),
-                  const SizedBox(height: 28),
-                  Container(
-                    width: 286,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _Step(label: '오늘 일정 6개 불러오기', state: _stateFor(p, 0.0, 0.18)),
-                        const SizedBox(height: 12),
-                        _Step(label: '완료한 일정 2개 확인', state: _stateFor(p, 0.18, 0.4)),
-                        const SizedBox(height: 12),
-                        _Step(
-                          label: p < 0.75 ? '늦어진 시간 계산 중 (1시간 40분)' : '늦어진 시간 계산 (1시간 40분)',
-                          state: _stateFor(p, 0.4, 0.75),
-                          spin: _spin.value,
-                        ),
-                        const SizedBox(height: 12),
-                        _Step(label: '남은 일정 다시 맞추기', state: _stateFor(p, 0.75, 1.0), spin: _spin.value),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Semantics(
-                    button: true,
-                    label: '취소',
-                    excludeSemantics: true,
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Pressable(
+                    const SizedBox(height: 28),
+                    PressBuilder(
+                      semanticLabel: '맞추기 취소',
                       onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 160,
+                      builder: (context, pressed) => Container(
                         constraints: const BoxConstraints(minHeight: 44),
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Text(
-                          '취소',
+                          '맞추기 취소',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
+                            height: 1.4,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white.withValues(alpha: 0.85),
+                            color: Colors.white.withValues(alpha: pressed ? 0.6 : 1),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
   }
-
-  _StepState _stateFor(double p, double start, double end) {
-    if (p >= end && end < 1.0) return _StepState.done;
-    if (p >= end) return _StepState.done;
-    if (p >= start) return _StepState.now;
-    return _StepState.todo;
-  }
 }
 
-enum _StepState { done, now, todo }
-
-class _Step extends StatelessWidget {
-  const _Step({required this.label, required this.state, this.spin = 0});
-
-  final String label;
-  final _StepState state;
-  final double spin;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = switch (state) {
-      _StepState.done => SvgPicture.asset('assets/icons/list_step_done.svg', width: 18, height: 18),
-      _StepState.now => RotationTransition(
-        turns: AlwaysStoppedAnimation(spin),
-        child: SvgPicture.asset('assets/icons/list_step_now.svg', width: 18, height: 18),
-      ),
-      _StepState.todo => SvgPicture.asset('assets/icons/list_step_todo.svg', width: 18, height: 18),
-    };
-    final style = switch (state) {
-      _StepState.done => TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.75)),
-      _StepState.now => const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
-      _StepState.todo => TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.45)),
-    };
-    return Row(
-      children: [
-        icon,
-        const SizedBox(width: 10),
-        Flexible(child: Text(label, style: style)),
-      ],
-    );
-  }
-}
-
-/// 07_05-2 AI 일정 제안: 바뀐 일정 미리보기 + 제안 카드. "제안대로 맞추기"면 true를 돌려준다.
-class ListAiSuggestionScreen extends StatefulWidget {
+/// 07_05-2 AI 일정 제안: 바뀐 일정 미리보기 + 아래 "AI 일정 맞추기" 패널.
+/// "제안대로 맞추기"면 true, "그대로 둘게요"면 false, X·뒤로는 null을 돌려준다.
+class ListAiSuggestionScreen extends StatelessWidget {
   const ListAiSuggestionScreen({super.key});
 
   @override
-  State<ListAiSuggestionScreen> createState() => _ListAiSuggestionScreenState();
-}
-
-class _ListAiSuggestionScreenState extends State<ListAiSuggestionScreen> {
-  static const _bg = Color(0xFFF4F5FA);
-
-  /// 피드백: true 도움돼요, false 별로예요.
-  bool? _feedback;
-
-  @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay.copyWith(statusBarColor: _bg),
+      value: lightScreenOverlay.copyWith(statusBarColor: AppColors.gray01),
       child: Scaffold(
-        backgroundColor: _bg,
+        backgroundColor: AppColors.gray01,
         body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 4),
-                      SizedBox(
-                        height: 44,
-                        width: double.infinity,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            const Text(
-                              '23일 (월) 바뀐 일정 미리보기',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.text),
-                            ),
-                            Positioned(
-                              left: 12,
-                              child: Semantics(
-                                button: true,
-                                label: '뒤로',
-                                excludeSemantics: true,
-                                onTap: () => Navigator.of(context).pop(),
-                                child: Pressable(
-                                  onTap: () => Navigator.of(context).pop(),
-                                  child: Container(
-                                    width: 44,
-                                    height: 44,
-                                    alignment: Alignment.center,
-                                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                                    child: SvgPicture.asset('assets/icons/list_back.svg', width: 22, height: 22),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: _Preview()),
-                      const Spacer(),
-                      const SizedBox(height: 24),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: _suggestionCard()),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _suggestionCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF005BF1), width: 1.5),
-        boxShadow: const [BoxShadow(color: Color(0x380057ED), blurRadius: 28, offset: Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          bottom: false,
+          child: Column(
             children: [
-              const ListGradientText(
-                'AI 일정 제안',
-                colors: [Color(0xFF005BF1), Color(0xFF136BFF), Color(0xFF004ED5)],
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-              ),
-              const Spacer(),
-              _FeedbackButton(
-                asset: 'assets/icons/list_thumb_up.svg',
-                label: '도움돼요',
-                selected: _feedback == true,
-                onTap: () => setState(() => _feedback = _feedback == true ? null : true),
-              ),
-              _FeedbackButton(
-                asset: 'assets/icons/list_thumb_down.svg',
-                label: '별로예요',
-                selected: _feedback == false,
-                onTap: () => setState(() => _feedback = _feedback == false ? null : false),
+              const SizedBox(height: 10),
+              const AxisBackTitleBar(title: '23일(월) 바뀐 일정 미리보기'),
+              const SizedBox(height: 14),
+              const Expanded(child: _Preview()),
+              _SuggestionPanel(
+                onClose: () => Navigator.of(context).pop(),
+                onKeep: () => Navigator.of(context).pop(false),
+                onApply: () => Navigator.of(context).pop(true),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            '점심을 30분 미루면 다 지킬 수 있어요',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.text),
-          ),
-          const SizedBox(height: 6),
-          const Text('기획안 제출이 늦어져 팀 점심 시간이 지났어요', style: TextStyle(fontSize: 14, color: Color(0xFF4E5968))),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(color: _bg, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: _CompareColumn(title: '지금 그대로면', value: '5 / 6', caption: '팀 점심을 놓쳐요', highlight: false),
-                ),
-                SvgPicture.asset('assets/icons/list_arrow.svg', width: 20, height: 20),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 12),
-                    child: _CompareColumn(title: '바꾸면', value: '6 / 6', caption: '모두 지킬 수 있어요', highlight: true),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(color: AppColors.blue01, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SvgPicture.asset('assets/icons/list_reason.svg', width: 13, height: 16),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    '고객사 미팅(PM 03:00)은 그대로예요.\n관리비 납부는 미팅 가는 지하철에서 5분이면 끝나요.',
-                    style: TextStyle(fontSize: 12, height: 1.5, color: AppColors.primary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Semantics(
-                button: true,
-                label: '그대로 둘게요',
-                excludeSemantics: true,
-                onTap: () => Navigator.of(context).pop(false),
-                child: Pressable(
-                  onTap: () => Navigator.of(context).pop(false),
-                  child: Container(
-                    width: 128,
-                    constraints: const BoxConstraints(minHeight: 52),
-                    padding: const EdgeInsets.symmetric(vertical: 13.5),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.chipBorder),
-                    ),
-                    child: const Text(
-                      '그대로 둘게요',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF4E5968)),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: BrandButton(label: '제안대로 맞추기', onPressed: () => Navigator.of(context).pop(true)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Center(
-            child: Text(
-              'AI 제안은 참고용이에요. 바꾼 뒤에도 언제든 되돌릴 수 있어요.',
-              style: TextStyle(fontSize: 12, color: Color(0xFF8B95A1)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeedbackButton extends StatelessWidget {
-  const _FeedbackButton({required this.asset, required this.label, required this.selected, required this.onTap});
-
-  final String asset;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      excludeSemantics: true,
-      onTap: onTap,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: SizedBox.square(
-          dimension: 32,
-          child: SvgPicture.asset(
-            asset,
-            width: 32,
-            height: 32,
-            colorFilter: selected ? const ColorFilter.mode(AppColors.primary, BlendMode.srcIn) : null,
-          ),
         ),
       ),
     );
   }
 }
 
-class _CompareColumn extends StatelessWidget {
-  const _CompareColumn({required this.title, required this.value, required this.caption, required this.highlight});
-
-  final String title;
-  final String value;
-  final String caption;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF8B95A1)),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: highlight ? AppColors.primary : const Color(0xFF4E5968),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(caption, style: const TextStyle(fontSize: 12, color: Color(0xFF8B95A1))),
-      ],
-    );
-  }
-}
-
-/// 바뀐 일정 미리보기 카드.
+/// 바뀐 일정 미리보기(흰 바탕). 바뀐 줄은 연파랑, "지금" 표시가 끼어 있다.
 class _Preview extends StatelessWidget {
   const _Preview();
 
-  static const _muted = Color(0xFFB0B8C1);
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: Colors.white,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 16),
+        children: [
+          const _PreviewRow(n: 1, time: '08:30 AM', title: '회사 출근', past: true),
+          const _PreviewRow(
+            n: 2,
+            time: '11:00 AM',
+            title: '기획안 제출',
+            past: true,
+            trailing: AxisTag('1시간 40분 늦어짐', tone: AxisTagTone.red),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 2, 14, 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(100)),
+                child: const Text(
+                  '지금  12:50 PM',
+                  style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          const _PreviewRow(n: 3, time: '12:30 PM', newTime: '01:00 PM', title: '팀 점심', trailing: _ChangedTag()),
+          const _PreviewRow(n: 6, time: '09:30 PM', newTime: '02:35 PM', title: '관리비 납부', trailing: _ChangedTag()),
+          const _PreviewRow(n: 4, time: '03:00 PM', title: '고객사 미팅', trailing: _FixedTag()),
+          const _PreviewRow(n: 5, time: '07:30 PM', title: '러닝'),
+        ],
+      ),
+    );
+  }
+}
+
+/// 연파랑 줄 위에서도 보이도록 한 단계 진한 파란 "변경" 태그.
+class _ChangedTag extends StatelessWidget {
+  const _ChangedTag();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          _row(n: 1, badge: CubeColors.green, faded: true, time: 'AM 08:30', title: '회사 출근'),
-          _row(
-            n: 2,
-            badge: CubeColors.green,
-            faded: true,
-            time: 'AM 11:00',
-            title: '기획안 제출',
-            tag: _tag('1시간 40분 늦게 끝남', const Color(0xFFFFF4E6), const Color(0xFFE8590C)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-            child: Row(
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(color: Color(0xFFE5484D), shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  '지금 PM 12:50',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFE5484D)),
-                ),
-                const SizedBox(width: 6),
-                const Expanded(
-                  child: SizedBox(height: 1, child: ColoredBox(color: Color(0xFFE5484D))),
-                ),
-              ],
-            ),
-          ),
-          _row(
-            n: 3,
-            badge: CubeColors.green,
-            changed: true,
-            oldTime: 'PM 12:30',
-            time: 'PM 01:00',
-            title: '팀 점심',
-            tag: _tag('변경', AppColors.blue01, AppColors.primary),
-          ),
-          _row(
-            n: 6,
-            badge: CubeColors.blue,
-            changed: true,
-            oldTime: 'PM 09:00',
-            time: 'PM 02:35',
-            title: '관리비 납부',
-            tag: _tag('변경', AppColors.blue01, AppColors.primary),
-          ),
-          _row(
-            n: 4,
-            badge: const Color(0xFFE5484D),
-            time: 'PM 03:00',
-            title: '고객사 미팅',
-            tag: _tag('고정', const Color(0xFFF2F4F6), const Color(0xFF6B7684), icon: 'assets/icons/list_lock.svg'),
-          ),
-          _row(n: 5, badge: CubeColors.orange, time: 'PM 07:30', title: '러닝'),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(color: const Color(0xFFCFE0FF), borderRadius: BorderRadius.circular(4)),
+      child: const Text(
+        '변경',
+        style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.brand),
       ),
     );
   }
+}
 
-  Widget _tag(String text, Color bg, Color fg, {String? icon}) {
+class _FixedTag extends StatelessWidget {
+  const _FixedTag();
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+      decoration: BoxDecoration(color: AxisTagTone.gray.background, borderRadius: BorderRadius.circular(4)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[SvgPicture.asset(icon, width: 10, height: 10), const SizedBox(width: 3)],
+          AxisIcon(KitIcon.lock, size: 12, color: AxisTagTone.gray.foreground),
+          const SizedBox(width: 3),
           Text(
-            text,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg),
+            '고정',
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+              color: AxisTagTone.gray.foreground,
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _row({
-    required int n,
-    required Color badge,
-    required String time,
-    required String title,
-    bool faded = false,
-    bool changed = false,
-    String? oldTime,
-    Widget? tag,
-  }) {
+class _PreviewRow extends StatelessWidget {
+  const _PreviewRow({
+    required this.n,
+    required this.time,
+    required this.title,
+    this.newTime,
+    this.past = false,
+    this.trailing,
+  });
+
+  final int n;
+  final String time;
+  final String? newTime;
+  final String title;
+  final bool past;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final changed = newTime != null;
     return Container(
-      color: changed ? const Color(0xFFEAF2FF) : null,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      color: changed ? AppColors.brandSoft : null,
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          Opacity(
-            opacity: faded ? 0.4 : 1,
-            child: Container(
-              width: 20,
-              height: 20,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(color: badge, borderRadius: BorderRadius.circular(4)),
-              child: Text(
-                '$n',
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+          SizedBox(
+            width: 14,
+            child: Text(
+              '$n',
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+                color: past ? AppColors.brandSky : AppColors.brand,
               ),
             ),
           ),
           const SizedBox(width: 10),
-          if (oldTime != null) ...[
-            Text(
-              oldTime,
-              style: const TextStyle(
-                fontSize: 12,
-                color: _muted,
-                decoration: TextDecoration.lineThrough,
-                decorationColor: _muted,
-              ),
-            ),
+          SizedBox(width: 60, child: Text(time, style: AxisText.caption)),
+          if (changed) ...[
             const SizedBox(width: 4),
             Text(
-              time,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
+              newTime!,
+              style: const TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w700, color: AppColors.brand),
             ),
-          ] else
-            Text(time, style: TextStyle(fontSize: 13, color: faded ? _muted : const Color(0xFF6B7684))),
+          ],
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               title,
-              style: faded
-                  ? const TextStyle(
-                      fontSize: 14,
-                      color: _muted,
-                      decoration: TextDecoration.lineThrough,
-                      decorationColor: _muted,
-                    )
-                  : const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.text),
+              overflow: TextOverflow.ellipsis,
+              style: AxisText.rowTitle.copyWith(color: past ? AppColors.gray06 : AppColors.gray07),
             ),
           ),
-          ?tag,
+          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+        ],
+      ),
+    );
+  }
+}
+
+/// 아래 "AI 일정 맞추기" 패널: 제안 문구 + 바뀌는 일정 카드 + 그대로 둘게요 / 제안대로 맞추기.
+class _SuggestionPanel extends StatelessWidget {
+  const _SuggestionPanel({required this.onClose, required this.onKeep, required this.onApply});
+
+  final VoidCallback onClose;
+  final VoidCallback onKeep;
+  final VoidCallback onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 22, 20, (bottom > 20 ? bottom : 20) + 8),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFE3EEFF), Colors.white],
+          stops: [0, 0.18],
+        ),
+        boxShadow: [BoxShadow(color: Color(0x1F000000), offset: Offset(0, -4), blurRadius: 24)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AxisSheetHeader(title: 'AI 일정 맞추기', ai: true, onClose: onClose),
+          const SizedBox(height: 16),
+          const Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '30분',
+                  style: TextStyle(color: AppColors.brand),
+                ),
+                TextSpan(text: '만 미루면 다 지킬 수 있어요'),
+              ],
+            ),
+            style: TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w700, color: AppColors.gray09),
+          ),
+          const SizedBox(height: 4),
+          Text('기획안 제출이 늦어져 팀 점심 시간이 지났어요', style: AxisText.body.copyWith(color: AppColors.gray06)),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(color: AppColors.gray01, borderRadius: BorderRadius.circular(12)),
+            child: const Column(
+              children: [
+                _ChangeRow(n: 3, title: '팀 점심', sub: '경의선숲길', from: '12:30 PM', to: '01:00 PM'),
+                AxisDivider(),
+                _ChangeRow(n: 6, title: '관리비 납부', sub: '미팅 가는 지하철에서 5분', from: '09:30 PM', to: '02:35 PM'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          AxisSplitButton(leftLabel: '그대로 둘게요', rightLabel: '제안대로 맞추기', onLeft: onKeep, onRight: onApply),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChangeRow extends StatelessWidget {
+  const _ChangeRow({required this.n, required this.title, required this.sub, required this.from, required this.to});
+
+  final int n;
+  final String title;
+  final String sub;
+  final String from;
+  final String to;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: [
+          AxisNumberBadge(n),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AxisText.rowTitle.copyWith(color: AppColors.gray07)),
+                const SizedBox(height: 2),
+                Text(sub, style: AxisText.body.copyWith(color: AppColors.gray06)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                from,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                  color: AppColors.gray06,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: AppColors.gray06,
+                ),
+              ),
+              Text(
+                to,
+                style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w700, color: AppColors.brand),
+              ),
+            ],
+          ),
         ],
       ),
     );
