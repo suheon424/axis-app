@@ -30,6 +30,7 @@ flutter:
     - assets/images/kit/
     - assets/icons/kit/
     - assets/images/my/
+    - assets/images/event/
   fonts:
     - family: Pretendard
       fonts:

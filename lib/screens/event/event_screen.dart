@@ -1,0 +1,311 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../widgets/kit/kit.dart';
+import 'event_affirmation_screen.dart';
+import 'event_attendance_screen.dart';
+import 'event_badge_collection_screen.dart';
+import 'event_cube_screen.dart';
+import 'event_data.dart';
+import 'event_invite_screen.dart';
+import 'event_plan_king_screen.dart';
+
+/// 이벤트 종류에 맞는 상세 화면(10-1~10-6).
+Widget eventDetailScreen(EventKind kind) => switch (kind) {
+  EventKind.cube => const EventCubeScreen(),
+  EventKind.attendance => const EventAttendanceScreen(),
+  EventKind.planKing => const EventPlanKingScreen(),
+  EventKind.affirmation => const EventAffirmationScreen(),
+  EventKind.invite => const EventInviteScreen(),
+  EventKind.badgeCollection => const EventBadgeCollectionScreen(),
+};
+
+/// 배너 순서: 큐브 자랑이 맨 앞, 나머지는 목록 순서.
+const _bannerOrder = [EventKind.cube, ...eventListOrder];
+
+/// 10_이벤트(130:12688): 이벤트 탭 첫 화면.
+/// 위는 큐브처럼 돌아가는 배너(1/6), 아래는 "혜택 가득! 진행 중인 이벤트" 목록. 배너·줄을 누르면 상세로 간다.
+class EventScreen extends StatefulWidget {
+  const EventScreen({super.key});
+
+  @override
+  State<EventScreen> createState() => _EventScreenState();
+}
+
+class _EventScreenState extends State<EventScreen> {
+  /// 배너는 양옆으로 끝없이 돈다: 큰 페이지 번호에서 시작해 6으로 나눈 나머지를 쓴다.
+  static const _start = 600;
+  final _pages = PageController(viewportFraction: 292 / 390, initialPage: _start);
+  int _page = _start;
+
+  int get _index => _page % _bannerOrder.length;
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
+
+  void _open(EventKind kind) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => eventDetailScreen(kind)));
+  }
+
+  void _goTo(int page) {
+    _pages.animateToPage(page, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: lightScreenOverlay,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        bottomNavigationBar: const AxisTabBar(current: MainTab.event),
+        body: SafeArea(
+          bottom: false,
+          child: ListView(
+            padding: const EdgeInsets.only(top: 10),
+            children: [
+              const SizedBox(
+                height: 40,
+                child: Center(
+                  child: Text(
+                    '이벤트',
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1.3,
+                      letterSpacing: -0.2,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gray06,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 292,
+                child: PageView.builder(
+                  controller: _pages,
+                  onPageChanged: (p) => setState(() => _page = p),
+                  itemBuilder: (context, i) => _CubeFace(
+                    controller: _pages,
+                    index: i,
+                    child: _Banner(
+                      info: eventCatalog[_bannerOrder[i % _bannerOrder.length]]!,
+                      onTap: () => _open(_bannerOrder[i % _bannerOrder.length]),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: AxisPager(
+                  page: _index + 1,
+                  count: _bannerOrder.length,
+                  onChanged: (p) => _goTo(_page + p - 1 - _index),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const AxisSectionDivider(),
+              const SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text.rich(
+                  const TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '혜택 가득!',
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                      TextSpan(text: ' 진행 중인 이벤트'),
+                    ],
+                  ),
+                  style: AxisText.sectionTitle.copyWith(color: Colors.black),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ValueListenableBuilder(
+                valueListenable: EventStatusStore.statuses,
+                builder: (context, statuses, _) => Column(
+                  children: [
+                    for (final kind in eventListOrder)
+                      _EventRow(
+                        info: eventCatalog[kind]!,
+                        status: statuses[kind]!,
+                        last: kind == eventListOrder.last,
+                        onTap: () => _open(kind),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 옆 페이지를 큐브의 옆면처럼 안쪽 가장자리를 축으로 돌려 얇게 보이게 한다.
+class _CubeFace extends StatelessWidget {
+  const _CubeFace({required this.controller, required this.index, required this.child});
+
+  final PageController controller;
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        var page = index.toDouble();
+        if (controller.hasClients && controller.position.haveDimensions) {
+          page = controller.page ?? page;
+        } else {
+          page = controller.initialPage.toDouble();
+        }
+        final d = (index - page).clamp(-1.0, 1.0);
+        return Opacity(
+          opacity: 1 - 0.5 * d.abs(),
+          child: Transform(
+            alignment: d > 0 ? Alignment.centerLeft : Alignment.centerRight,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.0012)
+              ..rotateY(-d * math.pi * 0.46),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+/// 292×292 배너 한 면: 하늘빛 방사형 바탕 + 큰 제목(검정→파랑 그라디언트) + 설명 + 그림.
+class _Banner extends StatelessWidget {
+  const _Banner({required this.info, required this.onTap});
+
+  final EventInfo info;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = info.icon;
+    return Semantics(
+      button: true,
+      label: info.bannerTitle.replaceAll('\n', ' '),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 5)],
+            gradient: const RadialGradient(
+              center: Alignment(1, -0.55),
+              radius: 1.05,
+              colors: [Color(0xFF71C3FF), Color(0xFF71C3FF), Color(0xFFA8DAFF), Color(0xFFE0F2FF)],
+              stops: [0, 0.18, 0.59, 1],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: 10,
+                top: 9,
+                child: icon == null
+                    ? Image.asset('assets/images/event/event_gift.png', width: 135, height: 135)
+                    : Padding(padding: const EdgeInsets.all(8), child: AxisEventIcon(icon, size: 119)),
+              ),
+              Positioned(
+                left: 30,
+                right: 20,
+                bottom: 38,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: (r) =>
+                          const LinearGradient(colors: [Colors.black, AppColors.primary]).createShader(r),
+                      child: Text(
+                        info.bannerTitle,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          height: 1.2,
+                          letterSpacing: -0.52,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(info.bannerCaption, style: AxisText.caption),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 목록 줄: 40px 이벤트 아이콘 + 제목(16 SemiBold) · 남은 날(12 gray06) + 참여 상태. 아래 1px 선.
+class _EventRow extends StatelessWidget {
+  const _EventRow({required this.info, required this.status, required this.last, required this.onTap});
+
+  final EventInfo info;
+  final AxisEventStatus status;
+  final bool last;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressBuilder(
+      semanticLabel: info.listTitle,
+      onTap: onTap,
+      scale: 1,
+      builder: (context, pressed) => Container(
+        color: pressed ? AppColors.gray01 : Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            border: last ? null : const Border(bottom: BorderSide(color: AppColors.gray02)),
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: OverflowBox(maxWidth: 54, maxHeight: 54, child: AxisEventIcon(info.icon!, size: 54)),
+                ),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(info.listTitle, style: AxisText.rowTitle.copyWith(color: Colors.black)),
+                    const SizedBox(height: 2),
+                    Text(info.daysLeftLabel, style: AxisText.caption),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AxisEventStatusBadge(status: status),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
