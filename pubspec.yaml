@@ -24,6 +24,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/characters/
+    - assets/images/characters/square/
     - assets/icons/
     - assets/icons/tab/
     - assets/images/main/

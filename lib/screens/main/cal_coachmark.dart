@@ -74,6 +74,25 @@ class _CalCoachmarkOverlayState extends State<CalCoachmarkOverlay> with SingleTi
     widget.onClose(_dontShowAgain);
   }
 
+  /// 아래 바("다시 보지 않기" · "닫기")는 피그마처럼 바닥에서 34 위에 둔다. 화면이 낮아
+  /// 비춘 카드와 겹치면 카드 12 아래로 내려 붙이되 바닥에서 8은 띄운다.
+  /// "이번 달 달성률" 안내는 카드 16 아래에 두고, 그 자리가 바와 겹치면 카드 16 위로 올린다.
+  static const _barBottom = 34.0;
+  static const _barHeight = 44.0;
+  static const _calloutHeight = 23.0;
+
+  double _barBottomFor(Rect? card, Size area) {
+    if (card == null) return _barBottom;
+    return (area.height - card.bottom - 12 - _barHeight).clamp(8.0, _barBottom);
+  }
+
+  double _cardCalloutTop(Rect card, Size area) {
+    final below = card.bottom + 16;
+    final barTop = area.height - _barBottomFor(card, area) - _barHeight;
+    if (below + _calloutHeight <= barTop - 12) return below;
+    return card.top - 16 - _calloutHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -120,13 +139,13 @@ class _CalCoachmarkOverlayState extends State<CalCoachmarkOverlay> with SingleTi
                 Positioned(
                   left: 20,
                   right: 20,
-                  top: _card!.bottom + 16,
+                  top: _cardCalloutTop(_card!, area),
                   child: const _Callout(before: '이번 달 ', accent: '달성률', after: '은 여기서 확인해요'),
                 ),
               Positioned(
                 left: 20,
                 right: 20,
-                bottom: 34,
+                bottom: _barBottomFor(_card, area),
                 child: AxisCoachmarkBottomBar(
                   dontShowAgain: _dontShowAgain,
                   onDontShowAgainChanged: (v) => setState(() => _dontShowAgain = v),

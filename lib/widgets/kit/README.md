@@ -46,7 +46,7 @@ import 'package:axis_app/widgets/kit/kit.dart'; // 키트 전부 + app_theme.dar
 - 14px: `smallBookmarkOff/On smallLikeOff/On smallChevronRight chevronDownSmall`, 12px `clockSmall`, 16px `helpful`
 - 18px 마이 메뉴(검정): `menuBadge menuPost menuComment menuBookmark menuNotice menuAlarm menuSupport menuInfo`
 - 흰색 채움(→ `color`로 칠해 쓰기): `heartOn heartOff plusBold filter alarmOn alarmOff calendar clock trash bus busFilled car walk subway question checkBox shareGraph swipeRight`
-- 기타: `repeat`(#8B95A1 선) `panZoom`(40px) `homeGlyph`(집 모양) `aiSparkle`(파란 그라디언트) `checkWhite`(흰 체크 선) `lock`
+- 기타: `clockLine`(18px #8B95A1 선 시계, 장소 카드) `repeat`(#8B95A1 선) `panZoom`(40px) `homeGlyph`(집 모양) `aiSparkle`(파란 그라디언트) `checkWhite`(흰 체크 선) `lock`
 
 3D 메탈 이미지(assets/images/kit/): `medal_*.png`(210px, `AxisMedal`), `event_*.png`(120px, `AxisEventIconType`), `ai_orb.png`(600px, 빛 포함).
 캐릭터는 기존 assets/images/characters/char_01~12.png.

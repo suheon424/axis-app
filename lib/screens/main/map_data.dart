@@ -547,7 +547,7 @@ class PlaceDetailSheet extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         _InfoRow(
-          icon: KitIcon.clock,
+          icon: KitIcon.clockLine,
           main: stop.isHome ? '${stop.time} 출발' : '${stop.time} 도착',
           sub: stop.prepNote ?? '정시 도착 예정',
         ),
@@ -574,7 +574,7 @@ class _InfoRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        AxisIcon(icon, size: 20, color: AppColors.gray06),
+        AxisIcon(icon, size: 18, color: AppColors.subIcon),
         const SizedBox(width: 8),
         Text(main, style: AxisText.rowTitleMedium.copyWith(color: AppColors.gray07)),
         const SizedBox(width: 8),

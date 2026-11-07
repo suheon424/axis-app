@@ -49,6 +49,9 @@ abstract final class KitIcon {
   static const alarmOff = 'alarm_off';
   static const calendar = 'calendar';
   static const clock = 'clock';
+
+  /// 장소 카드(130:11195)의 선 시계(18px, 1.4 선).
+  static const clockLine = 'clock_line';
   static const trash = 'trash';
   static const bus = 'bus';
   static const busFilled = 'bus_filled';

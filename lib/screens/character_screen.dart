@@ -29,7 +29,7 @@ class CharacterScreen extends StatefulWidget {
   static const backgroundNames = ['노랑', '파랑', '초록', '주황', '빨강', '회색', '연회색', '검정'];
 
   static final characters = [
-    for (var i = 1; i <= 12; i++) 'assets/images/characters/char_${i.toString().padLeft(2, '0')}.png',
+    for (var i = 1; i <= 12; i++) 'assets/images/characters/square/char_${i.toString().padLeft(2, '0')}.png',
   ];
 
   @override
@@ -124,6 +124,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                       separatorBuilder: (_, _) => const SizedBox(width: 8),
                       itemBuilder: (context, i) => AxisAvatar(
                         character: i + 1,
+                        square: true,
                         selected: i == _character,
                         onTap: () => setState(() => _character = i),
                       ),
@@ -212,7 +213,7 @@ class _Preview extends StatelessWidget {
           ),
         ),
         child: Image.asset(
-          AxisAvatar.asset(character),
+          AxisAvatar.squareAsset(character),
           key: ValueKey(character),
           width: 180,
           height: 180,

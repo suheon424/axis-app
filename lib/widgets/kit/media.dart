@@ -6,7 +6,14 @@ import 'icons.dart';
 /// Avatar/Character(130:9997): 캐릭터 01~12(assets/images/characters/char_XX.png)를
 /// 회색(#EDEEF6) 굴곡 8 상자에 담는다. [selected]면 파란 2px 테두리.
 class AxisAvatar extends StatelessWidget {
-  const AxisAvatar({super.key, required this.character, this.size = 60, this.selected = false, this.onTap});
+  const AxisAvatar({
+    super.key,
+    required this.character,
+    this.size = 60,
+    this.selected = false,
+    this.onTap,
+    this.square = false,
+  });
 
   /// 1~12
   final int character;
@@ -14,7 +21,14 @@ class AxisAvatar extends StatelessWidget {
   final bool selected;
   final VoidCallback? onTap;
 
+  /// true면 피그마 원본 비율(정사각형, 캐릭터 둘레 여백 포함) 이미지를 쓴다(06 캐릭터 고르기 화면).
+  final bool square;
+
   static String asset(int character) => 'assets/images/characters/char_${character.toString().padLeft(2, '0')}.png';
+
+  /// 피그마 Character 1~12(130:9999~) 원본 그대로의 정사각형 이미지.
+  static String squareAsset(int character) =>
+      'assets/images/characters/square/char_${character.toString().padLeft(2, '0')}.png';
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +48,7 @@ class AxisAvatar extends StatelessWidget {
             borderRadius: BorderRadius.circular(8 * size / 60),
             border: selected ? Border.all(color: AppColors.brand, width: 2) : null,
           ),
-          child: Image.asset(asset(character), fit: BoxFit.cover),
+          child: Image.asset(square ? squareAsset(character) : asset(character), fit: BoxFit.cover),
         ),
       ),
     );

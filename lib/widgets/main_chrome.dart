@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -15,23 +13,35 @@ extension MainTabLabel on MainTab {
 abstract final class MainTabRouter {
   static final Map<MainTab, WidgetBuilder> builders = {};
 
-  /// 지금까지 쌓인 화면을 모두 걷어내고 [tab]의 첫 화면으로 바꾼다(전환 효과 없음).
-  static void open(BuildContext context, MainTab tab) {
+  /// 다음에 그려질 탭 바가 어느 탭에서 넘어왔는지. 새 화면의 탭 바가 한 번 읽고 지운다.
+  static MainTab? _from;
+
+  /// 지금까지 쌓인 화면을 모두 걷어내고 [tab]의 첫 화면으로 바꾼다(화면 전환 효과 없음).
+  /// [from]을 주면 새 화면의 탭 바가 [from] → [tab]으로 넘어가는 모션을 보여 준다.
+  static void open(BuildContext context, MainTab tab, {MainTab? from}) {
     final builder = builders[tab];
     if (builder == null) return;
+    _from = from;
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder<void>(pageBuilder: (c, _, _) => builder(c), transitionDuration: Duration.zero),
       (_) => false,
     );
+  }
+
+  static MainTab? _takeFrom(MainTab current) {
+    final from = _from;
+    _from = null;
+    return from == current ? null : from;
   }
 }
 
 /// 하단 탭 바(피그마 Tab Bar 130:9415 · Bottom Navigation 130:9742).
 /// 리디자인에서는 모든 화면이 흰 바: 위 1px #CCD1DD 선 + 옅은 그림자, 높이 58(+ 홈 인디케이터 영역).
 /// 선택된 탭은 검정 아이콘(파란 사선) + 12 SemiBold #181920, 나머지는 #CCD1DD 아이콘 + 12 Regular #8B95A1.
-/// 탭을 바꾸면 새로 선택된 칸이 위아래로 한 번 뒤집히듯 넘어간다(Flip Shade).
+/// 탭을 바꾸면 피그마 Smart Animate(0.46초, ease in-out)처럼 칸마다 꺼진/켜진 버튼이 위아래로 굴러간다:
+/// 새 탭은 꺼진 버튼이 위로 빠지고 켜진 버튼이 아래에서 올라오며(그림자가 걷힘), 이전 탭은 그 반대로 내려간다.
 /// [onTap]이 없으면 [MainTabRouter]에 등록된 탭 첫 화면으로 바꾸고, 아직 없는 탭은 "준비 중" 안내를 띄운다.
-class AxisTabBar extends StatelessWidget {
+class AxisTabBar extends StatefulWidget {
   const AxisTabBar({super.key, required this.current, this.onTap, this.light = true});
 
   final MainTab current;
@@ -45,11 +55,19 @@ class AxisTabBar extends StatelessWidget {
   static const height = 58.0;
 
   @override
+  State<AxisTabBar> createState() => _AxisTabBarState();
+}
+
+class _AxisTabBarState extends State<AxisTabBar> {
+  late final MainTab? _from = MainTabRouter._takeFrom(widget.current);
+
+  @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
+    final current = widget.current;
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: background,
+        color: AxisTabBar.background,
         border: Border(top: BorderSide(color: Color(0xFFCCD1DD), width: 0.5)),
         boxShadow: [BoxShadow(color: Color(0x0F000A2B), blurRadius: 10, offset: Offset(0, -2))],
       ),
@@ -62,11 +80,13 @@ class AxisTabBar extends StatelessWidget {
                 child: _TabItem(
                   tab: tab,
                   selected: tab == current,
+                  // 이 화면이 다른 탭에서 넘어왔으면 처음 그릴 때 이전 상태에서 출발한다.
+                  wasSelected: _from == null ? tab == current : tab == _from,
                   onTap: () {
-                    if (onTap != null) {
-                      onTap!(tab);
+                    if (widget.onTap != null) {
+                      widget.onTap!(tab);
                     } else if (tab != current && MainTabRouter.builders[tab] != null) {
-                      MainTabRouter.open(context, tab);
+                      MainTabRouter.open(context, tab, from: current);
                     } else if (tab != current) {
                       ScaffoldMessenger.of(context)
                         ..hideCurrentSnackBar()
@@ -82,65 +102,172 @@ class AxisTabBar extends StatelessWidget {
   }
 }
 
-class _TabItem extends StatelessWidget {
-  const _TabItem({required this.tab, required this.selected, required this.onTap});
+/// 탭 한 칸(Bottom Navigation/Item). 56 높이 칸 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
+/// 선택 정도(0~1)에 따라 60씩 굴린다. 켜진 버튼이 올라오는 동안 Flip Shade(위가 진한 그림자)와
+/// Fold Edge(윗변 1px 선)가 걷힌다.
+class _TabItem extends StatefulWidget {
+  const _TabItem({required this.tab, required this.selected, required this.wasSelected, required this.onTap});
 
   final MainTab tab;
   final bool selected;
+  final bool wasSelected;
   final VoidCallback onTap;
+
+  @override
+  State<_TabItem> createState() => _TabItemState();
+}
+
+class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin {
+  static const _duration = Duration(milliseconds: 460);
+  static const _travel = 60.0;
+
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: _duration,
+    value: widget.wasSelected ? 1 : 0,
+  );
+  late final Animation<double> _t = CurvedAnimation(parent: _c, curve: Curves.easeInOut);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.wasSelected != widget.selected) _go();
+  }
+
+  @override
+  void didUpdateWidget(_TabItem old) {
+    super.didUpdateWidget(old);
+    if (old.selected != widget.selected) _go();
+  }
+
+  void _go() => widget.selected ? _c.forward() : _c.reverse();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      selected: selected,
-      label: tab.label,
+      selected: widget.selected,
+      label: widget.tab.label,
       excludeSemantics: true,
-      onTap: onTap,
+      onTap: widget.onTap,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+        onTap: widget.onTap,
         child: SizedBox(
           height: 56,
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(end: selected ? 1 : 0),
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeOutCubic,
-            builder: (context, t, _) {
-              // 선택될 때 0→1: 가운데(0.5)에서 칸이 옆으로 누운 것처럼 보였다가 새 상태로 펼쳐진다.
-              final flip = math.sin(t * math.pi) * 0.9;
-              final on = t >= 0.5;
-              return Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.002)
-                  ..rotateX(flip * math.pi / 4),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          child: ClipRect(
+            child: AnimatedBuilder(
+              animation: _t,
+              builder: (context, _) {
+                final t = _t.value;
+                return Stack(
                   children: [
-                    SvgPicture.asset(
-                      'assets/icons/tab/${tab._icon}_light_${on ? 'on' : 'off'}.svg',
-                      width: 24,
-                      height: 24,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      tab.label,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.4,
-                        fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-                        color: on ? const Color(0xFF181920) : const Color(0xFF8B95A1),
+                    if (t < 1)
+                      Positioned.fill(
+                        top: -_travel * t,
+                        bottom: _travel * t,
+                        child: _TabFace(tab: widget.tab, on: false),
                       ),
-                    ),
+                    if (t > 0)
+                      Positioned.fill(
+                        top: _travel * (1 - t),
+                        bottom: -_travel * (1 - t),
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            const ColoredBox(color: Colors.white),
+                            _TabFace(tab: widget.tab, on: true),
+                            Opacity(opacity: 1 - t, child: const _FlipShade()),
+                          ],
+                        ),
+                      ),
                   ],
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 아이콘(24) + 라벨(12). 켜지면 검정 아이콘·SemiBold 검정 글씨.
+class _TabFace extends StatelessWidget {
+  const _TabFace({required this.tab, required this.on});
+
+  final MainTab tab;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SvgPicture.asset('assets/icons/tab/${tab._icon}_light_${on ? 'on' : 'off'}.svg', width: 24, height: 24),
+        const SizedBox(height: 6),
+        Text(
+          tab.label,
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: 12,
+            height: 1.4,
+            fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+            color: on ? const Color(0xFF181920) : const Color(0xFF8B95A1),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Flip Shade(위에서 아래로 #384A5E 30% → 0) + Fold Edge(윗변 1px, 가운데가 진한 #384A5E 18%).
+class _FlipShade extends StatelessWidget {
+  const _FlipShade();
+
+  static const _ink = Color(0xFF384A5E);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                _ink.withValues(alpha: 0.30),
+                _ink.withValues(alpha: 0.16),
+                _ink.withValues(alpha: 0.03),
+                _ink.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.18, 0.52, 1],
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            height: 1,
+            width: double.infinity,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_ink.withValues(alpha: 0), _ink.withValues(alpha: 0.18), _ink.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
