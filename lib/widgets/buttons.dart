@@ -163,7 +163,7 @@ class SecondaryButton extends StatelessWidget {
   }
 }
 
-/// Button/Text: 밑줄 글자 버튼(높이 40). 건너뛰기 같은 보조 행동에 쓴다.
+/// Button/Text(130:9211): 밑줄 없는 14 Medium #636B78 글자 버튼(높이 40). 건너뛰기 같은 보조 행동에 쓴다.
 class TextLinkButton extends StatelessWidget {
   const TextLinkButton({super.key, required this.label, required this.onPressed});
 
@@ -185,14 +185,7 @@ class TextLinkButton extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                fontWeight: FontWeight.w500,
-                color: AppColors.body,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.body,
-              ),
+              style: const TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: Color(0xFF636B78)),
             ),
           ),
         ),

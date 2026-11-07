@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../widgets/kit/kit.dart';
@@ -29,9 +31,43 @@ class AiPlannerBackground extends StatelessWidget {
   }
 }
 
-/// 08_ai온보딩: axis 로고와 "무엇이든 물어보세요 / axis가 해결해드릴게요!".
-class AiPlannerIntro extends StatelessWidget {
-  const AiPlannerIntro({super.key});
+/// 08_ai온보딩: 움직이는 axis 로고(kling_motion gif, 130:11852)와 "무엇이든 물어보세요 / axis가 해결해드릴게요!".
+/// gif는 127장 × 0.04초 = 5.08초에 한 바퀴다. 첫 장이 화면에 그려진 순간부터 한 바퀴가 끝나면 [onFinished]를 부른다.
+/// gif가 1초 안에 뜨지 않으면(느린 기기·테스트) 그때부터 센다.
+class AiPlannerIntro extends StatefulWidget {
+  const AiPlannerIntro({super.key, this.onFinished});
+
+  final VoidCallback? onFinished;
+
+  static const asset = 'assets/images/planner/ai_intro.gif';
+  static const loop = Duration(milliseconds: 5080);
+
+  @override
+  State<AiPlannerIntro> createState() => _AiPlannerIntroState();
+}
+
+class _AiPlannerIntroState extends State<AiPlannerIntro> {
+  Timer? _fallback;
+  Timer? _end;
+
+  @override
+  void initState() {
+    super.initState();
+    _fallback = Timer(const Duration(seconds: 1), _start);
+  }
+
+  void _start() {
+    _fallback?.cancel();
+    if (_end != null) return;
+    _end = Timer(AiPlannerIntro.loop, () => widget.onFinished?.call());
+  }
+
+  @override
+  void dispose() {
+    _fallback?.cancel();
+    _end?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +76,18 @@ class AiPlannerIntro extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset('assets/images/planner/ai_logo.png', width: 160, height: 145),
-          const SizedBox(height: 22),
+          Image.asset(
+            AiPlannerIntro.asset,
+            width: 160,
+            height: 145,
+            fit: BoxFit.fill,
+            gaplessPlayback: true,
+            frameBuilder: (context, child, frame, _) {
+              if (frame != null) WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+              return child;
+            },
+          ),
+          const SizedBox(height: 23),
           const Text('무엇이든 물어보세요', style: _title),
           const SizedBox(height: 7),
           ShaderMask(
@@ -82,7 +128,9 @@ class AiPlannerHome extends StatelessWidget {
             child: Column(
               children: [
                 const Spacer(flex: 5),
-                Image.asset('assets/images/planner/ai_plus.png', width: 110, height: 110),
+                // Frame 237 1(130:11818): 투명 바탕 100px 플러스(뒤에 동그란 그림자 없음).
+                Image.asset('assets/images/planner/ai_plus.png', width: 100, height: 100),
+                const SizedBox(height: 5),
                 const Text('어떤 계획을\n도와드릴까요?', textAlign: TextAlign.center, style: _title),
                 const Spacer(flex: 6),
                 Padding(

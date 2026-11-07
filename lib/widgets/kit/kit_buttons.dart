@@ -72,6 +72,7 @@ class AxisCtaButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBuilder(
       semanticLabel: label,
+      scale: 1,
       onTap: enabled ? onPressed : onDisabledPressed,
       builder: (context, pressed) {
         final body = !enabled
@@ -170,7 +171,7 @@ class AxisSplitButton extends StatelessWidget {
     final red = tone == AxisSplitTone.red;
     final h = height ?? (red ? 40.0 : AppSizes.buttonHeight);
     final r = h < 48 ? 6.4 : 8.0;
-    final leftFill = red ? AppColors.error : AppColors.disabledFill;
+    final leftFill = red ? AppColors.error : AppColors.gray03;
     final leftText = red ? Colors.white : AppColors.gray06;
     final rightFill = red ? null : (rightEnabled ? AppColors.brand : AppColors.disabledFill);
     final rightStroke = red ? AppColors.error : null;
@@ -185,11 +186,12 @@ class AxisSplitButton extends StatelessWidget {
           Expanded(
             child: PressBuilder(
               semanticLabel: leftLabel,
+              scale: 1,
               onTap: onLeft,
               builder: (_, _) => CustomPaint(
                 painter: PolygonPainter(
                   fill: leftFill,
-                  build: (s) => _half(s, left: true, r: r),
+                  build: (s) => _half(s, left: true, r: r, figma: !red),
                 ),
                 child: _label(leftLabel, style.copyWith(color: leftText), h),
               ),
@@ -198,13 +200,14 @@ class AxisSplitButton extends StatelessWidget {
           Expanded(
             child: PressBuilder(
               semanticLabel: rightLabel,
+              scale: 1,
               onTap: red || rightEnabled ? onRight : null,
               builder: (_, _) => CustomPaint(
                 painter: PolygonPainter(
                   fill: rightFill,
                   stroke: rightStroke,
                   strokeWidth: 0.8,
-                  build: (s) => _half(s, left: false, r: r),
+                  build: (s) => _half(s, left: false, r: r, figma: !red),
                 ),
                 child: _label(rightLabel, style.copyWith(color: rightText), h),
               ),
@@ -222,20 +225,23 @@ class AxisSplitButton extends StatelessWidget {
     child: Text(text, style: style, textAlign: TextAlign.center),
   );
 
-  /// 각 반쪽은 가운데 이음매 쪽이 사선(위가 오른쪽으로 기움)이고 사이에 6px 틈이 있다.
-  static Path _half(Size size, {required bool left, required double r}) {
+  /// 각 반쪽은 가운데 이음매 쪽이 사선(위가 오른쪽으로 기움, 높이 52에 가로 35.5)이고 사이에 약 8px 틈이 있다.
+  /// 이음매의 뾰족한 모서리는 4, 둔한 모서리는 5만큼 둥글다(피그마 2Primary 130:9195 SVG).
+  /// [figma]=false(red 대화상자 버튼)는 예전 모양(사선 0.6h, 틈 6, 뾰족한 이음매)을 그대로 쓴다.
+  static Path _half(Size size, {required bool left, required double r, bool figma = true}) {
     final w = size.width, h = size.height;
-    final s = h * 0.6;
-    const g = 3.0; // 반쪽마다 틈의 절반
+    final s = figma ? h * 35.5 / 52 : h * 0.6;
+    final g = figma ? 3.95 : 3.0; // 반쪽마다 틈의 절반
+    final sharp = figma ? 4.0 : 0.0, blunt = figma ? 5.0 : 0.0;
     if (left) {
       return roundedPolygon(
         [const Offset(0.4, 0.4), Offset(w + s / 2 - g, 0.4), Offset(w - s / 2 - g, h - 0.4), Offset(0.4, h - 0.4)],
-        [r, 0, 0, r],
+        [r, sharp, blunt, r],
       );
     }
     return roundedPolygon(
       [Offset(s / 2 + g, 0.4), Offset(w - 0.4, 0.4), Offset(w - 0.4, h - 0.4), Offset(-s / 2 + g, h - 0.4)],
-      [0, r, r, 0],
+      [blunt, r, r, sharp],
     );
   }
 }
@@ -264,6 +270,7 @@ class AxisSmallButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return PressBuilder(
       semanticLabel: label,
+      scale: 1,
       onTap: enabled ? onPressed : null,
       builder: (context, pressed) {
         final Color bg;

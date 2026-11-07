@@ -281,14 +281,8 @@ class _EventRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: OverflowBox(maxWidth: 54, maxHeight: 54, child: AxisEventIcon(info.icon!, size: 54)),
-                ),
-              ),
+              // Icon/Event(130:10220) 그대로 40×40. 이미지가 이미 컴포넌트 40 칸 기준으로 잘려 있다.
+              AxisEventIcon(info.icon!),
               const SizedBox(width: 15),
               Expanded(
                 child: Column(

@@ -8,14 +8,13 @@ import 'planner_widgets.dart';
 enum AiPlannerStage { intro, home, chat }
 
 /// AI 플래너 탭 첫 화면(피그마 08_ai온보딩 130:11845 · 0801_ai온보딩 130:11801 · 0802_ai온보딩 130:11820).
-/// 앱을 켜고 처음 들어오면 08 소개가 잠깐 보였다가(누르면 건너뜀) 0801로 넘어간다.
+/// 앱을 켜고 처음 들어오면 08 소개(탭 바 없음)가 gif 한 바퀴(5.08초) 동안 보였다가(누르면 건너뜀) 0801로 넘어간다.
 /// 0801에서 요청을 보내거나 예시 카드를 누르면 같은 화면에서 0802 대화로 바뀐다.
 class AiPlannerScreen extends StatefulWidget {
-  const AiPlannerScreen({super.key, this.initialStage, this.introDuration = const Duration(milliseconds: 1800)});
+  const AiPlannerScreen({super.key, this.initialStage});
 
   /// 시작 단계. null이면 앱 실행 후 처음 한 번만 소개(08)부터, 그 뒤로는 0801부터.
   final AiPlannerStage? initialStage;
-  final Duration introDuration;
 
   static bool _introSeen = false;
 
@@ -35,11 +34,6 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     super.initState();
     _stage = widget.initialStage ?? (AiPlannerScreen._introSeen ? AiPlannerStage.home : AiPlannerStage.intro);
     AiPlannerScreen._introSeen = true;
-    if (_stage == AiPlannerStage.intro) {
-      Future.delayed(widget.introDuration, () {
-        if (mounted && _stage == AiPlannerStage.intro) setState(() => _stage = AiPlannerStage.home);
-      });
-    }
     _input.addListener(() => setState(() {}));
   }
 
@@ -48,6 +42,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     _input.dispose();
     _focus.dispose();
     super.dispose();
+  }
+
+  void _endIntro() {
+    if (mounted && _stage == AiPlannerStage.intro) setState(() => _stage = AiPlannerStage.home);
   }
 
   void _back() {
@@ -95,7 +93,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       child: Scaffold(
         backgroundColor: AiPlannerBackground.bottom,
         resizeToAvoidBottomInset: true,
-        bottomNavigationBar: const AxisTabBar(current: MainTab.planner),
+        // 08 소개 동안에는 탭 바 없이 화면 전체를 쓴다.
+        bottomNavigationBar: _stage == AiPlannerStage.intro ? null : const AxisTabBar(current: MainTab.planner),
         body: AiPlannerBackground(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 450),
@@ -103,8 +102,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 ? GestureDetector(
                     key: const ValueKey('intro'),
                     behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() => _stage = AiPlannerStage.home),
-                    child: const AiPlannerIntro(),
+                    onTap: _endIntro,
+                    child: AiPlannerIntro(onFinished: _endIntro),
                   )
                 : SafeArea(key: const ValueKey('main'), bottom: false, child: _main()),
           ),

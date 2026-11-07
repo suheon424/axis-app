@@ -43,6 +43,11 @@ void main() {
 
     await tapTab('AI 플래너');
     expect(find.byType(AiPlannerScreen), findsOneWidget);
+    // 처음 들어가면 08 소개(탭 바 없음)가 뜬다. 눌러서 건너뛰면 0801과 탭 바가 나온다.
+    expect(find.byType(AxisTabBar), findsNothing);
+    await tester.tap(find.text('무엇이든 물어보세요'));
+    await _settle(tester);
+    expect(find.byType(AxisTabBar), findsOneWidget);
     await tapTab('탐색');
     expect(find.byType(CommunityScreen), findsOneWidget);
     await tapTab('이벤트');

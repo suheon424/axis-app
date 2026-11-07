@@ -389,14 +389,18 @@ class MyProfileAvatar extends StatelessWidget {
       height: size,
       clipBehavior: Clip.antiAlias,
       decoration: const BoxDecoration(color: AppColors.blue01, shape: BoxShape.circle),
-      child: Padding(
-        padding: EdgeInsets.only(top: size * 0.1),
-        child: Image.asset(
-          AxisAvatar.asset(character),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          semanticLabel: '프로필 캐릭터',
-        ),
+      // 피그마(12 · 12-1)처럼 정사각형 캐릭터를 원의 90.6% 크기로, 위에서 7.3% 내려 가운데 둔다.
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: size * 0.047,
+            top: size * 0.073,
+            width: size * 0.906,
+            height: size * 0.906,
+            child: Image.asset(AxisAvatar.squareAsset(character), fit: BoxFit.cover, semanticLabel: '프로필 캐릭터'),
+          ),
+        ],
       ),
     );
   }

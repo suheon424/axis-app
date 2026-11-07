@@ -57,8 +57,9 @@ void main() {
     await _open(tester, stage: null);
     expect(find.text('무엇이든 물어보세요'), findsOneWidget);
     expect(find.text('axis가 해결해드릴게요!'), findsOneWidget);
+    expect(find.text('AI 플래너'), findsNothing); // 08에서는 탭 바가 없다.
     await _shot(tester, 'planner_08');
-    await _settle(tester, 2000);
+    await _settle(tester, 6800);
     expect(find.text('무엇이든 물어보세요'), findsNothing);
     expect(find.text('어떤 계획을\n도와드릴까요?'), findsOneWidget);
     expect(find.text('이렇게 요청해 보세요'), findsOneWidget);
