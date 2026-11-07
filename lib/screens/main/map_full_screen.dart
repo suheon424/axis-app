@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../theme/app_theme.dart';
-import '../../widgets/buttons.dart';
+import '../../widgets/kit/kit.dart';
 import 'map_data.dart';
 
 /// 07_09-1 지도 크게 보기. 작은 지도의 확대 버튼으로 연다.
 /// 두 손가락으로 확대·이동하고, 아래 카드를 넘기면 해당 핀이 선택된다.
+/// 선택된 카드나 핀을 다시 누르면 장소 상세 시트(Place Card 1_선택시)가 열린다.
 class MapFullScreen extends StatefulWidget {
   const MapFullScreen({super.key, this.optimized = false, this.initialId});
 
@@ -17,16 +17,6 @@ class MapFullScreen extends StatefulWidget {
   @override
   State<MapFullScreen> createState() => _MapFullScreenState();
 }
-
-/// 크게 보기 지도(390×844) 위 핀 왼쪽 위 좌표.
-const _bigPins = {
-  'home': Offset(65, 185),
-  's1': Offset(312, 227),
-  's2': Offset(299, 219),
-  's3': Offset(249, 205),
-  's4': Offset(71, 542),
-  's5': Offset(118, 488),
-};
 
 class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProviderStateMixin {
   late final MapDay _plan = MapDay.of(optimized: widget.optimized);
@@ -73,9 +63,9 @@ class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProvider
     final pad = MediaQuery.paddingOf(context);
     final bottom = pad.bottom > 0 ? pad.bottom : 20.0;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay.copyWith(statusBarColor: MapColors.ground),
+      value: lightScreenOverlay.copyWith(statusBarColor: mapGround),
       child: Scaffold(
-        backgroundColor: MapColors.ground,
+        backgroundColor: mapGround,
         body: Stack(
           children: [
             Positioned.fill(
@@ -87,46 +77,28 @@ class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProvider
                   child: FittedBox(
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: 390,
-                      height: 844,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned.fill(child: SvgPicture.asset('assets/icons/map_base_big.svg')),
-                          Positioned(
-                            left: 74,
-                            top: 194,
-                            child: SvgPicture.asset('assets/icons/map_route_big.svg', width: 250, height: 359),
-                          ),
-                          Positioned.fill(
-                            child: MapPinLayer(
-                              day: _plan,
-                              pins: _bigPins,
-                              selectedId: _cards[_index].id,
-                              ringSize: 40,
-                              onTapPin: _onTapPin,
-                            ),
-                          ),
-                        ],
-                      ),
+                    child: MapCanvas(
+                      asset: 'assets/icons/map_base_big.svg',
+                      size: const Size(390, 844),
+                      pins: bigMapPins,
+                      route: _plan.route,
+                      day: _plan,
+                      routeWidth: 4,
+                      selectedId: _cards[_index].id,
+                      onTapPin: _onTapPin,
                     ),
                   ),
                 ),
               ),
             ),
-            // 상단: 뒤로 · 날짜 칩 · 접기 / 내 위치
+            // 상단: 뒤로 · 날짜 칩 · 접기
             Positioned(
               left: 20,
               right: 20,
-              top: pad.top + 8,
+              top: pad.top + 11,
               child: Row(
                 children: [
-                  MapRoundButton(
-                    label: '뒤로',
-                    onTap: () => Navigator.of(context).maybePop(),
-                    child: SvgPicture.asset('assets/icons/map_back_round.svg', width: 22, height: 22),
-                  ),
+                  AxisIconButton.back(floating: true),
                   const Spacer(),
                   _DateChip(count: _cards.length),
                   const Spacer(),
@@ -138,27 +110,19 @@ class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProvider
                 ],
               ),
             ),
+            // 하단: 내 위치 + 장소 카드
             Positioned(
               right: 20,
-              top: pad.top + 64,
+              bottom: bottom + 116 + 13,
               child: MapRoundButton(
                 label: '처음 위치로',
+                color: AppColors.brand,
                 onTap: _recenter,
-                child: SvgPicture.asset('assets/icons/map_locate.svg', width: 22, height: 22),
-              ),
-            ),
-            // 하단: 페이지 표시 + 장소 카드
-            Positioned(
-              left: 26,
-              bottom: bottom + 113 + 10,
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 22),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: const Color(0xBF1F2126), borderRadius: BorderRadius.circular(100)),
-                child: Text(
-                  '${_index + 1} / ${_cards.length}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+                child: SvgPicture.asset(
+                  'assets/icons/map_locate.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                 ),
               ),
             ),
@@ -166,7 +130,7 @@ class _MapFullScreenState extends State<MapFullScreen> with SingleTickerProvider
               left: 20,
               right: 0,
               bottom: bottom,
-              height: 113,
+              height: 116,
               child: PageView.builder(
                 controller: _pages,
                 padEnds: false,
@@ -197,27 +161,26 @@ class _DateChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const style = TextStyle(fontSize: 18, height: 1.3, fontWeight: FontWeight.w600, color: AppColors.gray07);
     return Container(
       constraints: const BoxConstraints(minHeight: 44),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(100),
         boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 14, offset: Offset(0, 4))],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            '11월 23일 (월)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: MapColors.textStrong),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '일정 $count건',
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.primary),
-          ),
-        ],
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: '23일(월)  '),
+            TextSpan(
+              text: '일정 $count건',
+              style: style.copyWith(color: AppColors.brand),
+            ),
+          ],
+        ),
+        style: style,
       ),
     );
   }
@@ -242,37 +205,35 @@ class _PlaceCard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: selected ? AppColors.primary : Colors.white, width: 1.5),
-            boxShadow: const [BoxShadow(color: Color(0x29000000), blurRadius: 14, offset: Offset(0, 4))],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: selected ? AppColors.brand : Colors.white, width: 1.5),
+            boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 14, offset: Offset(0, 4))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  MapBadge(stop: stop, size: 20, fontSize: 12, bold: true),
+                  AxisNumberBadge(stop.number!),
                   const SizedBox(width: 8),
-                  Text(
-                    stop.time ?? '',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: MapColors.textSub),
-                  ),
+                  Text(stop.time ?? '', style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.gray06)),
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
                       stop.title,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: MapColors.textStrong),
+                      style: AxisText.rowTitle.copyWith(fontWeight: FontWeight.w700, color: AppColors.gray07),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 '${stop.place} · ${stop.address}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, color: AppColors.body),
+                style: AxisText.caption,
               ),
               const Spacer(),
               Row(
@@ -282,50 +243,19 @@ class _PlaceCard extends StatelessWidget {
                       stop.cardMove ?? '',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primary),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.4,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.brand,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _DirectionsButton(place: stop.place),
+                  AxisDirectionsButton(onPressed: () => showAxisToast(context, '${stop.place}까지 길찾기를 시작해요.')),
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DirectionsButton extends StatelessWidget {
-  const _DirectionsButton({required this.place});
-
-  final String place;
-
-  @override
-  Widget build(BuildContext context) {
-    void go() {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('$place까지 길찾기를 시작해요.')));
-    }
-
-    return Semantics(
-      button: true,
-      label: '길찾기',
-      excludeSemantics: true,
-      onTap: go,
-      child: Pressable(
-        onTap: go,
-        scale: 0.94,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 32),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6.5),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(8)),
-          child: const Text(
-            '길찾기',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
           ),
         ),
       ),
