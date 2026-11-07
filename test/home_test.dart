@@ -53,7 +53,7 @@ void main() {
     expect(find.text('반복 안 함'), findsOneWidget);
 
     // 제목 없이 누르면 그대로.
-    await tester.tap(find.text('일정 추가하기'));
+    await tester.tap(find.text('저장하기'));
     await tester.pumpAndSettle();
     expect(find.byType(AddScheduleScreen), findsOneWidget);
 
@@ -71,7 +71,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, '팀 회의');
     await tester.pumpAndSettle();
-    await tester.tap(find.text('일정 추가하기'));
+    await tester.tap(find.text('저장하기'));
     await tester.pumpAndSettle();
     expect(find.byType(AddScheduleScreen), findsNothing);
     expect(find.text('"팀 회의" 일정을 추가했어요.'), findsOneWidget);
