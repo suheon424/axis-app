@@ -63,7 +63,7 @@ void main() {
     expect(find.text('무엇이든 물어보세요'), findsNothing);
     expect(find.text('어떤 계획을\n도와드릴까요?'), findsOneWidget);
     expect(find.text('이렇게 요청해 보세요'), findsOneWidget);
-    expect(find.text('AI 플래너'), findsOneWidget);
+    expect(find.text('AI 플래너'), findsNothing); // 0801 · 0802도 탭 바가 없다.
     await _shot(tester, 'planner_0801');
 
     // 두 번째부터는 바로 0801.

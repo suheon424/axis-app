@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
       value: darkScreenOverlay.copyWith(statusBarColor: _headerColor),
       child: Scaffold(
         backgroundColor: Colors.black,
-        bottomNavigationBar: const AxisTabBar(current: MainTab.home),
+        bottomNavigationBar: const AxisTabBar(current: MainTab.home, light: false),
         body: Stack(
           children: [
             Positioned.fill(child: HomeBackground(top: top)),

@@ -4,8 +4,7 @@ import 'package:axis_app/screens/event/event_screen.dart';
 import 'package:axis_app/screens/home_screen.dart';
 import 'package:axis_app/screens/my/my_page_screen.dart';
 import 'package:axis_app/screens/planner/ai_planner_screen.dart';
-import 'package:axis_app/theme/app_theme.dart';
-import 'package:axis_app/widgets/main_chrome.dart';
+import 'package:axis_app/widgets/kit/kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,11 +42,14 @@ void main() {
 
     await tapTab('AI 플래너');
     expect(find.byType(AiPlannerScreen), findsOneWidget);
-    // 처음 들어가면 08 소개(탭 바 없음)가 뜬다. 눌러서 건너뛰면 0801과 탭 바가 나온다.
+    // AI 플래너(08 · 0801 · 0802)에는 탭 바가 없다. 소개를 눌러 건너뛰고 뒤로 가면 홈으로 돌아온다.
     expect(find.byType(AxisTabBar), findsNothing);
     await tester.tap(find.text('무엇이든 물어보세요'));
     await _settle(tester);
-    expect(find.byType(AxisTabBar), findsOneWidget);
+    expect(find.byType(AxisTabBar), findsNothing);
+    await tester.tap(find.byType(AxisIconButton).first);
+    await _settle(tester);
+    expect(find.byType(HomeScreen), findsOneWidget);
     await tapTab('탐색');
     expect(find.byType(CommunityScreen), findsOneWidget);
     await tapTab('이벤트');

@@ -8,7 +8,7 @@ import 'planner_widgets.dart';
 enum AiPlannerStage { intro, home, chat }
 
 /// AI 플래너 탭 첫 화면(피그마 08_ai온보딩 130:11845 · 0801_ai온보딩 130:11801 · 0802_ai온보딩 130:11820).
-/// 앱을 켜고 처음 들어오면 08 소개(탭 바 없음)가 gif 한 바퀴(5.08초) 동안 보였다가(누르면 건너뜀) 0801로 넘어간다.
+/// 탭 바 없이 화면 전체를 쓴다. 앱을 켜고 처음 들어오면 08 소개가 gif 한 바퀴(5.08초) 동안 보였다가(누르면 건너뜀) 0801로 넘어간다.
 /// 0801에서 요청을 보내거나 예시 카드를 누르면 같은 화면에서 0802 대화로 바뀐다.
 class AiPlannerScreen extends StatefulWidget {
   const AiPlannerScreen({super.key, this.initialStage});
@@ -83,7 +83,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   void _answer(AiChatMessage m, bool agreed) {
     setState(() => m.answer = agreed);
-    showAxisToast(context, agreed ? '오늘 일정표를 수정했어요' : '제안을 취소했어요', bottom: 82 + 72);
+    showAxisToast(context, agreed ? '오늘 일정표를 수정했어요' : '제안을 취소했어요', bottom: 90);
   }
 
   @override
@@ -93,8 +93,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       child: Scaffold(
         backgroundColor: AiPlannerBackground.bottom,
         resizeToAvoidBottomInset: true,
-        // 08 소개 동안에는 탭 바 없이 화면 전체를 쓴다.
-        bottomNavigationBar: _stage == AiPlannerStage.intro ? null : const AxisTabBar(current: MainTab.planner),
+        // 피그마 08 · 0801 · 0802에는 탭 바가 없다(위 뒤로 버튼으로 나간다).
         body: AiPlannerBackground(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 450),
@@ -105,7 +104,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     onTap: _endIntro,
                     child: AiPlannerIntro(onFinished: _endIntro),
                   )
-                : SafeArea(key: const ValueKey('main'), bottom: false, child: _main()),
+                : SafeArea(key: const ValueKey('main'), child: _main()),
           ),
         ),
       ),
@@ -135,7 +134,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
           child: AiPromptField(controller: _input, focusNode: _focus, onSend: _send),
         ),
       ],

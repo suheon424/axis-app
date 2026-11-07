@@ -36,7 +36,7 @@ abstract final class MainTabRouter {
 }
 
 /// 하단 탭 바(피그마 Tab Bar 130:9415 · Bottom Navigation 130:9742).
-/// 리디자인에서는 모든 화면이 흰 바: 위 1px #CCD1DD 선 + 옅은 그림자, 높이 58(+ 홈 인디케이터 영역).
+/// 기본은 흰 바(위 1px #CCD1DD 선 + 옅은 그림자, 높이 58 + 홈 인디케이터 영역). 07_01 홈은 [light]=false로 블랙모드 바.
 /// 선택된 탭은 검정 아이콘(파란 사선) + 12 SemiBold #181920, 나머지는 #CCD1DD 아이콘 + 12 Regular #8B95A1.
 /// 탭을 바꾸면 피그마 Smart Animate(0.46초, ease in-out)처럼 칸마다 꺼진/켜진 버튼이 위아래로 굴러간다:
 /// 새 탭은 꺼진 버튼이 위로 빠지고 켜진 버튼이 아래에서 올라오며(그림자가 걷힘), 이전 탭은 그 반대로 내려간다.
@@ -47,11 +47,13 @@ class AxisTabBar extends StatefulWidget {
   final MainTab current;
   final ValueChanged<MainTab>? onTap;
 
-  /// 예전 어두운 바와의 호환용. 리디자인에서는 값과 상관없이 항상 흰 바로 그린다.
+  /// true면 흰 바, false면 블랙모드 바(07_01 홈_목록 · 홈_달성률: #121212 바탕, 위 1px #1F2027 선,
+  /// 켜진 탭은 흰 아이콘·흰 SemiBold 글씨, 꺼진 탭은 #494949).
   final bool light;
 
   static const background = Colors.white;
   static const lightBackground = Colors.white;
+  static const darkBackground = Color(0xFF121212);
   static const height = 58.0;
 
   @override
@@ -65,12 +67,19 @@ class _AxisTabBarState extends State<AxisTabBar> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final current = widget.current;
+    final light = widget.light;
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AxisTabBar.background,
-        border: Border(top: BorderSide(color: Color(0xFFCCD1DD), width: 0.5)),
-        boxShadow: [BoxShadow(color: Color(0x0F000A2B), blurRadius: 10, offset: Offset(0, -2))],
-      ),
+      decoration: light
+          ? const BoxDecoration(
+              color: AxisTabBar.background,
+              border: Border(top: BorderSide(color: Color(0xFFCCD1DD), width: 0.5)),
+              boxShadow: [BoxShadow(color: Color(0x0F000A2B), blurRadius: 10, offset: Offset(0, -2))],
+            )
+          : const BoxDecoration(
+              color: AxisTabBar.darkBackground,
+              border: Border(top: BorderSide(color: Color(0xFF1F2027))),
+              boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 10, offset: Offset(0, -2))],
+            ),
       child: Padding(
         padding: EdgeInsets.only(top: 2, bottom: bottom > 0 ? bottom : 8),
         child: Row(
@@ -79,6 +88,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
               Expanded(
                 child: _TabItem(
                   tab: tab,
+                  light: light,
                   selected: tab == current,
                   // 이 화면이 다른 탭에서 넘어왔으면 처음 그릴 때 이전 상태에서 출발한다.
                   wasSelected: _from == null ? tab == current : tab == _from,
@@ -106,9 +116,16 @@ class _AxisTabBarState extends State<AxisTabBar> {
 /// 선택 정도(0~1)에 따라 60씩 굴린다. 켜진 버튼이 올라오는 동안 Flip Shade(위가 진한 그림자)와
 /// Fold Edge(윗변 1px 선)가 걷힌다.
 class _TabItem extends StatefulWidget {
-  const _TabItem({required this.tab, required this.selected, required this.wasSelected, required this.onTap});
+  const _TabItem({
+    required this.tab,
+    required this.light,
+    required this.selected,
+    required this.wasSelected,
+    required this.onTap,
+  });
 
   final MainTab tab;
+  final bool light;
   final bool selected;
   final bool wasSelected;
   final VoidCallback onTap;
@@ -172,7 +189,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
                       Positioned.fill(
                         top: -_travel * t,
                         bottom: _travel * t,
-                        child: _TabFace(tab: widget.tab, on: false),
+                        child: _TabFace(tab: widget.tab, on: false, light: widget.light),
                       ),
                     if (t > 0)
                       Positioned.fill(
@@ -181,8 +198,8 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            const ColoredBox(color: Colors.white),
-                            _TabFace(tab: widget.tab, on: true),
+                            ColoredBox(color: widget.light ? Colors.white : AxisTabBar.darkBackground),
+                            _TabFace(tab: widget.tab, on: true, light: widget.light),
                             Opacity(opacity: 1 - t, child: const _FlipShade()),
                           ],
                         ),
@@ -198,19 +215,24 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
   }
 }
 
-/// 아이콘(24) + 라벨(12). 켜지면 검정 아이콘·SemiBold 검정 글씨.
+/// 아이콘(24) + 라벨(12). 켜지면 검정 아이콘·SemiBold 검정 글씨(블랙모드는 흰 아이콘·흰 글씨).
 class _TabFace extends StatelessWidget {
-  const _TabFace({required this.tab, required this.on});
+  const _TabFace({required this.tab, required this.on, required this.light});
 
   final MainTab tab;
   final bool on;
+  final bool light;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset('assets/icons/tab/${tab._icon}_light_${on ? 'on' : 'off'}.svg', width: 24, height: 24),
+        SvgPicture.asset(
+          'assets/icons/tab/${tab._icon}${light ? '_light' : ''}_${on ? 'on' : 'off'}.svg',
+          width: 24,
+          height: 24,
+        ),
         const SizedBox(height: 6),
         Text(
           tab.label,
@@ -219,7 +241,9 @@ class _TabFace extends StatelessWidget {
             fontSize: 12,
             height: 1.4,
             fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            color: on ? const Color(0xFF181920) : const Color(0xFF8B95A1),
+            color: light
+                ? (on ? const Color(0xFF181920) : const Color(0xFF8B95A1))
+                : (on ? Colors.white : const Color(0xFF494949)),
           ),
         ),
       ],

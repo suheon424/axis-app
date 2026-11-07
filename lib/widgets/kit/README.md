@@ -53,7 +53,7 @@ import 'package:axis_app/widgets/kit/kit.dart'; // 키트 전부 + app_theme.dar
 
 ## 하단 탭 (lib/widgets/main_chrome.dart)
 
-`AxisTabBar(current*: MainTab, onTap: ValueChanged<MainTab>?, light = true)` — Tab Bar 130:9415 / Bottom Navigation 130:9742.
+`AxisTabBar(current*: MainTab, onTap: ValueChanged<MainTab>?, light = true)` — Tab Bar 130:9415 / Bottom Navigation 130:9742. `light: false`는 07_01 홈의 블랙모드 바(#121212).
 - 이제 **모든 화면에서 흰 바**(위 0.5px #CCD1DD + 옅은 그림자, 높이 58 + 홈 인디케이터). `light`는 호환용으로 남아 있고 무시된다.
 - 탭: 홈 / **AI 플래너** / 탐색 / 이벤트 / 마이 (`MainTab.home/planner/explore/event/my`, 라벨은 `tab.label`).
 - 선택: 검정 아이콘(파란 사선) + 12 SemiBold #181920 / 나머지: #CCD1DD 아이콘 + 12 Regular #8B95A1. 바뀔 때 칸이 위아래로 한 번 뒤집힘.

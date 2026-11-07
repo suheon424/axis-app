@@ -15,21 +15,27 @@ const loginFailedMessage = '이메일 또는 비밀번호가 일치하지 않아
 /// 계정 확인에 실패하면 비밀번호 칸이 오류 상태가 된다(다시 입력하면 사라진다).
 /// 성공하면 05 온보딩 · 빈값으로 이어진다.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.verify = defaultVerify});
+  const LoginScreen({super.key, this.verify = defaultVerify, this.prefill = false});
 
-  /// 계정 확인. 서버가 없어 기본값은 이메일 형식과 비밀번호 4자 이상만 본다.
+  /// true면 시연용 계정(demo@axis.app / 1234)이 미리 채워져 있어 바로 로그인을 누를 수 있다("이메일로 로그인하기").
+  final bool prefill;
+
+  static const demoEmail = 'demo@axis.app';
+  static const demoPassword = '1234';
+
+  /// 계정 확인. 서버가 없는 시연용이라 기본값은 두 칸에 아무 값이나 넣으면 통과한다.
+  /// 03 로그인 · 실패 화면은 [verify]를 바꿔(테스트) 볼 수 있다.
   final bool Function(String email, String password) verify;
 
-  static bool defaultVerify(String email, String password) =>
-      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email) && password.length >= 4;
+  static bool defaultVerify(String email, String password) => email.isNotEmpty && password.isNotEmpty;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _id = TextEditingController();
-  final _pw = TextEditingController();
+  late final _id = TextEditingController(text: widget.prefill ? LoginScreen.demoEmail : '');
+  late final _pw = TextEditingController(text: widget.prefill ? LoginScreen.demoPassword : '');
   bool _failed = false;
 
   @override

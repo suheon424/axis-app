@@ -49,13 +49,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(LoginScreen), findsNothing);
 
+    // 이메일로 로그인하기: 시연용 계정이 채워져 있어 바로 넘어간다.
     await tester.tap(find.text('이메일로 로그인하기'));
     await tester.pumpAndSettle();
     expect(find.byType(LoginScreen), findsOneWidget);
+    await tester.tap(find.text('로그인').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
   });
 
   testWidgets('로그인 실패면 비밀번호 칸에 오류가 뜨고, 고쳐서 로그인하면 05 온보딩으로 간다', (tester) async {
-    await _openLogin(tester);
+    // 시연용 기본 확인은 무엇이든 통과하므로, 실패 화면은 엄격한 확인을 넣어 본다.
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(),
+        home: LoginScreen(verify: (e, p) => p.length >= 4),
+      ),
+    );
+    await tester.pumpAndSettle();
     final fields = find.byType(TextField);
     await tester.enterText(fields.at(0), 'suhyun424@hansung.ac.kr');
     await tester.enterText(fields.at(1), '12');

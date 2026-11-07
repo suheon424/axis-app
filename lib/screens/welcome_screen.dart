@@ -48,6 +48,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
+  /// "이메일로 로그인하기": 시연용 계정이 채워진 로그인 화면(아무 값이나 넣어도 통과).
+  void _openEmailLogin() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen(prefill: true)));
+  }
+
   void _comingSoon(String provider) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -144,7 +149,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                     end: 1,
                     child: GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: _openLogin,
+                      onTap: _openEmailLogin,
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
