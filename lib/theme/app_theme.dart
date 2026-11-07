@@ -32,6 +32,98 @@ abstract final class AppColors {
   static const divider = Color(0xFFE4E7EC);
   static const checkboxBorder = Color(0xFFB8BEC8);
   static const stepperBg = Color(0xFFF4F5F8);
+
+  // 2026-11 리디자인(axis Components · Patterns) 토큰
+  static const brand = Color(0xFF004FED); // 새 디자인의 메인 파랑(버튼·선택·강조)
+  static const brandPressed = Color(0xFF003BC4); // 눌린 파란 버튼
+  static const brandCorner = Color(0xFF0041B0); // 메인 버튼 오른쪽 사선 조각
+  static const brandCornerPressed = Color(0xFF00318F);
+  static const brandSoft = Color(0xFFEAF2FF); // 연파랑 배경(참여 중 배지·추가 버튼·Blue 태그)
+  static const brandSky = Color(0xFFA0D5FF); // 현재 순서 마커의 바깥 고리
+  static const brandStep = Color(0xFF2F67F0); // 진행 단계 바·토스트 체크
+  static const disabledFill = Color(0xFFDCDFE6); // 비활성 버튼 바탕
+  static const disabledCorner = Color(0xFF9EA6B8); // 비활성 메인 버튼 사선 조각
+  static const gray01 = Color(0xFFF4F5FA); // 섹션 구분 띠·눌린 줄·빈 상태 원
+  static const subIcon = Color(0xFF8B95A1); // 꺼진 탭 글자·작은 보조 아이콘·설정 설명
+  static const segmentBg = Color(0xFFE8ECF4); // 사선 세그먼트 탭 바탕·J모드 칩
+  static const toggleOff = Color(0xFFE5E8EB);
+  static const neutralText = Color(0xFF4E5968); // 구매·도움돼요 같은 작은 테두리 버튼 글자
+  static const radioBorder = Color(0xFFB0B8C1);
+  static const toastBg = Color(0xF21F2027); // gray07 95%
+  static const toastAction = Color(0xFF7DB8FF);
+  static const tabLabelOn = Color(0xFF181920);
+  static const weekday = Color(0xFFA3A7B2); // 요일 머리글
+}
+
+/// 리디자인 공통 글자 스타일. 앱의 최소 글자 크기는 12.
+abstract final class AxisText {
+  /// 섹션 제목·시트 제목(20 Bold).
+  static const sectionTitle = TextStyle(
+    fontSize: 20,
+    height: 1.3,
+    letterSpacing: -0.2,
+    fontWeight: FontWeight.w700,
+    color: AppColors.gray07,
+  );
+
+  /// 상단 네비 가운데 제목(18 Bold gray06).
+  static const navTitle = TextStyle(
+    fontSize: 18,
+    height: 1.3,
+    letterSpacing: -0.09,
+    fontWeight: FontWeight.w700,
+    color: AppColors.gray06,
+  );
+
+  /// 날짜·카드 제목 같은 18 Bold 검정 제목.
+  static const title18 = TextStyle(
+    fontSize: 18,
+    height: 1.3,
+    letterSpacing: -0.09,
+    fontWeight: FontWeight.w700,
+    color: AppColors.gray09,
+  );
+
+  /// 목록 줄 제목(16 SemiBold).
+  static const rowTitle = TextStyle(
+    fontSize: 16,
+    height: 1.4,
+    letterSpacing: -0.32,
+    fontWeight: FontWeight.w600,
+    color: AppColors.gray07,
+  );
+
+  /// 메뉴·타임라인 줄 제목(16 Medium).
+  static const rowTitleMedium = TextStyle(
+    fontSize: 16,
+    height: 1.5,
+    letterSpacing: -0.32,
+    fontWeight: FontWeight.w500,
+    color: AppColors.gray07,
+  );
+
+  /// 본문 보조 문구(14 Regular).
+  static const body = TextStyle(fontSize: 14, height: 1.4, color: AppColors.body);
+
+  /// 보조 설명(12 Regular gray06).
+  static const caption = TextStyle(fontSize: 12, height: 1.4, color: AppColors.gray06);
+
+  /// 설정 화면 그룹 라벨(12 SemiBold gray06).
+  static const groupLabel = TextStyle(
+    fontSize: 12,
+    height: 1.4,
+    fontWeight: FontWeight.w600,
+    color: AppColors.gray06,
+  );
+
+  /// 버튼 글자(16 SemiBold).
+  static const button = TextStyle(
+    fontSize: 16,
+    height: 1.4,
+    letterSpacing: -0.32,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+  );
 }
 
 /// 디자인의 공통 수치.
