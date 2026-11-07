@@ -29,6 +29,7 @@ flutter:
     - assets/images/main/
     - assets/images/kit/
     - assets/icons/kit/
+    - assets/images/event/
   fonts:
     - family: Pretendard
       fonts:
