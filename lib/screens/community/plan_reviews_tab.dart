@@ -86,18 +86,10 @@ class _PlanReviewsTabState extends State<PlanReviewsTab> {
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: Text('조건에 맞는 후기가 없어요', style: AxisText.body),
                 ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => widget.onToast('후기를 더 불러오는 중이에요'),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    '후기 125개 더보기',
-                    style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: communityBody),
-                  ),
-                ),
+              // 🧩 axis Components의 Button/Text(130:9211).
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: TextLinkButton(label: '후기 125개 더보기', onPressed: () => widget.onToast('후기를 더 불러오는 중이에요')),
               ),
             ],
           ),

@@ -112,16 +112,12 @@ class _PlanCommentsTabState extends State<PlanCommentsTab> {
                   ),
                 ),
               ),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => widget.onToast('댓글을 더 불러오는 중이에요'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                alignment: Alignment.center,
-                child: Text(
-                  '댓글 ${(total - shown.length).clamp(0, 9999)}개 더보기',
-                  style: const TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: communityBody),
-                ),
+            // 🧩 axis Components의 Button/Text(130:9211).
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+              child: TextLinkButton(
+                label: '댓글 ${(total - shown.length).clamp(0, 9999)}개 더보기',
+                onPressed: () => widget.onToast('댓글을 더 불러오는 중이에요'),
               ),
             ),
           ],
@@ -189,13 +185,14 @@ class _NameRow extends StatelessWidget {
   }
 }
 
-class _CommentItem extends StatelessWidget {
+class _CommentItem extends StatefulWidget {
   const _CommentItem({
     required this.comment,
     required this.onLike,
     required this.onReply,
     required this.onMore,
     this.reply = false,
+    this.avatarKey,
   });
 
   final PlanComment comment;
@@ -204,16 +201,43 @@ class _CommentItem extends StatelessWidget {
   final ValueChanged<PlanComment> onMore;
   final bool reply;
 
+  /// 답글의 프로필 사진에 붙이는 키(위 댓글이 Vector 15 연결선을 여기까지 긋는다).
+  final GlobalKey? avatarKey;
+
+  @override
+  State<_CommentItem> createState() => _CommentItemState();
+}
+
+class _CommentItemState extends State<_CommentItem> {
+  final _self = GlobalKey();
+  final _firstReplyAvatar = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
-    final c = comment;
+    final item = _build(context);
+    if (widget.reply || widget.comment.replies.isEmpty) return item;
+    // Vector 15: 댓글 사진 아래에서 첫 답글 사진까지 내려와 오른쪽으로 꺾이는 2px #E5E8EB 선(굴곡 10).
+    return CustomPaint(
+      key: _self,
+      painter: _ReplyConnectorPainter(self: _self, anchor: _firstReplyAvatar),
+      child: item,
+    );
+  }
+
+  Widget _build(BuildContext context) {
+    final c = widget.comment;
+    final reply = widget.reply;
+    final onLike = widget.onLike, onReply = widget.onReply, onMore = widget.onMore;
     final likeColor = c.liked ? AppColors.brand : AppColors.gray06;
     return Padding(
       padding: EdgeInsets.only(top: reply ? 10 : 16, bottom: reply ? 4 : 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CommunityAvatar(c.user, size: reply ? 28 : 36),
+          KeyedSubtree(
+            key: widget.avatarKey,
+            child: CommunityAvatar(c.user, size: reply ? 28 : 36),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -292,8 +316,15 @@ class _CommentItem extends StatelessWidget {
                     ],
                   ],
                 ),
-                for (final r in c.replies)
-                  _CommentItem(comment: r, onLike: onLike, onReply: onReply, onMore: onMore, reply: true),
+                for (var i = 0; i < c.replies.length; i++)
+                  _CommentItem(
+                    comment: c.replies[i],
+                    onLike: onLike,
+                    onReply: onReply,
+                    onMore: onMore,
+                    reply: true,
+                    avatarKey: i == 0 ? _firstReplyAvatar : null,
+                  ),
               ],
             ),
           ),
@@ -301,4 +332,42 @@ class _CommentItem extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Vector 15(0903 댓글): 댓글 사진 가운데 아래에서 시작해 첫 답글 사진 위에서 17.5 내려온 높이까지 내려온 뒤
+/// 굴곡 10으로 꺾여 답글 사진 왼쪽 끝(+0.5)까지 가는 2px #E5E8EB 선.
+class _ReplyConnectorPainter extends CustomPainter {
+  _ReplyConnectorPainter({required this.self, required this.anchor});
+
+  final GlobalKey self;
+  final GlobalKey anchor;
+
+  static const _color = Color(0xFFE5E8EB);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final me = self.currentContext?.findRenderObject() as RenderBox?;
+    final avatar = anchor.currentContext?.findRenderObject() as RenderBox?;
+    if (me == null || avatar == null || !me.attached || !avatar.attached) return;
+    final a = avatar.localToGlobal(Offset.zero, ancestor: me);
+    const x = 18.0, top = 16.0 + 36.0, r = 10.0;
+    final y = a.dy + 17.5;
+    final endX = a.dx + 0.5;
+    if (y - r <= top) return;
+    final path = Path()
+      ..moveTo(x, top)
+      ..lineTo(x, y - r)
+      ..arcToPoint(Offset(x + r, y), radius: const Radius.circular(r), clockwise: false)
+      ..lineTo(endX, y);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = _color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ReplyConnectorPainter old) => true;
 }
