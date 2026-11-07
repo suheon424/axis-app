@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/app_theme.dart';
-import '../../widgets/main_chrome.dart';
+import '../../widgets/kit/kit.dart';
 import '../home_screen.dart';
 import 'calendar_screen.dart';
 import 'home_spline_cube.dart';
 import 'home_widgets.dart';
 
-/// 07_02 달성률. 목록/달성률 토글의 달성률 쪽. 가운데 큐브는 Spline 3D 장면([SplineCube]).
+/// 07_01 홈_달성률. 목록/달성률 토글의 달성률 쪽. 가운데 큐브는 Spline 3D 장면([SplineCube]).
 class AchievementScreen extends StatelessWidget {
   const AchievementScreen({super.key, this.nickname = ''});
 
@@ -25,78 +24,58 @@ class AchievementScreen extends StatelessWidget {
       value: darkScreenOverlay.copyWith(statusBarColor: _statusColor),
       child: Scaffold(
         backgroundColor: Colors.black,
-        body: Column(
+        bottomNavigationBar: const AxisTabBar(current: MainTab.home),
+        body: Stack(
           children: [
-            Expanded(
-              child: Stack(
+            Positioned.fill(child: HomeBackground(top: top - 95)),
+            Padding(
+              padding: EdgeInsets.only(top: top + 10),
+              child: Column(
                 children: [
-                  Positioned(
-                    top: top - 48,
-                    left: 0,
-                    right: -2,
-                    height: 849,
-                    child: const Opacity(
-                      opacity: 0.5,
-                      child: Image(image: AssetImage(homeBgPhoto), fit: BoxFit.cover),
+                  HomeTopBar(
+                    achievement: true,
+                    onToggle: (_) =>
+                        homeSwitchTo(context, HomeScreen(nickname: nickname, initialState: HomeLoadState.ready)),
+                  ),
+                  const SizedBox(height: 36),
+                  const Text(
+                    '모든 계획의 달성률을\n큐브로 확인하세요!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 22, height: 1.4, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    '면의 색은 카테고리, 맞춘 칸은 실천한 날이에요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, height: 1.4, color: Color(0xFFB0B8C1)),
+                  ),
+                  // 화면이 작으면 큐브 칸이 줄어든다.
+                  const Flexible(
+                    child: SizedBox(
+                      height: 260,
+                      child: SplineCube(
+                        imageOffset: Offset(0, -6),
+                        fingerOffset: Offset(0, 18),
+                        sceneOffset: Offset(5, -12),
+                      ),
                     ),
                   ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+                    child: _StatsCard(),
+                  ),
+                  const SizedBox(height: 12),
                   Padding(
-                    padding: EdgeInsets.only(top: top + 10),
-                    child: Column(
-                      children: [
-                        HomeTopBar(
-                          toggle: HomeSegmentToggle(
-                            achievement: true,
-                            background: const Color(0xFF454D58),
-                            onChanged: (v) {
-                              if (!v) homeSwitchTo(context, HomeScreen(nickname: nickname));
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 50),
-                        const Text(
-                          '모든 계획의 달성률을 큐브로 보여줘요.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w700, color: Colors.white),
-                        ),
-                        const Text(
-                          '면의 색은 카테고리, 맞춘 칸은 실천한 날이에요.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, height: 1.5, color: Color(0xFFB0B8C1)),
-                        ),
-                        // 피그마 07_01 홈_달성률: 설명 아래 273 높이에 큐브, 바로 밑에 맞춘 조각 카드.
-                        // 화면이 작으면 큐브 칸이 줄어든다. 남는 자리는 아래로 둔다.
-                        const Flexible(
-                          child: SizedBox(
-                            height: 273,
-                            child: SplineCube(
-                              imageOffset: Offset(0, -10.5),
-                              fingerOffset: Offset(0, 14.5),
-                              sceneOffset: Offset(5, -16.5),
-                            ),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-                          child: _StatsCard(),
-                        ),
-                        const SizedBox(height: 11),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-                          child: _NextPieceCard(
-                            onShowRemaining: () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder: (_) => const CalendarScreen()),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+                    child: _NextPieceCard(
+                      onShowRemaining: () => Navigator.of(context)
+                          .push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true))),
                     ),
                   ),
+                  const SizedBox(height: 28),
                 ],
               ),
             ),
-            const AxisTabBar(current: MainTab.home),
           ],
         ),
       ),
@@ -110,20 +89,19 @@ class _StatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 16, bottom: 18),
-      decoration: BoxDecoration(color: const Color(0x1AFFFFFF), borderRadius: BorderRadius.circular(8)),
-      child: const IntrinsicHeight(
+    return const HomeDarkCard(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: DecoratedBox(
-                decoration: BoxDecoration(border: Border(right: BorderSide(color: Color(0x80636C78)))),
-                child: _Stat(label: '맞춘 조각', value: '6/27'),
-              ),
+              child: _Stat(label: '맞춘 조각', value: '6/27'),
             ),
-            Expanded(child: _Stat(label: '연속 실천', value: '1일')),
+            VerticalDivider(width: 1, thickness: 1, color: homeTrackColor),
+            Expanded(
+              child: _Stat(label: '연속 실천', value: '1일'),
+            ),
           ],
         ),
       ),
@@ -141,14 +119,11 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, height: 16.5 / 13, letterSpacing: -0.26, color: Colors.white),
-        ),
-        const SizedBox(height: 7),
+        Text(label, style: const TextStyle(fontSize: 12, height: 1.4, color: Color(0xCCFFFFFF))),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontSize: 18, height: 16.5 / 18, fontWeight: FontWeight.w700, color: Colors.white),
+          style: const TextStyle(fontSize: 18, height: 1.4, fontWeight: FontWeight.w700, color: Colors.white),
         ),
       ],
     );
@@ -163,45 +138,51 @@ class _NextPieceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(color: const Color(0x1AFFFFFF), borderRadius: BorderRadius.circular(8)),
+    return HomeDarkCard(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       child: Column(
         children: [
           const Row(
             children: [
               Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                    children: [
-                      TextSpan(text: '다음 조각까지 '),
-                      TextSpan(text: '일정 2개', style: TextStyle(fontWeight: FontWeight.w700)),
-                    ],
-                  ),
+                child: Text(
+                  '다음 조각까지 일정 2개',
+                  style: TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600, color: Colors.white),
                 ),
               ),
               Text.rich(
                 TextSpan(
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFFC9CEDA)),
+                  style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: Color(0xFFC9CEDA)),
                   children: [
-                    TextSpan(text: '1', style: TextStyle(color: Colors.white)),
+                    TextSpan(
+                      text: '1',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     TextSpan(text: ' / 3'),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          const HomeStepBar(total: 3, done: 1, gap: 6, todoColor: Color(0x0FFFFFFF)),
-          const SizedBox(height: 18),
-          HomeDarkButton(
+          const SizedBox(height: 12),
+          const AxisStepBar(total: 3, done: 1, doneColor: AppColors.brand),
+          const SizedBox(height: 16),
+          PressBuilder(
             semanticLabel: '남은 일정 보기',
-            color: const Color(0x1FFFFFFF),
             onTap: onShowRemaining,
-            child: const Text(
-              '남은 일정 보기',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
+            builder: (context, pressed) => Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 40),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: pressed ? const Color(0x33FFFFFF) : homeTrackColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                '남은 일정 보기',
+                style: TextStyle(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
             ),
           ),
         ],

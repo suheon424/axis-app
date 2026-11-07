@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../theme/app_theme.dart';
+import '../../widgets/kit/kit.dart';
 import 'cal_data.dart';
 
-/// 캘린더 한 칸(40×40). 진행률만큼 파랗게 칠하고 오른쪽 아래에 선(계획대로·일부 조정·즉흥적으로)을 긋는다.
+/// 캘린더 한 칸(40×40, 피그마 Calendar/Day). 누르면 그날 일정, 길게 누르면 미리보기.
 class CalDayCell extends StatelessWidget {
   const CalDayCell({super.key, required this.date, this.onTap, this.onLongPressStart, this.onLongPressEnd});
 
@@ -17,14 +17,9 @@ class CalDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final record = CalData.recordFor(date);
+    final state = CalData.stateFor(date);
     final today = CalData.isToday(date);
-    final strong = record != null && record.progress >= 0.8;
-    final textColor = record == null ? AppColors.gray04 : (strong ? Colors.white : AppColors.gray09);
-    final label = record == null
-        ? '${date.month}월 ${date.day}일${today ? ', 오늘' : ''}'
-        : '${date.month}월 ${date.day}일${today ? ', 오늘' : ''}, 진행률 ${record.percent}%, ${record.mark.label}';
-
+    final label = '${date.month}월 ${date.day}일${today ? ', 오늘' : ''}, ${state.label}';
     return Semantics(
       button: true,
       label: label,
@@ -36,85 +31,10 @@ class CalDayCell extends StatelessWidget {
         onLongPressStart: onLongPressStart == null ? null : (_) => onLongPressStart!(),
         onLongPressEnd: onLongPressEnd == null ? null : (_) => onLongPressEnd!(),
         onLongPressCancel: onLongPressEnd,
-        child: SizedBox(
-          width: size,
-          height: size,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: record == null ? null : AppColors.primary.withValues(alpha: record.progress),
-              ),
-              child: Stack(
-                children: [
-                  if (record != null)
-                    Positioned.fill(
-                      child: CustomPaint(
-                        painter: CalMarkPainter(
-                          mark: record.mark,
-                          color: record.progress >= 0.6 ? const Color(0xFFA0D5FF) : AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    left: 5,
-                    top: 5,
-                    child: Text(
-                      '${date.day}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1,
-                        letterSpacing: -1,
-                        fontWeight: record == null ? FontWeight.w500 : FontWeight.w600,
-                        color: textColor,
-                      ),
-                    ),
-                  ),
-                  if (today)
-                    Positioned(
-                      left: 31,
-                      top: 5,
-                      child: Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        child: AxisCalendarDay(day: date.day, state: state),
       ),
     );
   }
-}
-
-/// 칸 오른쪽 아래 24×24 영역(중심 33,31)에 긋는 1.56px 선.
-class CalMarkPainter extends CustomPainter {
-  const CalMarkPainter({required this.mark, required this.color});
-
-  final CalMark mark;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.56
-      ..strokeCap = StrokeCap.round;
-    switch (mark) {
-      case CalMark.plan:
-        canvas.drawLine(const Offset(33, 19), const Offset(33, 43), paint);
-      case CalMark.adjust:
-        canvas.drawLine(const Offset(25, 40.5), const Offset(41, 21), paint);
-      case CalMark.free:
-        canvas.drawLine(const Offset(21, 31), const Offset(45, 31), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(CalMarkPainter old) => old.mark != mark || old.color != color;
 }
 
 /// 날짜를 길게 눌렀을 때 뜨는 말풍선(#1F2027, 굴곡 10). 아래쪽 삼각형이 칸을 가리킨다.
@@ -126,23 +46,21 @@ class CalDayPreview extends StatelessWidget {
   /// 삼각형을 가운데에서 옮길 거리(말풍선이 화면 끝에 붙어 밀렸을 때).
   final double pointerDx;
 
-  static const width = 157.0;
+  static const width = 168.0;
   static const height = 83.0; // 말풍선 75 + 삼각형 8
 
   @override
   Widget build(BuildContext context) {
     final record = CalData.recordFor(date);
-    final String line2;
+    final state = CalData.stateFor(date);
+    final line2 = state.label;
     final String line3;
-    if (CalData.isFuture(date)) {
-      line2 = '아직 다가오지 않은 날이에요';
-      line3 = '눌러서 일정을 확인해요';
-    } else if (record == null) {
-      line2 = '진행률 0% · 기록 없음';
-      line3 = '이날은 일정이 없었어요';
+    if (record == null) {
+      line3 = '등록된 일정이 없어요';
+    } else if (record.done == record.total) {
+      line3 = '일정 ${record.total}개 모두 완료';
     } else {
-      line2 = '진행률 ${record.percent}% · ${record.mark.label}';
-      line3 = record.done == record.total ? '일정 ${record.total}개 모두 완료' : '일정 ${record.total}개 중 ${record.done}개 완료';
+      line3 = '일정 ${record.total}개 중 ${record.done}개 완료';
     }
     return SizedBox(
       width: width,
@@ -210,22 +128,51 @@ class _PointerPainter extends CustomPainter {
   bool shouldRepaint(_PointerPainter old) => false;
 }
 
-/// 말풍선을 칸 위에 놓을 위치. [cell]은 칸의 영역, [bounds]는 말풍선이 들어갈 영역 너비.
+/// 말풍선을 칸 위에 놓을 위치. [cell]은 칸의 영역, [boundsWidth]는 말풍선이 들어갈 영역 너비.
 Offset calPreviewOrigin(Rect cell, double boundsWidth) {
   final wanted = cell.center.dx - CalDayPreview.width / 2;
   final left = wanted.clamp(8.0, boundsWidth - CalDayPreview.width - 8);
   return Offset(left, cell.top - 8 - CalDayPreview.height + 6);
 }
 
-/// 범례 아이콘(10×10).
-class CalLegendIcon extends StatelessWidget {
-  const CalLegendIcon(this.mark, {super.key});
+/// "이번 달, 얼마나 실천했을까요? / 계획 진척도 확인하기" 카드(흰 바탕, 굴곡 8).
+class CalProgressCard extends StatelessWidget {
+  const CalProgressCard({super.key, required this.onTap});
 
-  final CalMark mark;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final name = const ['plan', 'adjust', 'free'][mark.index];
-    return SvgPicture.asset('assets/icons/cal_legend_$name.svg', width: 10, height: 10);
+    return PressBuilder(
+      semanticLabel: '계획 진척도 확인하기',
+      onTap: onTap,
+      builder: (context, pressed) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: pressed ? AppColors.gray01 : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            SvgPicture.asset('assets/icons/cal_ic_cube.svg', width: 32, height: 37),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('이번 달, 얼마나 실천했을까요?', style: AxisText.caption.copyWith(color: AppColors.gray09)),
+                  const SizedBox(height: 1),
+                  const Text(
+                    '계획 진척도 확인하기',
+                    style: TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.brand),
+                  ),
+                ],
+              ),
+            ),
+            const AxisChevronRight(size: 24),
+          ],
+        ),
+      ),
+    );
   }
 }
