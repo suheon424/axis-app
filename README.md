@@ -1,6 +1,6 @@
 # axis 플래너 (Flutter)
 
-Figma 「클로드 개발」 파일의 화면 01~07을 Flutter(iOS · Android)로 옮긴 앱입니다.
+Figma 「클로드 개발」 파일의 화면 01~12(로그인·온보딩, 홈·캘린더·일정·지도, AI 플래너, 커뮤니티, 이벤트·뱃지, 마이)를 Flutter(iOS · Android)로 옮긴 앱입니다.
 
 ## 실행
 
@@ -15,7 +15,20 @@ flutter test           # 화면 이동 테스트
 `web/sw.js`가 한 번 받은 앱 파일을 휴대폰에 저장해 두어, 홈 화면에 추가한 앱이 두 번째부터 빨리 열립니다.
 빌드 스크립트가 배포마다 새 빌드 번호를 넣으므로 새 버전을 올리면 저장된 파일도 바뀝니다.
 
-## 화면 흐름
+## 하단 탭
+
+| 탭 | 첫 화면 | 코드 |
+| --- | --- | --- |
+| 홈 | 07_01 홈_목록 | `lib/screens/home_screen.dart` |
+| AI 플래너 | 08 → 0801 → 0802 | `lib/screens/planner/` |
+| 탐색 | 09 커뮤니티 → 0901~0903 계획 상세 | `lib/screens/community/` |
+| 이벤트 | 10 이벤트 → 10-1~10-6, 11 뱃지보관함 | `lib/screens/event/`, `lib/screens/badge/` |
+| 마이 | 12 마이페이지 → 12-1~12-11 | `lib/screens/my/` |
+
+탭 전환은 `MainTabRouter`(`lib/widgets/main_chrome.dart`)가 하고, 탭별 첫 화면은 `lib/main.dart`의 `registerMainTabs()`에서 등록합니다.
+공통 컴포넌트는 `lib/widgets/kit/`(목록은 `lib/widgets/kit/README.md`)에 있습니다.
+
+## 화면 흐름 (01~07)
 
 | Figma 프레임 | 코드 | 이동 |
 | --- | --- | --- |
