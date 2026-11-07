@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
-import '../widgets/buttons.dart';
 import '../widgets/form_widgets.dart';
+import '../widgets/kit/kit_buttons.dart';
+import '../widgets/kit/media.dart';
+import '../widgets/kit/selection.dart';
 import 'home_screen.dart';
 
-/// 06 · 프로필 캐릭터 고르기. 배경색 8가지와 캐릭터 12종 중에서 고르면 위 미리보기가 바뀐다.
+/// 06_온보딩 완료(프로필 캐릭터). 배경색 8가지와 캐릭터 12종 중에서 고르면 가운데 미리보기가 바뀐다.
+/// 시작하기·다음에 설정하기 → 07_01 홈.
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key, required this.nickname});
 
@@ -14,7 +17,7 @@ class CharacterScreen extends StatefulWidget {
 
   static const backgrounds = [
     Color(0xFFEDAA00),
-    Color(0xFF0057ED),
+    AppColors.brand,
     Color(0xFF009156),
     Color(0xFFFF6002),
     Color(0xFFE00000),
@@ -38,10 +41,8 @@ class _CharacterScreenState extends State<CharacterScreen> {
   int _character = 4;
 
   void _finish() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => HomeScreen(nickname: widget.nickname)),
-      (_) => false,
-    );
+    Navigator.of(context)
+        .pushAndRemoveUntil(MaterialPageRoute(builder: (_) => HomeScreen(nickname: widget.nickname)), (_) => false);
   }
 
   @override
@@ -59,11 +60,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 bottom: false,
                 child: Column(
                   children: [
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 10),
                     const AxisNavBar(title: '프로필 설정'),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 28, AppSizes.sidePadding, 24),
+                        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 30, AppSizes.sidePadding, 24),
                         child: Column(
                           children: [
                             const SizedBox(
@@ -80,24 +81,23 @@ class _CharacterScreenState extends State<CharacterScreen> {
                                 '액시스와 함께할\n프로필 캐릭터를 골라봐요!',
                                 style: TextStyle(
                                   fontSize: 22,
-                                  height: 1.32,
+                                  height: 1.3,
+                                  letterSpacing: -0.22,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 50),
                             _ColorPicker(selected: _color, onChanged: (i) => setState(() => _color = i)),
-                            const SizedBox(height: 30),
-                            _Preview(
-                              color: CharacterScreen.backgrounds[_color],
-                              image: CharacterScreen.characters[_character],
-                            ),
+                            const SizedBox(height: 26),
+                            _Preview(color: CharacterScreen.backgrounds[_color], character: _character + 1),
                             const SizedBox(height: 10),
                             Text(
                               '$name 님',
                               style: const TextStyle(
                                 fontSize: 20,
+                                height: 1.3,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.gray07,
                               ),
@@ -112,33 +112,31 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.only(top: 21, bottom: safeBottom > 24 ? safeBottom : 24),
+              padding: EdgeInsets.only(top: 21, bottom: safeBottom > 22 ? safeBottom : 22),
               child: Column(
                 children: [
                   SizedBox(
-                    height: 64,
+                    height: 60,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
                       itemCount: CharacterScreen.characters.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 7),
-                      itemBuilder: (context, i) => _CharacterTile(
-                        image: CharacterScreen.characters[i],
-                        index: i,
+                      separatorBuilder: (_, _) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) => AxisAvatar(
+                        character: i + 1,
                         selected: i == _character,
                         onTap: () => setState(() => _character = i),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 27),
+                  const SizedBox(height: 97),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-                    child: Column(
-                      children: [
-                        SecondaryButton(label: '다음에 설정하기', onPressed: _finish),
-                        const SizedBox(height: 10),
-                        BrandButton(label: '시작하기', onPressed: _finish),
-                      ],
+                    child: AxisSplitButton(
+                      leftLabel: '다음에 설정하기',
+                      rightLabel: '시작하기',
+                      onLeft: _finish,
+                      onRight: _finish,
                     ),
                   ),
                 ],
@@ -151,6 +149,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
   }
 }
 
+/// 흰 알약 안의 "배경색" + ColorSwatch 8개(간격 16).
 class _ColorPicker extends StatelessWidget {
   const _ColorPicker({required this.selected, required this.onChanged});
 
@@ -159,61 +158,41 @@ class _ColorPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 스와치마다 탭 여유 6이 붙어 있어 피그마 간격(16)에서 그만큼 뺀다.
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(24, 8.5, 18, 8.5),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(100)),
       child: Row(
         children: [
           const Text(
             '배경색',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.gray06),
+            style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w600, color: AppColors.gray06),
           ),
-          const SizedBox(width: 8),
-          for (var i = 0; i < CharacterScreen.backgrounds.length; i++)
-            Expanded(
-              child: Semantics(
-                button: true,
+          const SizedBox(width: 10),
+          for (var i = 0; i < CharacterScreen.backgrounds.length; i++) ...[
+            if (i > 0) const SizedBox(width: 4),
+            Semantics(
+              label: '배경색 ${CharacterScreen.backgroundNames[i]}',
+              child: AxisColorSwatch(
+                color: CharacterScreen.backgrounds[i],
                 selected: i == selected,
-                label: '배경색 ${CharacterScreen.backgroundNames[i]}',
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => onChanged(i),
-                  child: SizedBox(
-                    height: 32,
-                    child: Center(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        width: 24,
-                        height: 24,
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: i == selected ? AppColors.primary : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(shape: BoxShape.circle, color: CharacterScreen.backgrounds[i]),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                onTap: () => onChanged(i),
               ),
             ),
+          ],
         ],
       ),
     );
   }
 }
 
+/// Avatar/Profile: 180 상자(굴곡 18)에 고른 배경색 + 캐릭터.
 class _Preview extends StatelessWidget {
-  const _Preview({required this.color, required this.image});
+  const _Preview({required this.color, required this.character});
 
   final Color color;
-  final String image;
+  final int character;
 
   @override
   Widget build(BuildContext context) {
@@ -232,44 +211,12 @@ class _Preview extends StatelessWidget {
             child: child,
           ),
         ),
-        child: Align(
-          key: ValueKey(image),
-          alignment: Alignment.bottomCenter,
-          child: Image.asset(image, width: 137, fit: BoxFit.fitWidth),
-        ),
-      ),
-    );
-  }
-}
-
-class _CharacterTile extends StatelessWidget {
-  const _CharacterTile({required this.image, required this.index, required this.selected, required this.onTap});
-
-  final String image;
-  final int index;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: '캐릭터 ${index + 1}',
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: AppColors.gray02,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: selected ? AppColors.primary : Colors.transparent, width: 2.12),
-          ),
-          clipBehavior: Clip.antiAlias,
-          alignment: Alignment.bottomCenter,
-          child: Image.asset(image, width: 46, fit: BoxFit.fitWidth, excludeFromSemantics: true),
+        child: Image.asset(
+          AxisAvatar.asset(character),
+          key: ValueKey(character),
+          width: 180,
+          height: 180,
+          fit: BoxFit.cover,
         ),
       ),
     );

@@ -6,10 +6,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/buttons.dart';
+import '../widgets/kit/kit_buttons.dart';
 import 'login_screen.dart';
-import 'signup_screen.dart';
 
-/// 01 · 첫 화면(소셜 로그인 / 가입하기 / 이메일로 로그인).
+/// 01_시작 화면: 소셜 로그인 3종 + 로그인(→ 02 로그인) + 이메일로 로그인하기.
+/// 회원가입은 로그인 화면의 "회원가입"으로 들어간다.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -18,10 +19,8 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
-  late final AnimationController _intro = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1400),
-  )..forward();
+  late final AnimationController _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))
+    ..forward();
 
   @override
   void dispose() {
@@ -31,7 +30,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   /// [start]~[end] 구간(0~1)에서 아래에서 떠오르며 나타나는 애니메이션.
   Widget _reveal({required double start, required double end, required Widget child, double dy = 16}) {
-    final anim = CurvedAnimation(parent: _intro, curve: Interval(start, end, curve: Curves.easeOutCubic));
+    final anim = CurvedAnimation(
+      parent: _intro,
+      curve: Interval(start, end, curve: Curves.easeOutCubic),
+    );
     return AnimatedBuilder(
       animation: anim,
       child: child,
@@ -40,6 +42,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
         child: Transform.translate(offset: Offset(0, dy * (1 - anim.value)), child: child),
       ),
     );
+  }
+
+  void _openLogin() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
   void _comingSoon(String provider) {
@@ -59,27 +65,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
           fit: StackFit.expand,
           children: [
             Image.asset('assets/images/bg_welcome.png', fit: BoxFit.cover),
-            // 로고 영역 (프레임 상단에서 103px)
+            // 로고 영역 (프레임 상단에서 93px)
             Positioned(
-              top: 103,
+              top: 93,
               left: 0,
               right: 0,
               child: _reveal(
                 start: 0,
                 end: 0.45,
                 dy: 24,
+                // 로고 130 → 워드마크(로고 아래쪽에 21 겹침) → 27 아래 문구.
                 child: Column(
                   children: [
                     Image.asset('assets/images/logo_symbol.png', width: 130, height: 130),
                     Transform.translate(
-                      offset: const Offset(0, -8),
+                      offset: const Offset(0, -21),
                       child: Column(
                         children: [
-                          SvgPicture.asset('assets/icons/wordmark_axis.svg', width: 80, height: 29.74),
-                          const SizedBox(height: 10),
+                          SvgPicture.asset('assets/icons/wordmark_axis.svg', width: 73.6, height: 27.4),
+                          const SizedBox(height: 27),
                           const Text(
                             '흔들림 없는 일상의 중심축',
-                            style: TextStyle(fontSize: 13, height: 1.4, color: Colors.white),
+                            style: TextStyle(fontSize: 12, height: 1.4, color: Colors.white),
                           ),
                         ],
                       ),
@@ -92,7 +99,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
             Positioned(
               left: 12,
               right: 12,
-              bottom: 48 + (bottomInset > 34 ? bottomInset - 34 : 0),
+              bottom: 46 + (bottomInset > 34 ? bottomInset - 34 : 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -129,27 +136,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                   _reveal(
                     start: 0.54,
                     end: 0.89,
-                    child: BrandButton(
-                      label: '가입하기',
-                      gradient: welcomeButtonGradient,
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SignupScreen()),
-                      ),
-                    ),
+                    child: AxisCtaButton(label: '로그인', onPressed: _openLogin),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   _reveal(
                     start: 0.62,
                     end: 1,
                     child: GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      ),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _openLogin,
                       child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
-                          '이메일로 로그인 하기',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black),
+                          '이메일로 로그인하기',
+                          style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: Colors.black),
                         ),
                       ),
                     ),
@@ -176,20 +176,33 @@ class _SocialButton extends StatelessWidget {
     return Pressable(
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12.5, sigmaY: 12.5),
           child: Container(
-            height: AppSizes.buttonHeight,
+            constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight),
             width: double.infinity,
             color: Colors.black.withValues(alpha: 0.4),
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Positioned(left: 20, child: SvgPicture.asset(icon, width: 24, height: 24)),
-                Text(
-                  label,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white),
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 12),
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.5,
+                        letterSpacing: -0.32,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),

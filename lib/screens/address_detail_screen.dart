@@ -3,10 +3,11 @@ import 'package:flutter/services.dart';
 
 import '../data/address_suggestions.dart';
 import '../theme/app_theme.dart';
-import '../widgets/buttons.dart';
 import '../widgets/form_widgets.dart';
+import '../widgets/kit/icons.dart';
+import '../widgets/kit/kit_buttons.dart';
 
-/// 5-3 · 상세 주소 입력. 고른 주소를 보여 주고 동·호수를 받아 '주소, 상세' 형태로 돌려준다.
+/// 5-3 상세 주소 입력. 고른 주소를 보여 주고 동·호수를 받아 '주소, 상세' 형태로 돌려준다.
 class AddressDetailScreen extends StatefulWidget {
   const AddressDetailScreen({super.key, required this.suggestion});
 
@@ -45,34 +46,43 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
             bottom: false,
             child: Column(
               children: [
-                const SizedBox(height: 4),
                 SizedBox(
-                  height: AppSizes.navHeight,
+                  height: 50,
                   width: double.infinity,
                   child: Stack(
                     alignment: Alignment.center,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         '상세 주소 입력',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray07),
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.gray06,
+                        ),
                       ),
-                      Positioned(left: 8, child: BackArrowButton(color: AppColors.gray07)),
+                      // 아이콘은 왼쪽 20, 탭 영역 48.
+                      Positioned(
+                        left: 8,
+                        child: IconButton(
+                          tooltip: '뒤로',
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          icon: const AxisIcon(KitIcon.navBack),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 36, AppSizes.sidePadding, 24),
+                    padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 30, AppSizes.sidePadding, 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-                          decoration: BoxDecoration(
-                            color: AppColors.searchBg,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+                          decoration: BoxDecoration(color: AppColors.searchBg, borderRadius: BorderRadius.circular(8)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -80,7 +90,8 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
                                 Text(
                                   s.name,
                                   style: const TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 12,
+                                    height: 1.36,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.body,
                                   ),
@@ -92,21 +103,21 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   height: 1.4,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                   color: AppColors.gray07,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               GestureDetector(
+                                behavior: HitTestBehavior.opaque,
                                 onTap: () => Navigator.of(context).pop(),
                                 child: const Text(
                                   '주소 다시 검색',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 12,
+                                    height: 1.36,
                                     fontWeight: FontWeight.w500,
-                                    color: AppColors.primary,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: AppColors.primary,
+                                    color: AppColors.brand,
                                   ),
                                 ),
                               ),
@@ -121,10 +132,10 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => _register(),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 18),
                         const Text(
                           '동·호수 등 나머지 주소를 입력해 주세요.',
-                          style: TextStyle(fontSize: 13, color: AppColors.caption),
+                          style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.caption),
                         ),
                       ],
                     ),
@@ -135,9 +146,9 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
                     AppSizes.sidePadding,
                     0,
                     AppSizes.sidePadding,
-                    safeBottom > 24 ? safeBottom : 24,
+                    safeBottom > 28 ? safeBottom : 28,
                   ),
-                  child: BrandButton(label: '이 주소로 등록', onPressed: _register),
+                  child: AxisCtaButton(label: '완료', onPressed: _register),
                 ),
               ],
             ),

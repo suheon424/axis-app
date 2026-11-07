@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_theme.dart';
+import 'kit/icons.dart';
 
-/// 상단 네비게이션(뒤로가기 + 가운데 제목, Bold 18 gray06).
+/// Nav/Title(130:9407): 뒤로가기 + 가운데 제목(18 Bold gray06), 높이 40.
 class AxisNavBar extends StatelessWidget {
   const AxisNavBar({super.key, required this.title});
 
@@ -17,12 +18,16 @@ class AxisNavBar extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.gray06),
-          ),
+          Text(title, style: AxisText.navTitle),
           // 아이콘은 왼쪽 14에 오고, 탭 영역(48)은 그 둘레로 넓힌다.
-          const Positioned(left: 2, child: BackArrowButton()),
+          Positioned(
+            left: 2,
+            child: IconButton(
+              tooltip: '뒤로',
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const AxisIcon(KitIcon.navBack),
+            ),
+          ),
         ],
       ),
     );
@@ -49,7 +54,7 @@ class BackArrowButton extends StatelessWidget {
   }
 }
 
-/// TextField 컴포넌트의 상태별 모양.
+/// TextField(130:9234) 컴포넌트의 상태별 모양. 라벨 12 / 값 16 / 영역 44 / 도움말 12.
 /// 빈 값: 라벨을 숨기고 라벨 문구를 placeholder로 / 입력 중: 파란 라벨·2px 밑줄 /
 /// 값 있음: 회색 라벨·옅은 밑줄 / 오류: 빨간 라벨·2px 밑줄·도움말.
 class _FieldFrame extends StatelessWidget {
@@ -92,9 +97,8 @@ class _FieldFrame extends StatelessWidget {
             duration: _anim,
             style: TextStyle(
               fontFamily: 'Pretendard',
-              fontSize: 13,
-              height: 1.4,
-              letterSpacing: -0.26,
+              fontSize: 12,
+              height: 1.36,
               fontWeight: FontWeight.w500,
               color: labelColor,
             ),
@@ -107,9 +111,12 @@ class _FieldFrame extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: _anim,
-            height: 44,
+            constraints: const BoxConstraints(minHeight: 44),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: lineColor, width: lineWidth)),
+              border: Border(
+                bottom: BorderSide(color: lineColor, width: lineWidth),
+              ),
             ),
             child: Row(
               children: [
@@ -126,10 +133,7 @@ class _FieldFrame extends StatelessWidget {
               ? const SizedBox(width: double.infinity)
               : Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    message!,
-                    style: TextStyle(fontSize: 13, height: 1.5, letterSpacing: -0.26, color: messageColor),
-                  ),
+                  child: Text(message!, style: TextStyle(fontSize: 12, height: 1.4, color: messageColor)),
                 ),
         ),
       ],
@@ -138,19 +142,23 @@ class _FieldFrame extends StatelessWidget {
 }
 
 const _valueStyle = TextStyle(
-  fontSize: 17,
+  fontSize: 16,
   height: 1.5,
-  letterSpacing: -0.34,
+  letterSpacing: -0.32,
   fontWeight: FontWeight.w500,
   color: AppColors.text,
 );
 const _placeholderStyle = TextStyle(
-  fontSize: 17,
+  fontSize: 16,
   height: 1.5,
-  letterSpacing: -0.34,
-  fontWeight: FontWeight.w400,
+  letterSpacing: -0.32,
+  fontWeight: FontWeight.w500,
   color: AppColors.gray05,
 );
+
+/// 빈 칸의 밑줄(#BDC3D0)과 값이 있는 칸의 라벨(#636C78).
+const _idleLine = AppColors.gray04;
+const _filledLabel = AppColors.gray06;
 
 /// 밑줄형 입력창(TextField). 값이 있으면 오른쪽에 지우기 버튼이 생긴다.
 class AxisTextField extends StatefulWidget {
@@ -166,6 +174,7 @@ class AxisTextField extends StatefulWidget {
     this.autofocus = false,
     this.error,
     this.helper,
+    this.placeholderColor = AppColors.gray05,
   });
 
   final String label;
@@ -182,6 +191,9 @@ class AxisTextField extends StatefulWidget {
 
   /// 오류가 없을 때 아래에 보여 줄 도움말.
   final String? helper;
+
+  /// 빈 칸에 보이는 라벨 문구(placeholder) 색. 로그인 화면은 더 옅은 gray04.
+  final Color placeholderColor;
 
   @override
   State<AxisTextField> createState() => _AxisTextFieldState();
@@ -221,10 +233,10 @@ class _AxisTextFieldState extends State<AxisTextField> {
     if (error != null) {
       labelColor = lineColor = AppColors.error;
     } else if (focused) {
-      labelColor = lineColor = AppColors.primary;
+      labelColor = lineColor = AppColors.brand;
     } else {
-      labelColor = AppColors.gray06;
-      lineColor = hasValue ? AppColors.line : AppColors.gray04;
+      labelColor = _filledLabel;
+      lineColor = hasValue ? AppColors.line : _idleLine;
     }
 
     return _FieldFrame(
@@ -265,7 +277,7 @@ class _AxisTextFieldState extends State<AxisTextField> {
           border: InputBorder.none,
           contentPadding: EdgeInsets.zero,
           hintText: focused ? null : widget.label,
-          hintStyle: _placeholderStyle,
+          hintStyle: _placeholderStyle.copyWith(color: widget.placeholderColor),
         ),
       ),
     );
@@ -291,8 +303,8 @@ class AxisSelectField extends StatelessWidget {
       child: _FieldFrame(
         label: label,
         showLabel: hasValue,
-        labelColor: AppColors.primary,
-        lineColor: hasValue ? AppColors.primary : AppColors.gray04,
+        labelColor: AppColors.brand,
+        lineColor: hasValue ? AppColors.brand : _idleLine,
         lineWidth: 1,
         onTap: onTap,
         trailing: SvgPicture.asset('assets/icons/ic_chevron_down.svg', width: 18, height: 18),
@@ -314,7 +326,7 @@ class AxisSelectField extends StatelessWidget {
   }
 }
 
-/// 22px 체크박스(Checkbox/Off · Checkbox/On).
+/// Checkbox(130:9292) 22px. On: 파랑 채움 + 흰 체크 / Off: 흰 채움 + #B8BEC8 1.5 테두리.
 class AxisCheckbox extends StatelessWidget {
   const AxisCheckbox({super.key, required this.checked});
 
@@ -327,7 +339,7 @@ class AxisCheckbox extends StatelessWidget {
       width: 22,
       height: 22,
       decoration: BoxDecoration(
-        color: checked ? AppColors.primary : Colors.white,
+        color: checked ? AppColors.brand : Colors.white,
         borderRadius: BorderRadius.circular(4),
         border: checked ? null : Border.all(color: AppColors.checkboxBorder, width: 1.5),
       ),
@@ -341,7 +353,8 @@ class AxisCheckbox extends StatelessWidget {
   }
 }
 
-/// 약관 동의 한 줄(Consent). [bold]는 "전체 동의"용, [onView]가 있으면 오른쪽에 "보기"가 붙는다.
+/// Agreement(130:9346) 약관 동의 한 줄. [bold]는 "전체 동의"(16 SemiBold)용,
+/// [onView]가 있으면 오른쪽에 "보기"가 붙는다.
 class ConsentRow extends StatelessWidget {
   const ConsentRow({
     super.key,
@@ -379,8 +392,14 @@ class ConsentRow extends StatelessWidget {
                     child: Text(
                       label,
                       style: bold
-                          ? const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray07)
-                          : const TextStyle(fontSize: 14, color: AppColors.body),
+                          ? const TextStyle(
+                              fontSize: 16,
+                              height: 1.4,
+                              letterSpacing: -0.32,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.gray07,
+                            )
+                          : const TextStyle(fontSize: 14, height: 1.4, color: AppColors.body),
                     ),
                   ),
                 ],
@@ -391,17 +410,12 @@ class ConsentRow extends StatelessWidget {
         if (onView != null)
           GestureDetector(
             onTap: onView,
+            behavior: HitTestBehavior.opaque,
             child: const Padding(
-              padding: EdgeInsets.only(left: 10),
+              padding: EdgeInsets.fromLTRB(10, 4, 0, 4),
               child: Text(
                 '보기',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.caption,
-                  decoration: TextDecoration.underline,
-                  decorationColor: AppColors.caption,
-                ),
+                style: TextStyle(fontSize: 12, height: 1.36, fontWeight: FontWeight.w500, color: AppColors.caption),
               ),
             ),
           ),
@@ -410,14 +424,25 @@ class ConsentRow extends StatelessWidget {
   }
 }
 
-/// 시트 안의 사각 선택 상자(준비시간 칩, MBTI 옵션). 선택되면 연파랑 배경 + 파란 테두리.
+/// 시트 안의 사각 선택 상자(Chip, MBTI Option). 최소 높이 44·굴곡 8.
+/// 선택되면 [selectedColor] 배경 + 파란 테두리.
 class OptionBox extends StatelessWidget {
-  const OptionBox({super.key, required this.selected, required this.onTap, required this.child, this.label});
+  const OptionBox({
+    super.key,
+    required this.selected,
+    required this.onTap,
+    required this.child,
+    this.label,
+    this.selectedColor = AppColors.blue01,
+  });
 
   final bool selected;
   final VoidCallback onTap;
   final Widget child;
   final String? label;
+
+  /// 선택된 바탕색. 준비시간 칩은 brandSoft, MBTI 옵션은 blue01.
+  final Color selectedColor;
 
   @override
   Widget build(BuildContext context) {
@@ -430,12 +455,13 @@ class OptionBox extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOut,
-          height: 44,
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppColors.blue01 : Colors.white,
+            color: selected ? selectedColor : Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: selected ? AppColors.primary : AppColors.chipBorder),
+            border: Border.all(color: selected ? AppColors.brand : AppColors.chipBorder),
           ),
           child: child,
         ),

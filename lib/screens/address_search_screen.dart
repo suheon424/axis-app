@@ -5,9 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../data/address_suggestions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/buttons.dart';
+import '../widgets/kit/icons.dart';
 import 'address_detail_screen.dart';
 
-/// 5-3 · 주소 검색 화면. 검색창에 입력하면 아래에 관련 주소가 관련순으로 뜨고, 하나를 고르거나
+/// 5-3 주소 검색(빈 화면 = 검색 요령). 검색창에 입력하면 아래에 관련 주소가 관련순으로 뜨고, 하나를 고르거나
 /// 검색(키보드 완료 또는 돋보기)하면 상세 주소 입력 화면으로 넘어간다. 거기서 등록한 주소를
 /// 이전 화면으로 돌려준다.
 class AddressSearchScreen extends StatefulWidget {
@@ -47,9 +48,8 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
 
   Future<void> _openDetail(AddressSuggestion picked) async {
     FocusScope.of(context).unfocus();
-    final result = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => AddressDetailScreen(suggestion: picked)),
-    );
+    final result = await Navigator.of(context)
+        .push<String>(MaterialPageRoute(builder: (_) => AddressDetailScreen(suggestion: picked)));
     if (result != null && mounted) Navigator.of(context).pop(result);
   }
 
@@ -82,12 +82,7 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                       constraints: const BoxConstraints.tightFor(width: 40, height: 40),
                       padding: EdgeInsets.zero,
                       onPressed: () => Navigator.of(context).maybePop(),
-                      icon: SvgPicture.asset(
-                        'assets/icons/ic_arrow_left.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: const ColorFilter.mode(AppColors.icon, BlendMode.srcIn),
-                      ),
+                      icon: const AxisIcon(KitIcon.navBack),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -96,13 +91,23 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                         autofocus: true,
                         textInputAction: TextInputAction.search,
                         onSubmitted: _submit,
-                        style: const TextStyle(fontSize: 16, color: AppColors.gray07),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.gray07,
+                        ),
                         decoration: InputDecoration(
                           isDense: true,
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                           hintText: '장소, 주소 검색',
-                          hintStyle: TextStyle(fontSize: 16, color: AppColors.gray07.withValues(alpha: 0.5)),
+                          hintStyle: TextStyle(
+                            fontSize: 16,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.gray07.withValues(alpha: 0.5),
+                          ),
                         ),
                       ),
                     ),
@@ -114,7 +119,14 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                       onTap: () => _notice('음성 검색은 준비 중이에요.'),
                     ),
                     Container(width: 1, height: 19, color: AppColors.gray03),
-                    _IconTap(tooltip: '검색', asset: 'assets/icons/ic_search.svg', width: 18, height: 18, onTap: _submit),
+                    _IconTap(
+                      tooltip: '검색',
+                      asset: 'assets/icons/ic_search.svg',
+                      width: 18,
+                      height: 18,
+                      color: AppColors.brand,
+                      onTap: _submit,
+                    ),
                   ],
                 ),
               ),
@@ -127,11 +139,11 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
                   children: [
                     _QuickAction(
                       asset: 'assets/icons/ic_my_location.svg',
-                      label: '내위치',
-                      color: AppColors.primary,
+                      label: '내 위치',
+                      color: AppColors.brand,
                       onTap: () => _notice('내 위치 찾기는 위치 권한 연동 후 사용할 수 있어요.'),
                     ),
-                    const SizedBox(width: 50),
+                    const SizedBox(width: 64),
                     _QuickAction(
                       asset: 'assets/icons/ic_map.svg',
                       label: '지도에서 찾기',
@@ -221,7 +233,7 @@ TextSpan _highlight(String text, String query, TextStyle style) {
       spans.add(
         TextSpan(
           text: text.substring(start, i),
-          style: marked[start] ? const TextStyle(color: AppColors.primary) : null,
+          style: marked[start] ? const TextStyle(color: AppColors.brand) : null,
         ),
       );
       start = i;
@@ -234,11 +246,7 @@ TextSpan _highlight(String text, String query, TextStyle style) {
 class _SearchTips extends StatelessWidget {
   const _SearchTips({super.key});
 
-  static const _tips = [
-    ('도로명 + 건물번호', '예) 삼선교로16길 116'),
-    ('동/읍/면 + 번지', '예) 삼선동 2가 389'),
-    ('건물명, 아파트명', '예) 한성대학교'),
-  ];
+  static const _tips = [('도로명 + 건물번호', '예) 삼선교로16길 116'), ('동/읍/면 + 번지', '예) 삼선동 2가 389'), ('건물명, 아파트명', '예) 한성대학교')];
 
   @override
   Widget build(BuildContext context) {
@@ -247,7 +255,7 @@ class _SearchTips extends StatelessWidget {
       children: [
         const Text(
           '이렇게 검색해 보세요',
-          style: TextStyle(fontSize: 16, height: 1.2, fontWeight: FontWeight.w700, color: AppColors.gray07),
+          style: TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.gray07),
         ),
         const SizedBox(height: 16),
         Container(
@@ -260,18 +268,23 @@ class _SearchTips extends StatelessWidget {
                 if (i > 0) const SizedBox(height: 14),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 14, height: 1.2, fontWeight: FontWeight.w500, color: AppColors.gray07),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.gray07,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(example, style: const TextStyle(fontSize: 13, height: 1.2, color: AppColors.primary)),
+                Text(example, style: const TextStyle(fontSize: 12, height: 1.4, color: AppColors.brand)),
               ],
             ],
           ),
         ),
         const SizedBox(height: 16),
         const Text(
-          '집 주소는 출발 시간 계산에만 사용되며,\n다른 사람에게 공개되지 않아요.',
-          style: TextStyle(fontSize: 13, height: 1.2, color: AppColors.caption),
+          '집 주소는 출발 시간 계산에만 쓰고, 다른 사람에게 공개되지 않아요.',
+          style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.caption),
         ),
       ],
     );
@@ -303,6 +316,7 @@ class _IconTap extends StatelessWidget {
     required this.width,
     required this.height,
     required this.onTap,
+    this.color,
   });
 
   final String tooltip;
@@ -310,6 +324,7 @@ class _IconTap extends StatelessWidget {
   final double width;
   final double height;
   final VoidCallback onTap;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +335,12 @@ class _IconTap extends StatelessWidget {
         radius: 20,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: SvgPicture.asset(asset, width: width, height: height),
+          child: SvgPicture.asset(
+            asset,
+            width: width,
+            height: height,
+            colorFilter: color == null ? null : ColorFilter.mode(color!, BlendMode.srcIn),
+          ),
         ),
       ),
     );
@@ -344,9 +364,9 @@ class _QuickAction extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(asset, width: 15, height: 15),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(fontSize: 14, color: color)),
+            SvgPicture.asset(asset, width: 15, height: 15, colorFilter: ColorFilter.mode(color, BlendMode.srcIn)),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontSize: 14, height: 1.4, color: color)),
           ],
         ),
       ),

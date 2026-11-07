@@ -1,16 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import '../widgets/buttons.dart';
 import '../widgets/form_page.dart';
 import '../widgets/form_widgets.dart';
-import 'home_screen.dart';
+import '../widgets/kit/kit_buttons.dart';
+import 'profile_setup_screen.dart';
 import 'signup_screen.dart';
 
-/// 02 · 로그인(빈 값) / 03 · 로그인(입력 중 · 입력 완료).
-/// 세 프레임은 같은 화면의 상태 차이라서 하나로 구현했다. 둘 다 입력해야 로그인 버튼이 활성화된다.
+/// 로그인 실패 시 비밀번호 칸 아래에 보여 주는 문구(03 로그인 · 실패).
+const loginFailedMessage = '이메일 또는 비밀번호가 일치하지 않아요.';
+
+/// 02 로그인 · 빈값 / 03 로그인 · 입력중 · 입력완료 · 실패.
+/// 네 프레임은 같은 화면의 상태 차이라서 하나로 구현했다. 두 칸을 채워야 로그인 버튼이 활성화되고,
+/// 계정 확인에 실패하면 비밀번호 칸이 오류 상태가 된다(다시 입력하면 사라진다).
+/// 성공하면 05 온보딩 · 빈값으로 이어진다.
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.verify = defaultVerify});
+
+  /// 계정 확인. 서버가 없어 기본값은 이메일 형식과 비밀번호 4자 이상만 본다.
+  final bool Function(String email, String password) verify;
+
+  static bool defaultVerify(String email, String password) =>
+      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email) && password.length >= 4;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -19,15 +30,26 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _id = TextEditingController();
   final _pw = TextEditingController();
+  bool _failed = false;
 
   @override
   void initState() {
     super.initState();
-    _id.addListener(_refresh);
-    _pw.addListener(_refresh);
+    _id.addListener(_onEdit);
+    _pw.addListener(_onEdit);
   }
 
-  void _refresh() => setState(() {});
+  String _lastId = '';
+  String _lastPw = '';
+
+  void _onEdit() {
+    final changed = _id.text != _lastId || _pw.text != _lastPw;
+    _lastId = _id.text;
+    _lastPw = _pw.text;
+    setState(() {
+      if (changed) _failed = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -40,25 +62,34 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _submit() {
     FocusScope.of(context).unfocus();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => HomeScreen(nickname: _id.text.trim())),
-      (route) => false,
-    );
+    final email = _id.text.trim();
+    if (!widget.verify(email, _pw.text)) {
+      setState(() => _failed = true);
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileSetupScreen(nickname: email.split('@').first)));
+  }
+
+  void _comingSoon() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('비밀번호 찾기는 준비 중이에요.')));
   }
 
   @override
   Widget build(BuildContext context) {
     return FormPage(
       title: '로그인',
-      bottom: BrandButton(label: '로그인', enabled: _canSubmit, onPressed: _submit),
+      bottom: AxisCtaButton(label: '로그인', enabled: _canSubmit, onPressed: _submit),
       children: [
-        const PageHeading('axis 플래너와 함께\n계획을 완성 할 준비 되셨나요?', height: 1.34),
-        const SizedBox(height: 51),
+        const PageHeading('axis 플래너와 함께\n계획을 완성할 준비 되셨나요?'),
+        const SizedBox(height: 53),
         AxisTextField(
           label: '이메일',
           controller: _id,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
+          placeholderColor: AppColors.gray04,
         ),
         const SizedBox(height: 24),
         AxisTextField(
@@ -66,6 +97,8 @@ class _LoginScreenState extends State<LoginScreen> {
           controller: _pw,
           obscure: true,
           textInputAction: TextInputAction.done,
+          placeholderColor: AppColors.gray04,
+          error: _failed ? loginFailedMessage : null,
           onSubmitted: (_) {
             if (_canSubmit) _submit();
           },
@@ -75,18 +108,17 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _LinkText('비밀번호 찾기', onTap: () {
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(const SnackBar(content: Text('비밀번호 찾기는 준비 중이에요.')));
-              }),
+              _LinkText('비밀번호 찾기', onTap: _comingSoon),
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text('|', style: TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted)),
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('|', style: _linkStyle),
               ),
-              _LinkText('회원가입', onTap: () {
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const SignupScreen()));
-              }),
+              _LinkText(
+                '회원가입',
+                onTap: () {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const SignupScreen()));
+                },
+              ),
             ],
           ),
         ),
@@ -94,6 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+const _linkStyle = TextStyle(fontSize: 14, height: 1.4, color: AppColors.muted);
 
 class _LinkText extends StatelessWidget {
   const _LinkText(this.text, {required this.onTap});
@@ -104,8 +138,12 @@ class _LinkText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Text(text, style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.muted)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Text(text, style: _linkStyle),
+      ),
     );
   }
 }

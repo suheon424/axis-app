@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/app_theme.dart';
-import '../widgets/buttons.dart';
 import '../widgets/form_widgets.dart';
+import '../widgets/kit/kit_buttons.dart';
+import '../widgets/kit/selection.dart';
+import '../widgets/kit/sheets.dart';
 
 /// 5-1 시트의 "자주 선택하는 시간".
 const prepQuickMinutes = [20, 30, 40, 60, 90];
@@ -19,12 +20,12 @@ const mbtiAxes = [
 /// MBTI 시트에서 "잘 모르겠어요"를 눌렀을 때 돌려주는 값.
 const mbtiUnknown = '잘 모르겠어요';
 
-/// 5-1 · 평소 준비시간 시트. 10분 단위로 조절하고 고른 분(min)을 돌려준다.
+/// 5-1 준비시간 시트. 10분 단위로 조절하고 고른 분(min)을 돌려준다.
 Future<int?> showPrepTimeSheet(BuildContext context, {int? initial}) {
   return _showSheet<int>(context, (_) => _PrepTimeSheet(initial: initial ?? 40));
 }
 
-/// 5-2 · MBTI 시트. 네 글자 유형 또는 [mbtiUnknown]을 돌려준다.
+/// 5-2 MBTI 시트(선택 전 · 선택 완료). 네 글자 유형 또는 [mbtiUnknown]을 돌려준다.
 Future<String?> showMbtiSheet(BuildContext context, {String? initial}) {
   return _showSheet<String>(context, (_) => _MbtiSheet(initial: initial));
 }
@@ -44,64 +45,39 @@ Future<T?> _showSheet<T>(BuildContext context, WidgetBuilder builder) {
   );
 }
 
-/// 개선안 ③의 공통 시트 틀: 높이 495 고정, 위 굴곡 16, 제목 + 닫기 + 설명, 아래 버튼.
+/// 5-1·5-2 시트의 공통 틀: Sheet/Header(제목 + 닫기) 바로 아래 설명 14,
+/// 16 띄우고 본문, [footerGap](20 이상) 띄우고 아래 버튼. 높이는 내용에 맞춘다.
 class _SheetFrame extends StatelessWidget {
-  const _SheetFrame({required this.title, required this.description, required this.body, required this.footer});
+  const _SheetFrame({
+    required this.title,
+    required this.description,
+    required this.body,
+    required this.footer,
+    this.footerGap = 32,
+  });
 
   final String title;
   final String description;
   final Widget body;
   final Widget footer;
+  final double footerGap;
 
   @override
   Widget build(BuildContext context) {
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
-    return Container(
-      height: 495 + safeBottom,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        boxShadow: [BoxShadow(color: Color(0x1F000000), offset: Offset(0, -4), blurRadius: 24)],
+    return AxisSheetFrame(
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AxisSheetHeader(title: title),
+          Text(description, style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.body)),
+        ],
       ),
-      padding: EdgeInsets.fromLTRB(20, 22, 20, 28 + safeBottom),
+      footer: footer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            height: 32,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 20, height: 1.4, fontWeight: FontWeight.w700, color: AppColors.gray07),
-                  ),
-                ),
-                // 아이콘 24, 보이는 영역 32. 탭 영역은 44로 넓힌다.
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: OverflowBox(
-                    maxWidth: 44,
-                    maxHeight: 44,
-                    child: IconButton(
-                      tooltip: '닫기',
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints.tightFor(width: 44, height: 44),
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: SvgPicture.asset('assets/icons/ic_close.svg', width: 24, height: 24),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(description, style: const TextStyle(fontSize: 14, color: AppColors.body)),
-          const SizedBox(height: 24),
           body,
-          const Spacer(),
-          footer,
+          SizedBox(height: footerGap - 20),
         ],
       ),
     );
@@ -130,59 +106,22 @@ class _PrepTimeSheetState extends State<_PrepTimeSheet> {
   Widget build(BuildContext context) {
     return _SheetFrame(
       title: '평소 준비시간',
-      description: '준비 시간에 맞춰서 이동 동선을 제안 및 추천해드려요.',
+      description: '준비 시간을 반영해 출발 시간을 알려 드려요.',
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 76,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(color: AppColors.stepperBg, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              children: [
-                _StepButton(
-                  icon: 'assets/icons/ic_minus.svg',
-                  tooltip: '10분 줄이기',
-                  onTap: _minutes > _min ? () => _change(-_step) : null,
-                ),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 160),
-                        transitionBuilder: (child, anim) => FadeTransition(
-                          opacity: anim,
-                          child: ScaleTransition(scale: Tween(begin: 0.85, end: 1.0).animate(anim), child: child),
-                        ),
-                        child: Text(
-                          '$_minutes분',
-                          key: ValueKey(_minutes),
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.gray07),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '10분 단위로 조절',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.caption),
-                      ),
-                    ],
-                  ),
-                ),
-                _StepButton(
-                  icon: 'assets/icons/ic_plus.svg',
-                  tooltip: '10분 늘리기',
-                  onTap: _minutes < _max ? () => _change(_step) : null,
-                ),
-              ],
-            ),
+          AxisStepper(
+            value: '$_minutes분',
+            caption: '10분 단위로 조절',
+            onMinus: _minutes > _min ? () => _change(-_step) : null,
+            onPlus: _minutes < _max ? () => _change(_step) : null,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Text(
             '자주 선택하는 시간',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.body),
+            style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.body),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 9),
           Row(
             children: [
               for (final m in prepQuickMinutes) ...[
@@ -190,14 +129,16 @@ class _PrepTimeSheetState extends State<_PrepTimeSheet> {
                 Expanded(
                   child: OptionBox(
                     selected: _minutes == m,
+                    selectedColor: AppColors.brandSoft,
+                    label: '$m분',
                     onTap: () => setState(() => _minutes = m),
                     child: Text(
                       '$m분',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         height: 1.5,
-                        fontWeight: FontWeight.w700,
-                        color: _minutes == m ? AppColors.primary : AppColors.body,
+                        fontWeight: FontWeight.w500,
+                        color: _minutes == m ? AppColors.brand : AppColors.body,
                       ),
                     ),
                   ),
@@ -207,41 +148,7 @@ class _PrepTimeSheetState extends State<_PrepTimeSheet> {
           ),
         ],
       ),
-      footer: BrandButton(label: '선택 완료', onPressed: () => Navigator.of(context).pop(_minutes)),
-    );
-  }
-}
-
-class _StepButton extends StatelessWidget {
-  const _StepButton({required this.icon, required this.tooltip, required this.onTap});
-
-  final String icon;
-  final String tooltip;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: Pressable(
-        onTap: onTap,
-        scale: 0.9,
-        child: AnimatedOpacity(
-          opacity: onTap == null ? 0.35 : 1,
-          duration: const Duration(milliseconds: 150),
-          child: Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.chipBorder),
-            ),
-            child: SvgPicture.asset(icon, width: 24, height: 24),
-          ),
-        ),
-      ),
+      footer: AxisCtaButton(label: '선택 완료', onPressed: () => Navigator.of(context).pop(_minutes)),
     );
   }
 }
@@ -281,7 +188,12 @@ class _MbtiSheetState extends State<_MbtiSheet> {
                   width: 44,
                   child: Text(
                     mbtiAxes[i].name,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.body),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.36,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.body,
+                    ),
                   ),
                 ),
                 for (final (letter, meaning) in mbtiAxes[i].options) ...[
@@ -300,48 +212,53 @@ class _MbtiSheetState extends State<_MbtiSheet> {
           ],
         ],
       ),
+      footerGap: 24,
       footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            height: 52,
-            decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppColors.chipBorder))),
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.chipBorder)),
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('선택한 유형', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black)),
-                Text(
-                  [for (final p in _picked) p ?? '—'].join(_complete ? '' : ' '),
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.3,
-                    fontWeight: FontWeight.w700,
-                    color: _complete ? AppColors.primary : Colors.black,
+                const Text('선택한 유형', style: _resultLabel),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _complete ? _picked.join() : '아직 선택하지 않았어요',
+                    textAlign: TextAlign.right,
+                    style: _complete
+                        ? _resultLabel.copyWith(color: AppColors.brand)
+                        : const TextStyle(fontSize: 14, height: 1.4, color: AppColors.gray05),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlineButton(label: mbtiUnknown, onPressed: () => Navigator.of(context).pop(mbtiUnknown)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: BrandButton(
-                  label: '선택 완료',
-                  enabled: _complete,
-                  onPressed: () => Navigator.of(context).pop(_picked.join()),
-                ),
-              ),
-            ],
+          const SizedBox(height: 16),
+          AxisSplitButton(
+            leftLabel: mbtiUnknown,
+            rightLabel: '선택 완료',
+            rightEnabled: _complete,
+            onLeft: () => Navigator.of(context).pop(mbtiUnknown),
+            onRight: () => Navigator.of(context).pop(_picked.join()),
           ),
         ],
       ),
     );
   }
 }
+
+const _resultLabel = TextStyle(
+  fontSize: 16,
+  height: 1.4,
+  letterSpacing: -0.32,
+  fontWeight: FontWeight.w600,
+  color: Colors.black,
+);
 
 class _MbtiOption extends StatelessWidget {
   const _MbtiOption({required this.letter, required this.meaning, required this.selected, required this.onTap});
@@ -364,12 +281,16 @@ class _MbtiOption extends StatelessWidget {
             letter,
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: selected ? AppColors.primary : AppColors.gray07,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+              color: selected ? AppColors.brand : AppColors.gray07,
             ),
           ),
           const SizedBox(width: 6),
-          Text(meaning, style: TextStyle(fontSize: 13, color: selected ? AppColors.primary : AppColors.body)),
+          Text(
+            meaning,
+            style: TextStyle(fontSize: 14, height: 1.4, color: selected ? AppColors.brand : AppColors.body),
+          ),
         ],
       ),
     );

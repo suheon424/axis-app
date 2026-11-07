@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
-import '../widgets/buttons.dart';
 import '../widgets/form_page.dart';
 import '../widgets/form_widgets.dart';
+import '../widgets/kit/kit_buttons.dart';
 import 'profile_setup_screen.dart';
 
-/// 04 · 회원가입(빈 값 · 입력 중 · 오류).
+/// 04 회원가입 · 빈값 / 입력중 / 오류.
 /// 네 칸을 모두 채우고 필수 약관에 동의해야 가입하기 버튼이 활성화된다.
 /// 이메일 형식과 비밀번호 확인은 칸을 벗어날 때(또는 가입하기를 누를 때) 검사해 칸 아래에 알려 준다.
 class SignupScreen extends StatefulWidget {
@@ -32,11 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _touched = <FocusNode>{};
 
   /// 테스트용 기본값. 빈 칸으로 가입하기를 누르면 이 값이 채워진다.
-  static const _testDefaults = (
-    nickname: '수현',
-    email: 'h4s2h4@hansung.ac.kr',
-    password: '0000',
-  );
+  static const _testDefaults = (nickname: '수현', email: 'h4s2h4@hansung.ac.kr', password: '0000');
 
   @override
   void initState() {
@@ -120,26 +116,24 @@ class _SignupScreenState extends State<SignupScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _touched.addAll([_emailFocus, _pwFocus, _pwConfirmFocus]));
     if (_emailError != null || _pwError != null || _pwConfirmError != null) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProfileSetupScreen(nickname: _nickname.text.trim())),
-    );
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileSetupScreen(nickname: _nickname.text.trim())));
   }
 
   @override
   Widget build(BuildContext context) {
     return FormPage(
       title: '회원가입',
-      bottom: BrandButton(
+      bottom: AxisCtaButton(
         label: '가입하기',
-        enabled: _canSubmit,
+        enabled: _canSubmit && _emailError == null && _pwError == null && _pwConfirmError == null,
         onPressed: _submit,
         onDisabledPressed: _allFilled ? null : _fillTestDefaultsAndSubmit,
       ),
       children: [
-        const PageHeading('만나서 반가워요 😊'),
-        const SizedBox(height: 4),
+        const PageHeading('만나서 반가워요'),
+        const SizedBox(height: 6),
         const PageSubheading('기본 정보를 입력해주세요'),
-        const SizedBox(height: 40),
+        const SizedBox(height: 41),
         AxisTextField(label: '닉네임', controller: _nickname, textInputAction: TextInputAction.next),
         const SizedBox(height: 16),
         AxisTextField(
@@ -168,7 +162,7 @@ class _SignupScreenState extends State<SignupScreen> {
           textInputAction: TextInputAction.done,
           error: _pwConfirmError,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 39),
         ConsentRow(label: '전체 동의', bold: true, checked: _allConsented, onChanged: _setAll),
         const SizedBox(height: 14),
         const Divider(height: 1, thickness: 1, color: AppColors.divider),
