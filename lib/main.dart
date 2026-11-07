@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'screens/community/community_screen.dart';
 import 'screens/badge/badge_storage_screen.dart';
 import 'screens/event/event_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/my/my_page_screen.dart';
+import 'screens/planner/ai_planner_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/main_chrome.dart';
@@ -20,6 +22,8 @@ void main() {
 void registerMainTabs() {
   MainTabRouter.builders
     ..[MainTab.home] = ((_) => const HomeScreen())
+    ..[MainTab.planner] = ((_) => const AiPlannerScreen())
+    ..[MainTab.explore] = ((_) => const CommunityScreen())
     ..[MainTab.event] = ((_) => const EventScreen())
     ..[MainTab.my] = ((_) => const MyPageScreen());
   MyPageScreen.openBadges = (_) => const BadgeStorageScreen();
