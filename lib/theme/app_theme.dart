@@ -109,12 +109,7 @@ abstract final class AxisText {
   static const caption = TextStyle(fontSize: 12, height: 1.4, color: AppColors.gray06);
 
   /// 설정 화면 그룹 라벨(12 SemiBold gray06).
-  static const groupLabel = TextStyle(
-    fontSize: 12,
-    height: 1.4,
-    fontWeight: FontWeight.w600,
-    color: AppColors.gray06,
-  );
+  static const groupLabel = TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.gray06);
 
   /// 버튼 글자(16 SemiBold).
   static const button = TextStyle(
@@ -230,9 +225,6 @@ ThemeData buildAppTheme() {
     textSelectionTheme: const TextSelectionThemeData(cursorColor: AppColors.primary),
   );
   return base.copyWith(
-    snackBarTheme: const SnackBarThemeData(
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: AppColors.gray07,
-    ),
+    snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: AppColors.gray07),
   );
 }

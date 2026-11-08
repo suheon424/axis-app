@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../widgets/browser_keyboard.dart';
 import '../../widgets/kit/kit.dart';
 import 'planner_widgets.dart';
 
@@ -43,7 +44,10 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     AiPlannerScreen._introSeen = true;
     _input.addListener(() => setState(() {}));
     _focus.addListener(() => setState(() {}));
+    browserKeyboardInset.addListener(_onBrowserKeyboard);
   }
+
+  void _onBrowserKeyboard() => setState(() {});
 
   bool get _simulate =>
       widget.simulateKeyboard ??
@@ -54,7 +58,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   /// 지금 화면 아래를 덮는 키패드 높이. 진짜 키패드가 없으면(컴퓨터 브라우저) 입력 중일 때 그림 키패드 높이.
   double _keyboard(BuildContext context) {
-    final real = MediaQuery.viewInsetsOf(context).bottom;
+    // 아이폰 사파리는 viewInsets를 0으로 주는 일이 많아 브라우저가 잰 키패드 높이도 함께 본다.
+    final browser = _focus.hasFocus ? browserKeyboardInset.value : 0.0;
+    final real = math.max(MediaQuery.viewInsetsOf(context).bottom, browser);
     if (real > 0) return real;
     if (_simulate && _focus.hasFocus && _stage != AiPlannerStage.intro) {
       return MediaQuery.sizeOf(context).width / _fakeKeyboardAspect;
@@ -64,6 +70,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   @override
   void dispose() {
+    browserKeyboardInset.removeListener(_onBrowserKeyboard);
     _input.dispose();
     _focus.dispose();
     super.dispose();
@@ -157,7 +164,9 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
   /// 컴퓨터 브라우저용 그림 키패드. 입력 중이면 아래에서 올라온다. "완료"는 입력을 끝내고 "전송"은 보낸다.
   /// 누르는 동안 입력창 포커스가 풀리지 않게 TextFieldTapRegion으로 감싼다.
   Widget _fakeKeyboardView(BuildContext context) {
-    final shown = _focus.hasFocus && _stage != AiPlannerStage.intro;
+    // 진짜 키패드가 잡히면(폰 브라우저) 그림은 띄우지 않는다.
+    final realKeyboard = math.max(MediaQuery.viewInsetsOf(context).bottom, browserKeyboardInset.value) > 0;
+    final shown = _focus.hasFocus && _stage != AiPlannerStage.intro && !realKeyboard;
     final width = MediaQuery.sizeOf(context).width;
     final scale = width / 390;
     return Positioned(
