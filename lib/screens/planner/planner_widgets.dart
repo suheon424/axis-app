@@ -502,9 +502,11 @@ class _PromptGradientPainter extends CustomPainter {
 
   final Animation<double> turns;
 
-  // 피그마 선형 그라디언트(#03215B 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%)를 밝은 끝에서부터 잰 거리로.
-  static const _strokeFromLight = [Color(0xFFA0D5FF), Color(0xFF005FFF), Color(0xFF003DAB), Color(0xFF03215B)];
-  static const _stopsFromLight = [0.0, 0.35, 0.6, 0.855];
+  // 피그마 테두리 색(#A0D5FF → #005FFF → #003DAB → #03215B)을 밝은 쪽(0°)에서 양옆으로 대칭으로 둘렀다.
+  static const _light = Color(0xFFA0D5FF), _blue = Color(0xFF005FFF), _deep = Color(0xFF003DAB);
+  static const _dark = Color(0xFF03215B);
+  static const _sweepColors = [_light, _blue, _deep, _dark, _dark, _deep, _blue, _light];
+  static const _sweepStops = [0.0, 0.1, 0.22, 0.34, 0.66, 0.78, 0.9, 1.0];
   static const _shadow = Color(0xFF0141B6);
   static const _shadowOffset = 10.0;
   static const _shadowBlur = 15.0;
@@ -533,13 +535,14 @@ class _PromptGradientPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // 테두리: 밝은 점(안쪽 그림자와 같은 방향, 박스에 내접한 타원 위)에서 퍼지는 원형 그라디언트.
-    // 피그마의 가운데 → 오른쪽 끝 선형 그라디언트를 거리로 바꾼 것이라, 돌아도 밝은 부분이 끊기지 않고 미끄러진다.
-    final light = center + Offset(dir.dx * size.width / 2, dir.dy * size.height / 2);
+    // 테두리: 가운데에서 [a] 방향 한쪽만 밝고 양옆으로 갈수록 어두워지는 각도 그라디언트가 통째로 돈다(안쪽 그림자와 같은 방향).
+    final spin = Matrix4.translationValues(center.dx, center.dy, 0)
+      ..rotateZ(a)
+      ..translateByDouble(-center.dx, -center.dy, 0, 1);
     canvas.drawRRect(
       rrect.deflate(1),
       Paint()
-        ..shader = ui.Gradient.radial(light, size.width / 2, _strokeFromLight, _stopsFromLight)
+        ..shader = ui.Gradient.sweep(center, _sweepColors, _sweepStops, TileMode.clamp, 0, 2 * math.pi, spin.storage)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
