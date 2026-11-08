@@ -116,14 +116,20 @@ class _CtaPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 피그마 Button(130:9184) Type=Primary 그대로: 버튼 전체를 굴곡 8로 잘라(clip) 두고,
+    // 몸통(위 343 → 아래 312로 기우는 사선)과 오른쪽 조각(350,0 → 319,52 사선)을 뾰족한 다각형으로 그린다.
+    // 그래서 오른쪽 조각의 위 끝도 굴곡 8로 깎여 보인다.
     final w = size.width, h = size.height;
     final s = h * 31 / 52;
     const gap = 7.0;
+    canvas.save();
+    canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8)));
     canvas.drawPath(
-      roundedPolygon([const Offset(0, 0), Offset(w - gap, 0), Offset(w - gap - s, h), Offset(0, h)], [8, 0, 0, 8]),
+      Path()..addPolygon([Offset.zero, Offset(w - gap, 0), Offset(w - gap - s, h), Offset(0, h)], true),
       Paint()..color = body,
     );
-    canvas.drawPath(roundedPolygon([Offset(w, 0), Offset(w, h), Offset(w - s, h)], [0, 8, 0]), Paint()..color = corner);
+    canvas.drawPath(Path()..addPolygon([Offset(w, 0), Offset(w, h), Offset(w - s, h)], true), Paint()..color = corner);
+    canvas.restore();
   }
 
   @override
