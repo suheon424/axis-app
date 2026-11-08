@@ -286,7 +286,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
             padding: const EdgeInsets.only(left: 11),
             child: AxisMonthHeader(title: '2026년 11월', onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요')),
           ),
-          const SizedBox(height: 6),
+          // 피그마: 월 머리글 아래 18 → 회색 기둥(52×87) 위 끝.
+          const SizedBox(height: 18),
           WeekStrip(
             selected: _selectedDay,
             stateOf: _dayState,

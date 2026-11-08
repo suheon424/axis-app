@@ -82,7 +82,8 @@ class _DayColumn extends StatelessWidget {
               ),
               Column(
                 children: [
-                  const SizedBox(height: 11),
+                  // 피그마 Rectangle 37(52×87): 위 5 · 요일 20 · 15 · 날짜 칸 40 · 아래 7.
+                  const SizedBox(height: 5),
                   SizedBox(
                     height: 20,
                     child: Center(
@@ -96,7 +97,7 @@ class _DayColumn extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 13),
+                  const SizedBox(height: 15),
                   AxisCalendarDay(day: day, state: state),
                 ],
               ),
