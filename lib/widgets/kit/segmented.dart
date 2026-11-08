@@ -89,7 +89,7 @@ class _IndicatorPainter extends CustomPainter {
 }
 
 /// Segmented/Tab 2(130:9937): 사진·어두운 배경 위 반투명 알약(#454D58 50%, 배경 흐림 5, 안쪽 여백 4) 두 칸 토글.
-/// 칸은 70.5×30. 선택된 칸은 흰 조각(왼쪽 반원 + 오른쪽 사선, 옆 칸으로 6.7 넘어감) 위 #0F1014 13 Bold,
+/// 칸은 70.5×30. 선택된 칸은 흰 조각(왼쪽 반원 + 오른쪽 사선, 옆 칸으로 6.7 넘어감) 위 #0F1014 14 Medium(줄 높이 150%, 07_01 인스턴스 값),
 /// 나머지는 #BDC3D0. 두 번째 칸이 선택되면 조각을 180° 돌려 그린다(피그마 07_01 홈_달성률).
 class AxisPillSegment extends StatelessWidget {
   const AxisPillSegment({super.key, required this.labels, required this.selected, required this.onChanged});
@@ -129,14 +129,14 @@ class AxisPillSegment extends StatelessWidget {
                       child: Container(
                         constraints: const BoxConstraints(minWidth: _cellWidth, minHeight: _cellHeight),
                         alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4.5),
                         child: Text(
                           labels[i],
                           maxLines: 1,
                           style: TextStyle(
-                            fontSize: 13,
-                            height: 1.4,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
                             color: i == selected ? AppColors.gray09 : AppColors.gray04,
                           ),
                         ),
