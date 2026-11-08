@@ -86,26 +86,35 @@ class AxisEventIcon extends StatelessWidget {
 
 /// AI/Orb(130:10215): 파란 빛이 번지는 AI 구슬. [size]는 가운데 구슬 지름(기본 80);
 /// 빛까지 포함한 그림은 [size]×2.5 크기로 그려지며, 레이아웃은 [size]만 차지한다.
+/// 구슬 안 그라디언트(Frame 290: 검정 위 투명 → #004FED 76.9% → #A0D5FF, 왼쪽 아래로 치우친 방사형)는
+/// [spinDuration]마다 360° 돈다. 가운데 axis 로고(130:10219, 70×70)는 돌지 않는다.
 /// [pulse]면 숨 쉬듯 천천히 커졌다 작아진다.
 class AxisAiOrb extends StatefulWidget {
-  const AxisAiOrb({super.key, this.size = 80, this.pulse = false});
+  const AxisAiOrb({super.key, this.size = 80, this.pulse = false, this.spin = true});
 
   final double size;
   final bool pulse;
 
+  /// 그라디언트를 돌릴지.
+  final bool spin;
+
   static const asset = 'assets/images/kit/ai_orb.png';
+  static const logoAsset = 'assets/images/kit/ai_orb_logo.png';
+  static const spinDuration = Duration(milliseconds: 3200);
 
   @override
   State<AxisAiOrb> createState() => _AxisAiOrbState();
 }
 
-class _AxisAiOrbState extends State<AxisAiOrb> with SingleTickerProviderStateMixin {
+class _AxisAiOrbState extends State<AxisAiOrb> with TickerProviderStateMixin {
   late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+  late final _spin = AnimationController(vsync: this, duration: AxisAiOrb.spinDuration);
 
   @override
   void initState() {
     super.initState();
     if (widget.pulse) _c.repeat(reverse: true);
+    if (widget.spin) _spin.repeat();
   }
 
   @override
@@ -113,17 +122,21 @@ class _AxisAiOrbState extends State<AxisAiOrb> with SingleTickerProviderStateMix
     super.didUpdateWidget(old);
     if (widget.pulse && !_c.isAnimating) _c.repeat(reverse: true);
     if (!widget.pulse && _c.isAnimating) _c.stop();
+    if (widget.spin && !_spin.isAnimating) _spin.repeat();
+    if (!widget.spin && _spin.isAnimating) _spin.stop();
   }
 
   @override
   void dispose() {
     _c.dispose();
+    _spin.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final s = widget.size;
+    final k = s / 80; // 피그마 80 구슬 기준 배율
     return SizedBox(
       width: s,
       height: s,
@@ -132,7 +145,39 @@ class _AxisAiOrbState extends State<AxisAiOrb> with SingleTickerProviderStateMix
         maxHeight: s * 2.5,
         child: ScaleTransition(
           scale: Tween(begin: 1.0, end: 1.06).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)),
-          child: Image.asset(AxisAiOrb.asset, width: s * 2.5, height: s * 2.5, semanticLabel: 'AI'),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 바깥 빛(Glow · 그림자)은 피그마에서 내보낸 그림 그대로.
+              Image.asset(AxisAiOrb.asset, width: s * 2.5, height: s * 2.5, semanticLabel: 'AI'),
+              // 구슬 그라디언트: 원이라 통째로 돌려도 모양은 그대로이고 빛만 둘레를 따라 돈다.
+              RotationTransition(
+                turns: _spin,
+                child: Container(
+                  width: s,
+                  height: s,
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        // 피그마 gradientTransform을 풀면 중심 (0.636, 0.364), 반지름 0.678(지름 80 기준).
+                        center: Alignment(0.272, -0.272),
+                        radius: 0.678,
+                        colors: [Color(0x00000000), Color(0xFF004FED), Color(0xFFA0D5FF)],
+                        stops: [0, 0.769, 1],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // 로고는 구슬(80) 안 (5, 6)에 70×70.
+              Transform.translate(
+                offset: Offset(0, 1 * k),
+                child: Image.asset(AxisAiOrb.logoAsset, width: 70 * k, height: 70 * k, excludeFromSemantics: true),
+              ),
+            ],
+          ),
         ),
       ),
     );
