@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -196,7 +197,8 @@ void showAxisToast(
     builder: (ctx) => Positioned(
       left: 20,
       right: 20,
-      bottom: MediaQuery.paddingOf(ctx).bottom + bottom,
+      // 피그마 프레임은 늘 34 Home Indicator를 둔다. 웹처럼 아래 여백이 0이어도 탭 바(92) 위에 뜨도록 34로 맞춘다.
+      bottom: math.max(MediaQuery.paddingOf(ctx).bottom, 34) + bottom,
       child: _ToastAnimator(
         child: Material(
           type: MaterialType.transparency,

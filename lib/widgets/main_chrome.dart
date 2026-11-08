@@ -56,6 +56,9 @@ class AxisTabBar extends StatefulWidget {
   static const darkBackground = Color(0xFF121212);
   static const height = 58.0;
 
+  /// Tab Bar(130:9415)는 58 바 + 34 Home Indicator = 92. 기기가 아래 여백을 알려주지 않는 웹에서도 34를 둔다.
+  static const homeIndicator = 34.0;
+
   @override
   State<AxisTabBar> createState() => _AxisTabBarState();
 }
@@ -81,7 +84,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
               boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 10, offset: Offset(0, -2))],
             ),
       child: Padding(
-        padding: EdgeInsets.only(top: 2, bottom: bottom > 0 ? bottom : 8),
+        padding: EdgeInsets.only(top: 2, bottom: bottom > AxisTabBar.homeIndicator ? bottom : AxisTabBar.homeIndicator),
         child: Row(
           children: [
             for (final tab in MainTab.values)
