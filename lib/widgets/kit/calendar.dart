@@ -149,6 +149,9 @@ class AxisCalendarDay extends StatelessWidget {
       AxisDayState.scheduled || AxisDayState.today => AppColors.brand,
       AxisDayState.empty => AppColors.gray04,
     };
+    // 피그마처럼 테두리(1px, INSIDE)는 맨 위에 덧그려서 날짜 위치가 상태마다 달라지지 않게 한다.
+    // (Container의 border는 안쪽 내용을 테두리 두께만큼 밀어낸다.)
+    final radius = BorderRadius.circular(6 * k);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -158,9 +161,14 @@ class AxisCalendarDay extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: state == AxisDayState.done ? AppColors.brand : Colors.white,
-          borderRadius: BorderRadius.circular(6 * k),
-          border: border ? Border.all(color: AppColors.brand, width: math.max(0.7, k)) : null,
+          borderRadius: radius,
         ),
+        foregroundDecoration: border
+            ? BoxDecoration(
+                borderRadius: radius,
+                border: Border.all(color: AppColors.brand, width: math.max(0.7, k)),
+              )
+            : null,
         child: Stack(
           children: [
             if (state == AxisDayState.inProgress) Positioned.fill(child: CustomPaint(painter: _SlashPainter())),
@@ -185,14 +193,16 @@ class AxisCalendarDay extends StatelessWidget {
 }
 
 class _SlashPainter extends CustomPainter {
+  // 피그마 Calendar/Day · In Progress의 Vector 10: (-0.71, 0.5)에 놓인 37.5×39.5 조각.
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width, h = size.height;
+    final k = size.width / 40;
+    const dx = -0.71, dy = 0.5;
     final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(w * 37.5 / 40, 0)
-      ..lineTo(w * 10.5 / 40, h)
-      ..lineTo(0, h)
+      ..moveTo((dx + 0) * k, (dy + 0) * k)
+      ..lineTo((dx + 37.5) * k, (dy + 0) * k)
+      ..lineTo((dx + 10.5) * k, (dy + 39.5) * k)
+      ..lineTo((dx + 0) * k, (dy + 39.5) * k)
       ..close();
     canvas.drawPath(path, Paint()..color = AppColors.brand);
   }

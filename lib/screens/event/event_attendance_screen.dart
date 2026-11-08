@@ -170,11 +170,14 @@ class _DayCell extends StatelessWidget {
       width: 50,
       height: 50,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: BorderRadius.circular(5.66),
-        border: border == null ? null : Border.all(color: border, width: 0.94),
-      ),
+      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(5.66)),
+      // 테두리는 위에 덧그려서(피그마 INSIDE 선) 테두리 없는 칸과 날짜 위치가 같게 한다.
+      foregroundDecoration: border == null
+          ? null
+          : BoxDecoration(
+              borderRadius: BorderRadius.circular(5.66),
+              border: Border.all(color: border, width: 0.94),
+            ),
       child: Stack(
         children: [
           if (state == _Day.done) ...[
