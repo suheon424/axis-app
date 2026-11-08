@@ -96,8 +96,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     if (!_badgeShown && item.done && doneCount >= 6) {
       _badgeShown = true;
       Future.delayed(const Duration(milliseconds: 250), () {
-        // 11_뱃지획득(130:13419)과 같은 축하 화면으로 "중심의 첫걸음"을 띄운다.
-        if (mounted) showBadgeCelebration(context, medal: AxisMedal.firstStep, message: '‘누적 완료 6회 이상’ 조건을 달성했어요!');
+        // 11_뱃지획득(130:13419) 그대로: 각성의 순간 배지 GIF와 문구.
+        if (mounted) showBadgeCelebration(context, medal: AxisMedal.awakening);
       });
     }
   }

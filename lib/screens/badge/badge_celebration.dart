@@ -89,10 +89,8 @@ class BadgeCelebration extends StatelessWidget {
 }
 
 /// 축하 카드 위쪽(220×194)에 들어가는 배지 그림. 없으면 메달 이미지를 비스듬히 눕혀 쓴다.
-const _celebrateArt = {
-  AxisMedal.awakening: 'assets/images/event/badge_celebrate_awakening.png',
-  AxisMedal.firstStep: 'assets/images/main/list_badge_first_step.png',
-};
+/// 각성의 순간은 11_뱃지획득(130:13424)에 들어간 움직이는 GIF(피그마 크롭 그대로 330×291)를 쓴다.
+const _celebrateArt = {AxisMedal.awakening: 'assets/images/event/badge_celebrate_awakening.gif'};
 
 class _Card extends StatelessWidget {
   const _Card({required this.medal, required this.message});
@@ -120,7 +118,12 @@ class _Card extends StatelessWidget {
                     width: 220,
                     height: 194,
                     child: _celebrateArt[medal] != null
-                        ? Image.asset(_celebrateArt[medal]!, fit: BoxFit.contain, semanticLabel: medal.title)
+                        ? Image.asset(
+                            _celebrateArt[medal]!,
+                            fit: BoxFit.fill,
+                            gaplessPlayback: true,
+                            semanticLabel: medal.title,
+                          )
                         : Center(
                             child: Transform(
                               alignment: Alignment.center,

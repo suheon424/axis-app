@@ -75,7 +75,7 @@ void main() {
     await tapVisible(tester, find.bySemanticsLabel('관리비 납부 완료'));
     expect(find.byType(BadgeCelebration), findsOneWidget);
 
-    expect(find.textContaining('중심의 첫걸음', findRichText: true), findsOneWidget);
+    expect(find.textContaining('각성의 순간', findRichText: true), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('닫기').last);
     await tester.pumpAndSettle();
     expect(find.byType(BadgeCelebration), findsNothing);
