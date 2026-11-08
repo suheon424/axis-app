@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'home_widgets.dart' show homeRotating;
 import 'home_spline_cube_io.dart' if (dart.library.js_interop) 'home_spline_cube_web.dart' as platform;
 
 /// Spline 3D 큐브 장면 주소.
@@ -89,31 +90,30 @@ class _SplineCubeState extends State<SplineCube> {
         fit: StackFit.expand,
         children: [
           if (scene == null)
-            Center(
-              child: Transform.translate(
-                offset: widget.imageOffset,
-                child: Image.asset(
-                  homeCubeImage,
-                  key: SplineCube.imageKey,
-                  width: widget.imageSize.width,
-                  height: widget.imageSize.height,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            )
-          else
-            ClipRect(
-              child: OverflowBox(
-                minWidth: widget.sceneSize.width,
-                maxWidth: widget.sceneSize.width,
-                minHeight: widget.sceneSize.height,
-                maxHeight: widget.sceneSize.height,
-                child: Transform.translate(
-                  offset: widget.sceneOffset,
-                  child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+            _image()
+          else ...[
+            // 목록 ↔ 달성률이 도는 동안에는 장면(사진으로 뜰 수 없는 HTML 요소) 대신 그림을 보인다.
+            ValueListenableBuilder<bool>(
+              valueListenable: homeRotating,
+              builder: (context, rotating, _) => Visibility.maintain(visible: rotating, child: _image(withKey: false)),
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: homeRotating,
+              builder: (context, rotating, sceneChild) => Offstage(offstage: rotating, child: sceneChild),
+              child: ClipRect(
+                child: OverflowBox(
+                  minWidth: widget.sceneSize.width,
+                  maxWidth: widget.sceneSize.width,
+                  minHeight: widget.sceneSize.height,
+                  maxHeight: widget.sceneSize.height,
+                  child: Transform.translate(
+                    offset: widget.sceneOffset,
+                    child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+                  ),
                 ),
               ),
             ),
+          ],
           Center(
             child: Transform.translate(
               offset: widget.fingerOffset,
@@ -133,6 +133,19 @@ class _SplineCubeState extends State<SplineCube> {
       ),
     );
   }
+
+  Widget _image({bool withKey = true}) => Center(
+    child: Transform.translate(
+      offset: widget.imageOffset,
+      child: Image.asset(
+        homeCubeImage,
+        key: withKey ? SplineCube.imageKey : null,
+        width: widget.imageSize.width,
+        height: widget.imageSize.height,
+        fit: BoxFit.contain,
+      ),
+    ),
+  );
 }
 
 /// 60 원형(검정 60% + 흐림) 안의 스와이프 손가락 아이콘.

@@ -169,11 +169,13 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Positioned.fill(child: HomeBackground(top: top)),
             Positioned.fill(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(20, top + 58 + 10, 20, 24),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: KeyedSubtree(key: ValueKey(_state), child: _content()),
+              child: HomeRotateLayer(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(20, top + 58 + 10, 20, 24),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: KeyedSubtree(key: ValueKey(_state), child: _content()),
+                  ),
                 ),
               ),
             ),

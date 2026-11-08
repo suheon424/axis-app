@@ -14,8 +14,8 @@ class AchievementScreen extends StatelessWidget {
   /// 목록(홈)으로 돌아갈 때 그대로 넘겨 준다.
   final String nickname;
 
-  /// 배경 사진 꼭대기(50%) 색에 맞춘 상단 표시줄 색.
-  static const _statusColor = Color(0xFF72777B);
+  /// 상단 표시줄·상단 줄 색(07_01 홈_목록과 같은 회색).
+  static const _statusColor = Color(0xFF858C94);
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +27,65 @@ class AchievementScreen extends StatelessWidget {
         bottomNavigationBar: const AxisTabBar(current: MainTab.home),
         body: Stack(
           children: [
-            Positioned.fill(child: HomeBackground(top: top - 95)),
-            Padding(
-              padding: EdgeInsets.only(top: top + 10),
-              child: Column(
-                children: [
-                  HomeTopBar(
+            Positioned.fill(child: HomeBackground(top: top)),
+            Positioned.fill(
+              child: HomeRotateLayer(
+                child: Padding(
+                  padding: EdgeInsets.only(top: top + 58),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 36),
+                      const Text(
+                        '모든 계획의 달성률을\n큐브로 확인하세요!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 22, height: 1.4, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        '면의 색은 카테고리, 맞춘 칸은 실천한 날이에요.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, height: 1.4, color: Color(0xFFB0B8C1)),
+                      ),
+                      // 화면이 작으면 큐브 칸이 줄어든다.
+                      const Flexible(
+                        child: SizedBox(
+                          height: 260,
+                          child: SplineCube(
+                            imageOffset: Offset(0, -6),
+                            fingerOffset: Offset(0, 18),
+                            sceneOffset: Offset(5, -12),
+                          ),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+                        child: _StatsCard(),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+                        child: _NextPieceCard(
+                          onShowRemaining: () => Navigator.of(
+                            context,
+                          ).push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true))),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // 고정 상단 줄(회색). 07_01 홈_목록과 같다.
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ColoredBox(
+                color: _statusColor,
+                child: Padding(
+                  padding: EdgeInsets.only(top: top + 10),
+                  child: HomeTopBar(
                     achievement: true,
                     onToggle: (_) => homeSwitchTo(
                       context,
@@ -40,43 +93,7 @@ class AchievementScreen extends StatelessWidget {
                       forward: false,
                     ),
                   ),
-                  const SizedBox(height: 36),
-                  const Text(
-                    '모든 계획의 달성률을\n큐브로 확인하세요!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, height: 1.4, fontWeight: FontWeight.w700, color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    '면의 색은 카테고리, 맞춘 칸은 실천한 날이에요.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, height: 1.4, color: Color(0xFFB0B8C1)),
-                  ),
-                  // 화면이 작으면 큐브 칸이 줄어든다.
-                  const Flexible(
-                    child: SizedBox(
-                      height: 260,
-                      child: SplineCube(
-                        imageOffset: Offset(0, -6),
-                        fingerOffset: Offset(0, 18),
-                        sceneOffset: Offset(5, -12),
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-                    child: _StatsCard(),
-                  ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-                    child: _NextPieceCard(
-                      onShowRemaining: () => Navigator.of(context)
-                          .push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true))),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                ],
+                ),
               ),
             ),
           ],

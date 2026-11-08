@@ -494,53 +494,50 @@ class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProvider
   }
 }
 
-/// Frame 105(입력창) 채우기·테두리: 같은 각도 그라디언트(#005BF0 14.5% · #136BFF 33.5% · #005FFF 87.9% · #003DAB 97.2%,
-/// 피그마 gradientTransform 그대로) 위에 채우기만 검정 70%. 테두리는 안쪽 2. 테두리 그라디언트만 [turns]만큼 돌린다.
+/// Frame 105(입력창, 0801_ai온보딩): 채우기 검정, 반지름 8, 테두리 안쪽 2의 선형 그라디언트
+/// (#03215B 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%, 가운데 → 오른쪽 끝), 안쪽 그림자 #0141B6 x −10 흐림 15.
+/// 밝은 쪽(오른쪽)과 안쪽 그림자가 함께 [turns]만큼 테두리를 따라 360° 돈다.
 class _PromptGradientPainter extends CustomPainter {
   _PromptGradientPainter(this.turns) : super(repaint: turns);
 
   final Animation<double> turns;
 
-  // 피그마 gradientTransform [[a, b, tx], [c, d, ty]]: 노드(0~1) → 그라디언트 공간.
-  static const _a = -0.8781932592391968, _b = 0.27170079946517944, _tx = 1.1297459602355957;
-  static const _c = -0.5806764960289001, _d = -0.03502766788005829, _ty = 0.8927838802337646;
-
-  static const _c1 = Color(0xFF005BF0), _c2 = Color(0xFF136BFF), _c3 = Color(0xFF005FFF), _c4 = Color(0xFF003DAB);
-
-  /// 0과 1 자리(97.2% → 다음 바퀴 14.5% 사이)의 색.
-  static final _wrap = Color.lerp(_c4, _c1, (1 - 0.972) / (1 - 0.972 + 0.145))!;
-
-  /// [turn](0~1)만큼 돌린 각도 그라디언트. 그라디언트 공간 → 화면 픽셀: 픽셀 = S · A⁻¹ · (g − t), 중심 (0.5, 0.5) 축 회전.
-  ui.Gradient _shader(Size size, double turn) {
-    final det = _a * _d - _b * _c;
-    final ia = _d / det, ib = -_b / det, ic = -_c / det, id = _a / det;
-    final toNode = Matrix4(ia, ic, 0, 0, ib, id, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)..translateByDouble(-_tx, -_ty, 0, 1);
-    final local = Matrix4.diagonal3Values(size.width, size.height, 1)
-      ..multiply(toNode)
-      ..translateByDouble(0.5, 0.5, 0, 1)
-      ..rotateZ(turn * 2 * math.pi)
-      ..translateByDouble(-0.5, -0.5, 0, 1);
-    return ui.Gradient.sweep(
-      const Offset(0.5, 0.5),
-      [_wrap, _c1, _c2, _c3, _c4, _wrap],
-      [0, 0.145, 0.335, 0.879, 0.972, 1],
-      TileMode.clamp,
-      0,
-      2 * math.pi,
-      local.storage,
-    );
-  }
+  static const _stroke = [Color(0xFF03215B), Color(0xFF003DAB), Color(0xFF005FFF), Color(0xFFA0D5FF)];
+  static const _stops = [0.145, 0.4, 0.65, 1.0];
+  static const _shadow = Color(0xFF0141B6);
+  static const _shadowOffset = 10.0;
+  static const _shadowBlur = 15.0;
 
   @override
   void paint(Canvas canvas, Size size) {
     final rrect = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8));
-    // 채우기는 피그마 그대로 멈춰 있고, 테두리(선)의 그라디언트만 돈다.
-    canvas.drawRRect(rrect, Paint()..shader = _shader(size, 0));
-    canvas.drawRRect(rrect, Paint()..color = Colors.black.withValues(alpha: 0.7));
+    final a = turns.value * 2 * math.pi;
+    final dir = Offset(math.cos(a), math.sin(a)); // 밝은 쪽 방향(박스 비율 공간)
+    final center = size.center(Offset.zero);
+
+    canvas.drawRRect(rrect, Paint()..color = Colors.black);
+
+    // 안쪽 그림자: 박스 밖을 칠한 모양을 밝은 쪽 반대로 10 밀어 흐리게 그리고, 박스 안만 남긴다.
+    canvas.save();
+    canvas.clipRRect(rrect);
+    final outside = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(rrect.outerRect.inflate(_shadowBlur * 3))
+      ..addRRect(rrect.shift(dir * -_shadowOffset));
+    canvas.drawPath(
+      outside,
+      Paint()
+        ..color = _shadow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, _shadowBlur / 2),
+    );
+    canvas.restore();
+
+    // 테두리: 가운데에서 밝은 쪽 끝까지 이어지는 선형 그라디언트(가운데 너머는 첫 색).
+    final end = center + Offset(dir.dx * size.width / 2, dir.dy * size.height / 2);
     canvas.drawRRect(
       rrect.deflate(1),
       Paint()
-        ..shader = _shader(size, turns.value)
+        ..shader = ui.Gradient.linear(center, end, _stroke, _stops)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
