@@ -502,8 +502,9 @@ class _PromptGradientPainter extends CustomPainter {
 
   final Animation<double> turns;
 
-  static const _stroke = [Color(0xFF03215B), Color(0xFF003DAB), Color(0xFF005FFF), Color(0xFFA0D5FF)];
-  static const _stops = [0.145, 0.4, 0.65, 1.0];
+  // 피그마 선형 그라디언트(#03215B 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%)를 밝은 끝에서부터 잰 거리로.
+  static const _strokeFromLight = [Color(0xFFA0D5FF), Color(0xFF005FFF), Color(0xFF003DAB), Color(0xFF03215B)];
+  static const _stopsFromLight = [0.0, 0.35, 0.6, 0.855];
   static const _shadow = Color(0xFF0141B6);
   static const _shadowOffset = 10.0;
   static const _shadowBlur = 15.0;
@@ -532,12 +533,13 @@ class _PromptGradientPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // 테두리: 가운데에서 밝은 쪽 끝까지 이어지는 선형 그라디언트(가운데 너머는 첫 색).
-    final end = center + Offset(dir.dx * size.width / 2, dir.dy * size.height / 2);
+    // 테두리: 밝은 점(안쪽 그림자와 같은 방향, 박스에 내접한 타원 위)에서 퍼지는 원형 그라디언트.
+    // 피그마의 가운데 → 오른쪽 끝 선형 그라디언트를 거리로 바꾼 것이라, 돌아도 밝은 부분이 끊기지 않고 미끄러진다.
+    final light = center + Offset(dir.dx * size.width / 2, dir.dy * size.height / 2);
     canvas.drawRRect(
       rrect.deflate(1),
       Paint()
-        ..shader = ui.Gradient.linear(center, end, _stroke, _stops)
+        ..shader = ui.Gradient.radial(light, size.width / 2, _strokeFromLight, _stopsFromLight)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
