@@ -50,8 +50,96 @@ class _PressBuilderState extends State<PressBuilder> {
   }
 }
 
+/// 버튼 4 · 활성화 전환: 비활성 → 활성이 되면 파란색이 사선(31°)으로 오른쪽에서 왼쪽으로 밀려 들어와 회색을 채운다.
+/// 채움 520ms ease-out (.22, 1, .36, 1), 글자 회색 → 흰색 260ms(160ms 늦게), 오른쪽 조각 +14 → 0 spring,
+/// 조각 색 200ms. 다시 비활성이 되면 파란색이 오른쪽으로 빠져나간다.
+class EnableMotion {
+  const EnableMotion({required this.fill, required this.label, required this.capColor, required this.capDx});
+
+  static const settledOn = EnableMotion(fill: 1, label: 1, capColor: 1, capDx: 0);
+  static const settledOff = EnableMotion(fill: 0, label: 0, capColor: 0, capDx: 0);
+
+  /// 파란 채움이 들어온 정도(0 회색 ~ 1 다 채움).
+  final double fill;
+
+  /// 글자 색(0 회색 ~ 1 흰색).
+  final double label;
+
+  /// 오른쪽 조각 색(0 회색 ~ 1 파랑).
+  final double capColor;
+
+  /// 오른쪽 조각이 오른쪽으로 밀린 거리.
+  final double capDx;
+}
+
+class EnableMotionBuilder extends StatefulWidget {
+  const EnableMotionBuilder({super.key, required this.enabled, required this.builder});
+
+  final bool enabled;
+  final Widget Function(BuildContext context, EnableMotion motion) builder;
+
+  static const duration = Duration(milliseconds: 520);
+  static const _out = Cubic(0.22, 1, 0.36, 1);
+  static const _spring = Cubic(0.34, 1.56, 0.64, 1);
+
+  @override
+  State<EnableMotionBuilder> createState() => _EnableMotionBuilderState();
+}
+
+class _EnableMotionBuilderState extends State<EnableMotionBuilder> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, duration: EnableMotionBuilder.duration, value: 1);
+
+  @override
+  void didUpdateWidget(EnableMotionBuilder old) {
+    super.didUpdateWidget(old);
+    if (old.enabled != widget.enabled) _c.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  EnableMotion _at(double u) {
+    if (u >= 1) return widget.enabled ? EnableMotion.settledOn : EnableMotion.settledOff;
+    const total = 520.0;
+    final fill = EnableMotionBuilder._out.transform(u);
+    final label = ((u * total - 160) / 260).clamp(0.0, 1.0);
+    final cap = (u * total / 200).clamp(0.0, 1.0);
+    if (widget.enabled) {
+      return EnableMotion(
+        fill: fill,
+        label: label,
+        capColor: cap,
+        capDx: 14 * (1 - EnableMotionBuilder._spring.transform(u)),
+      );
+    }
+    return EnableMotion(fill: 1 - fill, label: 1 - label, capColor: 1 - cap, capDx: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      AnimatedBuilder(animation: _c, builder: (context, _) => widget.builder(context, _at(_c.value)));
+}
+
+/// [clip] 안에 파란 채움을 그린다. 채움의 왼쪽 끝은 위가 오른쪽으로 기운 사선(높이 [h]에 가로 [slant]).
+void paintEnableFill(Canvas canvas, Size size, Path clip, double fill, Color color, double slant) {
+  if (fill <= 0) return;
+  final w = size.width, h = size.height;
+  final x0 = w + 10 + (-slant - 20 - w - 10) * fill; // 오른쪽 밖 → 왼쪽 밖
+  canvas.save();
+  canvas.clipPath(clip);
+  canvas.drawPath(
+    Path()..addPolygon([Offset(x0 + slant, -1), Offset(w + 40, -1), Offset(w + 40, h + 1), Offset(x0, h + 1)], true),
+    Paint()..color = color,
+  );
+  canvas.restore();
+}
+
 /// Button(130:9184) Type=Primary: 오른쪽 끝이 사선으로 잘린 메인 CTA(높이 52, 16 SemiBold).
 /// 필수 입력이 끝나기 전에는 [enabled]=false → 회색(Disabled). 누르면 진한 파랑(Pressed).
+/// 비활성 ↔ 활성은 [EnableMotionBuilder](버튼 4 · 활성화 전환)로 바뀐다.
 class AxisCtaButton extends StatelessWidget {
   const AxisCtaButton({
     super.key,
@@ -74,45 +162,47 @@ class AxisCtaButton extends StatelessWidget {
       semanticLabel: label,
       scale: 1,
       onTap: enabled ? onPressed : onDisabledPressed,
-      builder: (context, pressed) {
-        final body = !enabled
-            ? AppColors.disabledFill
-            : pressed
-            ? AppColors.brandPressed
-            : AppColors.brand;
-        final corner = !enabled
-            ? AppColors.disabledCorner
-            : pressed
-            ? AppColors.brandCornerPressed
-            : AppColors.brandCorner;
-        return CustomPaint(
-          painter: _CtaPainter(body: body, corner: corner),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight),
-            width: double.infinity,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-            child: AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: AxisText.button.copyWith(
-                fontFamily: 'Pretendard',
-                color: enabled ? Colors.white : AppColors.gray06,
-              ),
-              textAlign: TextAlign.center,
-              child: Text(label),
+      builder: (context, pressed) => EnableMotionBuilder(
+        enabled: enabled,
+        builder: (context, m) {
+          final on = enabled && pressed;
+          return CustomPaint(
+            painter: _CtaPainter(
+              fill: on ? AppColors.brandPressed : AppColors.brand,
+              corner: Color.lerp(
+                AppColors.disabledCorner,
+                on ? AppColors.brandCornerPressed : AppColors.brandCorner,
+                m.capColor,
+              )!,
+              motion: m,
             ),
-          ),
-        );
-      },
+            child: Container(
+              constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight),
+              width: double.infinity,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: AxisText.button.copyWith(
+                  fontFamily: 'Pretendard',
+                  color: Color.lerp(AppColors.gray06, Colors.white, m.label),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
 class _CtaPainter extends CustomPainter {
-  const _CtaPainter({required this.body, required this.corner});
+  const _CtaPainter({required this.fill, required this.corner, required this.motion});
 
-  final Color body;
+  final Color fill;
   final Color corner;
+  final EnableMotion motion;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -124,16 +214,20 @@ class _CtaPainter extends CustomPainter {
     const gap = 7.0;
     canvas.save();
     canvas.clipRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8)));
+    final body = Path()..addPolygon([Offset.zero, Offset(w - gap, 0), Offset(w - gap - s, h), Offset(0, h)], true);
+    if (motion.fill < 1) canvas.drawPath(body, Paint()..color = AppColors.disabledFill);
+    paintEnableFill(canvas, size, body, motion.fill, fill, s);
+    final dx = motion.capDx;
     canvas.drawPath(
-      Path()..addPolygon([Offset.zero, Offset(w - gap, 0), Offset(w - gap - s, h), Offset(0, h)], true),
-      Paint()..color = body,
+      Path()..addPolygon([Offset(w + dx, 0), Offset(w + dx, h), Offset(w - s + dx, h)], true),
+      Paint()..color = corner,
     );
-    canvas.drawPath(Path()..addPolygon([Offset(w, 0), Offset(w, h), Offset(w - s, h)], true), Paint()..color = corner);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_CtaPainter old) => old.body != body || old.corner != corner;
+  bool shouldRepaint(_CtaPainter old) =>
+      old.fill != fill || old.corner != corner || old.motion.fill != motion.fill || old.motion.capDx != motion.capDx;
 }
 
 /// 두 버튼을 사선으로 나눠 붙인 버튼 쌍.
@@ -179,9 +273,8 @@ class AxisSplitButton extends StatelessWidget {
     final r = h < 48 ? 6.4 : 8.0;
     final leftFill = red ? AppColors.error : AppColors.gray03;
     final leftText = red ? Colors.white : AppColors.gray06;
-    final rightFill = red ? null : (rightEnabled ? AppColors.brand : AppColors.disabledFill);
     final rightStroke = red ? AppColors.error : null;
-    final rightText = red ? AppColors.error : (rightEnabled ? Colors.white : AppColors.gray06);
+    const rightText = AppColors.error;
     final style = AxisText.button.copyWith(fontFamily: 'Pretendard');
 
     // 두 칸 중 글자가 더 긴 쪽에 맞춰 같은 높이로 늘어난다.
@@ -208,15 +301,30 @@ class AxisSplitButton extends StatelessWidget {
               semanticLabel: rightLabel,
               scale: 1,
               onTap: red || rightEnabled ? onRight : null,
-              builder: (_, _) => CustomPaint(
-                painter: PolygonPainter(
-                  fill: rightFill,
-                  stroke: rightStroke,
-                  strokeWidth: 0.8,
-                  build: (s) => _half(s, left: false, r: r, figma: !red),
-                ),
-                child: _label(rightLabel, style.copyWith(color: rightText), h),
-              ),
+              builder: (_, _) => red
+                  ? CustomPaint(
+                      painter: PolygonPainter(
+                        stroke: rightStroke,
+                        strokeWidth: 0.8,
+                        build: (s) => _half(s, left: false, r: r, figma: false),
+                      ),
+                      child: _label(rightLabel, style.copyWith(color: rightText), h),
+                    )
+                  // 비활성 ↔ 활성은 버튼 4 · 활성화 전환으로 바뀐다.
+                  : EnableMotionBuilder(
+                      enabled: rightEnabled,
+                      builder: (context, m) => CustomPaint(
+                        painter: _SplitRightPainter(
+                          path: (s) => _half(s, left: false, r: r),
+                          fill: m.fill,
+                        ),
+                        child: _label(
+                          rightLabel,
+                          style.copyWith(color: Color.lerp(AppColors.gray06, Colors.white, m.label)),
+                          h,
+                        ),
+                      ),
+                    ),
             ),
           ),
         ],
@@ -250,6 +358,24 @@ class AxisSplitButton extends StatelessWidget {
       [blunt, r, r, sharp],
     );
   }
+}
+
+/// 2Primary 오른쪽 메인 반쪽: 회색 위로 파란 채움이 사선으로 들어온다.
+class _SplitRightPainter extends CustomPainter {
+  const _SplitRightPainter({required this.path, required this.fill});
+
+  final Path Function(Size size) path;
+  final double fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = path(size);
+    if (fill < 1) canvas.drawPath(p, Paint()..color = AppColors.disabledFill);
+    paintEnableFill(canvas, size, p, fill, AppColors.brand, size.height * 35.5 / 52);
+  }
+
+  @override
+  bool shouldRepaint(_SplitRightPainter old) => old.fill != fill;
 }
 
 /// Button/Small(130:9975): 높이 40·굴곡 8의 작은 버튼. 빈 상태·카드 안 행동에 쓴다.
