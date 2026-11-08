@@ -5,6 +5,7 @@ import 'package:axis_app/screens/main/list_sheets.dart';
 import 'package:axis_app/screens/main/map_screen.dart';
 import 'package:axis_app/screens/main/schedule_list_screen.dart';
 import 'package:axis_app/widgets/kit/kit.dart';
+import 'package:axis_app/screens/badge/badge_celebration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -64,19 +65,20 @@ void main() {
     await pumpList(tester);
     expect(find.text('11월 23일 월요일'), findsOneWidget);
     expect(find.text('일정 6개'), findsOneWidget);
-    expect(find.byType(ListBadgePopup), findsNothing);
+    expect(find.byType(BadgeCelebration), findsNothing);
 
     for (final title in ['팀 점심', '고객사 미팅', '러닝 5km']) {
       await tapVisible(tester, find.bySemanticsLabel('$title 완료'));
     }
-    expect(find.byType(ListBadgePopup), findsNothing);
+    expect(find.byType(BadgeCelebration), findsNothing);
 
     await tapVisible(tester, find.bySemanticsLabel('관리비 납부 완료'));
-    expect(find.byType(ListBadgePopup), findsOneWidget);
+    expect(find.byType(BadgeCelebration), findsOneWidget);
 
-    await tester.tap(find.text('칭호로 등록하기'));
+    expect(find.textContaining('중심의 첫걸음', findRichText: true), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('닫기').last);
     await tester.pumpAndSettle();
-    expect(find.byType(ListBadgePopup), findsNothing);
+    expect(find.byType(BadgeCelebration), findsNothing);
   });
 
   testWidgets('빈 상태: 일정이 없는 날은 안내와 일정 추가하기 버튼을 보여 준다', (tester) async {

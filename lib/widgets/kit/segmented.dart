@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -87,8 +88,9 @@ class _IndicatorPainter extends CustomPainter {
   bool shouldRepaint(_IndicatorPainter old) => old.t != t || old.count != count;
 }
 
-/// Segmented/Tab 2(130:9937): 사진·어두운 배경 위 반투명 알약(#454D58 50%) 두 칸 토글.
-/// 선택된 칸은 흰 바탕 + 검정 13 Bold, 나머지는 흰 글자. 칸 사이는 사선.
+/// Segmented/Tab 2(130:9937): 사진·어두운 배경 위 반투명 알약(#454D58 50%, 배경 흐림 5, 안쪽 여백 4) 두 칸 토글.
+/// 칸은 70.5×30. 선택된 칸은 흰 조각(왼쪽 반원 + 오른쪽 사선, 옆 칸으로 6.7 넘어감) 위 #0F1014 13 Bold,
+/// 나머지는 #BDC3D0. 두 번째 칸이 선택되면 조각을 180° 돌려 그린다(피그마 07_01 홈_달성률).
 class AxisPillSegment extends StatelessWidget {
   const AxisPillSegment({super.key, required this.labels, required this.selected, required this.onChanged});
 
@@ -96,61 +98,89 @@ class AxisPillSegment extends StatelessWidget {
   final int selected;
   final ValueChanged<int> onChanged;
 
+  static const _cellWidth = 70.5;
+  static const _cellHeight = 30.0;
+
   @override
   Widget build(BuildContext context) {
     final n = labels.length;
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: const Color(0x80454D58), borderRadius: BorderRadius.circular(100)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < n; i++)
-            Semantics(
-              button: true,
-              selected: i == selected,
-              label: labels[i],
-              excludeSemantics: true,
-              onTap: () => onChanged(i),
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onChanged(i),
-                child: CustomPaint(
-                  painter: i == selected
-                      ? PolygonPainter(
-                          fill: Colors.white,
-                          build: (sz) => _pillPiece(sz, first: i == 0, last: i == n - 1),
-                        )
-                      : null,
-                  child: Container(
-                    constraints: const BoxConstraints(minWidth: 71, minHeight: 30),
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    child: Text(
-                      labels[i],
-                      style: TextStyle(
-                        fontSize: 13,
-                        height: 1.4,
-                        fontWeight: FontWeight.w700,
-                        color: i == selected ? AppColors.gray09 : Colors.white,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(100),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 2.5, sigmaY: 2.5),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          color: const Color(0x80454D58),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < n; i++)
+                Semantics(
+                  button: true,
+                  selected: i == selected,
+                  label: labels[i],
+                  excludeSemantics: true,
+                  onTap: () => onChanged(i),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onChanged(i),
+                    child: CustomPaint(
+                      painter: i == selected ? _PillPiecePainter(flipped: i == n - 1 && i > 0) : null,
+                      child: Container(
+                        constraints: const BoxConstraints(minWidth: _cellWidth, minHeight: _cellHeight),
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        child: Text(
+                          labels[i],
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.4,
+                            fontWeight: FontWeight.w700,
+                            color: i == selected ? AppColors.gray09 : AppColors.gray04,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
+}
 
-  static Path _pillPiece(Size size, {required bool first, required bool last}) {
+/// Segmented/Tab 2의 흰 선택 조각(Union: 반원 끝 사각형 + Vector). 칸이 70.5보다 넓으면 평평한 부분만 늘린다.
+class _PillPiecePainter extends CustomPainter {
+  const _PillPiecePainter({required this.flipped});
+
+  final bool flipped;
+
+  @override
+  void paint(Canvas canvas, Size size) {
     final w = size.width, h = size.height;
-    const s = 6.0;
+    final ky = h / 30;
+    final ox = 22.164764404296875 + (w - AxisPillSegment._cellWidth);
+    Offset p(double x, double y) => Offset(ox + x, y * ky);
     final r = h / 2;
-    return roundedPolygon(
-      [Offset(first ? 0 : s, 0), Offset(last ? w : w + s, 0), Offset(last ? w : w - s, h), Offset(first ? 0 : -s, h)],
-      [first ? r : 0, last ? r : 0, last ? r : 0, first ? r : 0],
-    );
+    final path = Path()
+      ..moveTo(r, 0)
+      ..lineTo(p(53.809, 0).dx, 0)
+      ..cubicTo(p(54.766, 0).dx, 0, p(55.331, 1.087).dx, p(55.331, 1.087).dy, p(54.788, 1.882).dx, p(54.788, 1.882).dy)
+      ..lineTo(p(36.984, 27.926).dx, p(36.984, 27.926).dy)
+      ..cubicTo(p(36.097, 29.224).dx, p(36.097, 29.224).dy, p(34.630, 30).dx, h, p(33.064, 30).dx, h)
+      ..lineTo(r, h)
+      ..arcToPoint(Offset(r, 0), radius: Radius.circular(r))
+      ..close();
+    if (flipped) {
+      canvas.translate(w, h);
+      canvas.rotate(math.pi);
+    }
+    canvas.drawPath(path, Paint()..color = Colors.white);
   }
+
+  @override
+  bool shouldRepaint(_PillPiecePainter old) => old.flipped != flipped;
 }

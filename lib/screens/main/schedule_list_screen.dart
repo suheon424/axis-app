@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../widgets/kit/kit.dart';
+import '../badge/badge_celebration.dart';
 import 'add_schedule_screen.dart';
 import 'calendar_screen.dart';
 import 'list_ai.dart';
@@ -12,7 +13,7 @@ import 'map_screen.dart';
 import 'week_strip.dart';
 
 /// 07_05 일정 목록(Todo). 머리글의 "J모드" 칩으로 07_06 J모드(시간 + AI 꼬리표)와 오간다.
-/// - 체크박스로 완료 표시, 6개를 모두 체크하면 배지 획득 팝업(pop_07_05).
+/// - 체크박스로 완료 표시, 6개를 모두 체크하면 배지 획득 축하(11_뱃지획득).
 /// - 일정이 없는 날은 빈 상태(07_05 빈 상태) + "일정 추가하기".
 /// - J모드에서 꼬리표를 누르면 제안이 펼쳐진다(07_07).
 /// - 일정을 왼쪽으로 밀면 "이동 · 삭제"(07_07 이동/삭제).
@@ -95,7 +96,8 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     if (!_badgeShown && item.done && doneCount >= 6) {
       _badgeShown = true;
       Future.delayed(const Duration(milliseconds: 250), () {
-        if (mounted) showListBadgePopup(context);
+        // 11_뱃지획득(130:13419)과 같은 축하 화면으로 "중심의 첫걸음"을 띄운다.
+        if (mounted) showBadgeCelebration(context, medal: AxisMedal.firstStep, message: '‘누적 완료 6회 이상’ 조건을 달성했어요!');
       });
     }
   }
@@ -279,12 +281,12 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
     return Container(
       color: Colors.white,
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 7, bottom: 18),
+      padding: const EdgeInsets.only(top: 16, bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 11),
+            padding: const EdgeInsets.only(left: 20),
             child: AxisMonthHeader(
               title: '2026년 11월',
               onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요'),

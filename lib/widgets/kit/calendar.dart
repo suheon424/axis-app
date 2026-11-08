@@ -86,26 +86,36 @@ class _MonthArrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = AxisIcon(KitIcon.navBack, size: 18, color: onTap == null ? AppColors.gray04 : AppColors.gray06);
-    return Semantics(
-      button: true,
-      enabled: onTap != null,
-      label: next ? '다음 달' : '이전 달',
-      excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(9),
-          child: Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: onTap == null ? AppColors.gray01 : AppColors.gray02,
-              borderRadius: BorderRadius.circular(6),
+    // Calendar/Month Header(130:10071): 26 칸(#EDEEF6, 굴곡 6) 안에 20.8 화살표. 못 누르면 화살표만 #A3AAB5.
+    // 누르는 영역은 44지만 배치는 26만 차지해서 제목과의 간격이 피그마처럼 16이 된다.
+    final icon = AxisIcon(KitIcon.navBack, size: 20.8, color: onTap == null ? AppColors.gray05 : AppColors.gray09);
+    return SizedBox(
+      width: 26,
+      height: 26,
+      child: OverflowBox(
+        maxWidth: 44,
+        maxHeight: 44,
+        child: Semantics(
+          button: true,
+          enabled: onTap != null,
+          label: next ? '다음 달' : '이전 달',
+          excludeSemantics: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: Center(
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: AppColors.gray02, borderRadius: BorderRadius.circular(6)),
+                  child: next ? Transform.flip(flipX: true, child: icon) : icon,
+                ),
+              ),
             ),
-            child: next ? Transform.flip(flipX: true, child: icon) : icon,
           ),
         ),
       ),

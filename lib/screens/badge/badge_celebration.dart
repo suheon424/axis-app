@@ -88,6 +88,12 @@ class BadgeCelebration extends StatelessWidget {
   }
 }
 
+/// 축하 카드 위쪽(220×194)에 들어가는 배지 그림. 없으면 메달 이미지를 비스듬히 눕혀 쓴다.
+const _celebrateArt = {
+  AxisMedal.awakening: 'assets/images/event/badge_celebrate_awakening.png',
+  AxisMedal.firstStep: 'assets/images/main/list_badge_first_step.png',
+};
+
 class _Card extends StatelessWidget {
   const _Card({required this.medal, required this.message});
 
@@ -113,8 +119,8 @@ class _Card extends StatelessWidget {
                   SizedBox(
                     width: 220,
                     height: 194,
-                    child: medal == AxisMedal.awakening
-                        ? Image.asset('assets/images/event/badge_celebrate_awakening.png', semanticLabel: medal.title)
+                    child: _celebrateArt[medal] != null
+                        ? Image.asset(_celebrateArt[medal]!, fit: BoxFit.contain, semanticLabel: medal.title)
                         : Center(
                             child: Transform(
                               alignment: Alignment.center,

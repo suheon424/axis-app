@@ -87,11 +87,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                       offset: const Offset(0, -21),
                       child: Column(
                         children: [
-                          SvgPicture.asset('assets/icons/wordmark_axis.svg', width: 73.6, height: 27.4),
+                          SvgPicture.asset('assets/icons/wordmark_axis.svg', width: 73.6, height: 27),
                           const SizedBox(height: 27),
-                          const Text(
-                            '흔들림 없는 일상의 중심축',
-                            style: TextStyle(fontSize: 12, height: 1.4, color: Colors.white),
+                          // 피그마에서 문구는 x 128에서 시작해(가운데보다 5 왼쪽) 그대로 맞춘다.
+                          Transform.translate(
+                            offset: const Offset(-5, 0),
+                            child: const Text(
+                              '흔들림 없는 일상의 중심축',
+                              style: TextStyle(fontSize: 12, height: 1.4, color: Colors.white),
+                            ),
                           ),
                         ],
                       ),
