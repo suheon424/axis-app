@@ -398,7 +398,7 @@ class AiPromptField extends StatefulWidget {
   final FocusNode focusNode;
   final VoidCallback onSend;
 
-  /// 각도 그라디언트(채우기·테두리)를 [spinDuration]마다 360° 돌릴지.
+  /// 테두리(선)의 각도 그라디언트를 [spinDuration]마다 360° 돌릴지. 채우기는 그대로.
   final bool spin;
 
   static const spinDuration = Duration(milliseconds: 3200);
@@ -495,7 +495,7 @@ class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProvider
 }
 
 /// Frame 105(입력창) 채우기·테두리: 같은 각도 그라디언트(#005BF0 14.5% · #136BFF 33.5% · #005FFF 87.9% · #003DAB 97.2%,
-/// 피그마 gradientTransform 그대로) 위에 채우기만 검정 70%. 테두리는 안쪽 2. [turns]만큼 그라디언트를 중심으로 돌린다.
+/// 피그마 gradientTransform 그대로) 위에 채우기만 검정 70%. 테두리는 안쪽 2. 테두리 그라디언트만 [turns]만큼 돌린다.
 class _PromptGradientPainter extends CustomPainter {
   _PromptGradientPainter(this.turns) : super(repaint: turns);
 
@@ -510,18 +510,17 @@ class _PromptGradientPainter extends CustomPainter {
   /// 0과 1 자리(97.2% → 다음 바퀴 14.5% 사이)의 색.
   static final _wrap = Color.lerp(_c4, _c1, (1 - 0.972) / (1 - 0.972 + 0.145))!;
 
-  @override
-  void paint(Canvas canvas, Size size) {
-    // 그라디언트 공간 → 화면 픽셀: 픽셀 = S · A⁻¹ · (g − t), 그리고 중심(0.5, 0.5)을 축으로 회전.
+  /// [turn](0~1)만큼 돌린 각도 그라디언트. 그라디언트 공간 → 화면 픽셀: 픽셀 = S · A⁻¹ · (g − t), 중심 (0.5, 0.5) 축 회전.
+  ui.Gradient _shader(Size size, double turn) {
     final det = _a * _d - _b * _c;
     final ia = _d / det, ib = -_b / det, ic = -_c / det, id = _a / det;
     final toNode = Matrix4(ia, ic, 0, 0, ib, id, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)..translateByDouble(-_tx, -_ty, 0, 1);
     final local = Matrix4.diagonal3Values(size.width, size.height, 1)
       ..multiply(toNode)
       ..translateByDouble(0.5, 0.5, 0, 1)
-      ..rotateZ(turns.value * 2 * math.pi)
+      ..rotateZ(turn * 2 * math.pi)
       ..translateByDouble(-0.5, -0.5, 0, 1);
-    final shader = ui.Gradient.sweep(
+    return ui.Gradient.sweep(
       const Offset(0.5, 0.5),
       [_wrap, _c1, _c2, _c3, _c4, _wrap],
       [0, 0.145, 0.335, 0.879, 0.972, 1],
@@ -530,13 +529,18 @@ class _PromptGradientPainter extends CustomPainter {
       2 * math.pi,
       local.storage,
     );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
     final rrect = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8));
-    canvas.drawRRect(rrect, Paint()..shader = shader);
+    // 채우기는 피그마 그대로 멈춰 있고, 테두리(선)의 그라디언트만 돈다.
+    canvas.drawRRect(rrect, Paint()..shader = _shader(size, 0));
     canvas.drawRRect(rrect, Paint()..color = Colors.black.withValues(alpha: 0.7));
     canvas.drawRRect(
       rrect.deflate(1),
       Paint()
-        ..shader = shader
+        ..shader = _shader(size, turns.value)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2,
     );
