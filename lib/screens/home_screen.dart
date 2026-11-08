@@ -7,7 +7,7 @@ import '../widgets/kit/kit.dart';
 import 'main/achievement_screen.dart';
 import 'main/add_schedule_screen.dart';
 import 'main/home_widgets.dart';
-import 'main/schedule_list_screen.dart';
+import 'main/calendar_screen.dart';
 
 /// 홈_목록이 보여 주는 상태.
 enum HomeLoadState {
@@ -153,8 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// 07_01 홈_목록 → 07_04 캘린더(처음엔 코치마크 v2) → 날짜를 고르면 07_05 일정 목록.
   void _openCategory() =>
-      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ScheduleListScreen()));
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true)));
 
   @override
   Widget build(BuildContext context) {

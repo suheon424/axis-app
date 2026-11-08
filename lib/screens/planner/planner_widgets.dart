@@ -6,9 +6,12 @@ import '../../widgets/kit/kit.dart';
 
 /// AI 플래너 화면 공통 배경: 위는 하늘빛, 가운데 파랑, 아래 남색으로 번지는 그라디언트 이미지(image 37).
 class AiPlannerBackground extends StatelessWidget {
-  const AiPlannerBackground({super.key, required this.child});
+  const AiPlannerBackground({super.key, required this.child, this.lift = 0});
 
   final Widget child;
+
+  /// 키패드 높이. 피그마 0801_ai온보딩_ 입력처럼 배경 그림의 아래 끝을 키패드 위에 맞춰 올린다(어두운 아래쪽이 보인다).
+  final double lift;
 
   static const top = Color(0xFFDCEAF6);
   static const bottom = Color(0xFF0D1325);
@@ -16,15 +19,33 @@ class AiPlannerBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-          colors: [bottom, bottom, CubeColors.blue],
-          stops: [0, 0.245, 1],
-        ),
-        image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover, alignment: Alignment.topCenter),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: lift),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      builder: (context, l, child) => Stack(
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: bottom),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: -l,
+            bottom: l,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [bottom, bottom, CubeColors.blue],
+                  stops: [0, 0.245, 1],
+                ),
+                image: DecorationImage(image: AssetImage(asset), fit: BoxFit.cover, alignment: Alignment.topCenter),
+              ),
+            ),
+          ),
+          child!,
+        ],
       ),
       child: SizedBox.expand(child: child),
     );
@@ -114,9 +135,12 @@ const aiSuggestions = ['오늘 일정이 교통사고나서\n완전 틀어졌어
 
 /// 0801_ai온보딩 본문: 가운데 "어떤 계획을 도와드릴까요?"와 아래 예시 요청 카드 두 개.
 class AiPlannerHome extends StatelessWidget {
-  const AiPlannerHome({super.key, required this.onSuggestion});
+  const AiPlannerHome({super.key, required this.onSuggestion, this.compact = false});
 
   final ValueChanged<String> onSuggestion;
+
+  /// 키패드가 떠 있을 때(피그마 0801_ai온보딩_ 입력): 가운데 플러스·제목을 숨기고 예시 카드만 입력창 위에 둔다.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -127,12 +151,16 @@ class AiPlannerHome extends StatelessWidget {
           child: IntrinsicHeight(
             child: Column(
               children: [
-                const Spacer(flex: 5),
-                // Frame 237 1(130:11818): 투명 바탕 100px 플러스(뒤에 동그란 그림자 없음).
-                Image.asset('assets/images/planner/ai_plus.png', width: 100, height: 100),
-                const SizedBox(height: 5),
-                const Text('어떤 계획을\n도와드릴까요?', textAlign: TextAlign.center, style: _title),
-                const Spacer(flex: 6),
+                if (compact)
+                  const Spacer()
+                else ...[
+                  const Spacer(flex: 5),
+                  // Frame 237 1(130:11818): 투명 바탕 100px 플러스(뒤에 동그란 그림자 없음).
+                  Image.asset('assets/images/planner/ai_plus.png', width: 100, height: 100),
+                  const SizedBox(height: 5),
+                  const Text('어떤 계획을\n도와드릴까요?', textAlign: TextAlign.center, style: _title),
+                  const Spacer(flex: 6),
+                ],
                 Padding(
                   // 예시 카드 아래와 입력창 위 사이 30(피그마 0801: 카드 끝 654, 입력창 684).
                   padding: const EdgeInsets.fromLTRB(32, 16, 32, 18),

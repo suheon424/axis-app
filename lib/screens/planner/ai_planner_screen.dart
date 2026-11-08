@@ -98,6 +98,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
         resizeToAvoidBottomInset: false,
         // 피그마 08 · 0801 · 0802에는 탭 바가 없다(위 뒤로 버튼으로 나간다).
         body: AiPlannerBackground(
+          lift: _stage == AiPlannerStage.intro ? 0 : MediaQuery.viewInsetsOf(context).bottom,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 450),
             child: _stage == AiPlannerStage.intro
@@ -119,7 +120,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
   double _barBottom(BuildContext context) {
     final mq = MediaQuery.of(context);
     final keyboard = mq.viewInsets.bottom;
-    if (keyboard > 0) return keyboard + 8;
+    // 피그마 0801_ai온보딩_ 입력: 키패드 위 34에 입력창 아래가 온다.
+    if (keyboard > 0) return keyboard + 34;
     return math.max(_barGap, mq.viewPadding.bottom + 6);
   }
 
@@ -142,10 +144,14 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             duration: const Duration(milliseconds: 300),
             child: chat
                 ? AiChatList(key: const ValueKey('chat'), messages: _messages, typing: _typing, onAnswer: _answer)
-                : AiPlannerHome(key: const ValueKey('home'), onSuggestion: _send),
+                : AiPlannerHome(
+                    key: const ValueKey('home'),
+                    onSuggestion: _send,
+                    compact: MediaQuery.viewInsetsOf(context).bottom > 0,
+                  ),
           ),
         ),
-        // 피그마 0801·0802(높이 774 프레임): 입력창 아래가 화면 끝에서 40 위. 키패드가 뜨면 입력창이 키패드 바로 위(8)로 올라온다.
+        // 피그마 0801·0802(높이 774 프레임): 입력창 아래가 화면 끝에서 40 위. 키패드가 뜨면(0801_ai온보딩_ 입력) 입력창이 키패드 위 34로 올라오고 가운데 제목은 숨는다.
         AnimatedPadding(
           duration: const Duration(milliseconds: 280),
           curve: Curves.easeOutCubic,

@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../../widgets/kit/kit.dart';
 import '../badge/badge_celebration.dart';
 import 'add_schedule_screen.dart';
-import 'calendar_screen.dart';
 import 'list_ai.dart';
 import 'list_data.dart';
 import 'list_parts.dart';
@@ -21,7 +20,10 @@ import 'week_strip.dart';
 /// - "틀어진 일정 맞추기" → AI 분석 중(07_05-1) → AI 일정 제안(07_05-2) → 맞추기 완료 토스트(07_06 완료).
 /// - 목록 / 지도 탭: 지도는 같은 화면 안에서 [MapTab]으로 바꿔 보여 준다.
 class ScheduleListScreen extends StatefulWidget {
-  const ScheduleListScreen({super.key, this.initialJMode = false, this.empty = false});
+  const ScheduleListScreen({super.key, this.initialJMode = false, this.empty = false, this.initialDate});
+
+  /// 07_04 캘린더에서 고른 날짜. 이번 주 띠(11월 22~28일) 안이면 그 날을 골라 둔 채로 연다.
+  final DateTime? initialDate;
 
   /// J모드를 켠 채로 연다(07_06 확인용).
   final bool initialJMode;
@@ -56,7 +58,14 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
   late final List<ListSchedule> _items = widget.empty ? [] : listSampleSchedules();
   late bool _jMode = widget.initialJMode;
   _Filter _filter = _Filter.all;
-  int _selectedDay = _scheduleDay;
+  late int _selectedDay = _initialDay();
+
+  int _initialDay() {
+    final d = widget.initialDate;
+    if (d != null && d.year == 2026 && d.month == 11 && d.day >= 22 && d.day <= 28) return d.day;
+    return _scheduleDay;
+  }
+
   int? _openSwipeId;
   bool _mapTab = false;
   final _mapKey = GlobalKey<MapTabState>();
@@ -287,14 +296,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 20),
-            child: AxisMonthHeader(
-              title: '2026년 11월',
-              onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요'),
-              // 제목을 누르면 07_04 한 달 캘린더(처음엔 코치마크 v2).
-              onTitleTap: () =>
-                  Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true))),
-            ),
+            child: AxisMonthHeader(title: '2026년 11월', onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요')),
           ),
           // 피그마: 월 머리글 아래 18 → 회색 기둥(52×87) 위 끝.
           const SizedBox(height: 18),

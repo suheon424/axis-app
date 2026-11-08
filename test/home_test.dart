@@ -65,11 +65,21 @@ void main() {
     expect(find.text('03:00 PM 영어 공부'), findsOneWidget);
   });
 
-  testWidgets('홈: 카테고리 줄을 누르면 일정 목록(J모드)으로 간다', (tester) async {
+  testWidgets('홈 목록 → 07_04 캘린더(코치마크 v2) → 캘린더 → 날짜를 고르면 07_05 일정 목록', (tester) async {
+    CalendarScreen.coachmarkDismissed = false;
     await tester.pumpWidget(_app(const HomeScreen(initialState: HomeLoadState.ready)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Study'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CalendarScreen), findsOneWidget);
+    expect(find.text('다시 보지 않기'), findsOneWidget);
+
+    await tester.tap(find.text('닫기'));
+    await tester.pumpAndSettle();
+    expect(find.text('다시 보지 않기'), findsNothing);
+
+    await tester.tap(find.bySemanticsLabel(RegExp('^11월 24일')));
     await tester.pumpAndSettle();
     expect(find.byType(ScheduleListScreen), findsOneWidget);
   });

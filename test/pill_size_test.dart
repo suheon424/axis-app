@@ -11,7 +11,9 @@ void main() {
             height: 48,
             child: Stack(
               alignment: Alignment.center,
-              children: [AxisPillSegment(labels: const ['목록', '달성률'], selected: 0, onChanged: (_) {})],
+              children: [
+                AxisPillSegment(labels: const ['목록', '달성률'], selected: 0, onChanged: (_) {}),
+              ],
             ),
           ),
         ),

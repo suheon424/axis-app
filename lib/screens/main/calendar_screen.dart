@@ -54,7 +54,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   void _openDay(DateTime date) {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ScheduleListScreen()));
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ScheduleListScreen(initialDate: date)));
   }
 
   void _showPreview(DateTime date, BuildContext cellContext) {

@@ -94,14 +94,12 @@ void main() {
     expect(find.text('11월 24일 (화)'), findsOneWidget);
   });
 
-  testWidgets('월 머리글(2026년 11월)을 누르면 07_04 캘린더가 열리고 코치마크 v2가 뜬다', (tester) async {
+  testWidgets('월 머리글(2026년 11월)은 이제 캘린더를 열지 않는다', (tester) async {
     await pumpList(tester);
-    await tester.tap(find.bySemanticsLabel('2026년 11월 달력 보기'));
-    for (var i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 50));
-    }
-    expect(find.byType(CalendarScreen), findsOneWidget);
-    expect(find.text('다시 보지 않기'), findsOneWidget);
+    expect(find.bySemanticsLabel('2026년 11월 달력 보기'), findsNothing);
+    await tester.tap(find.text('2026년 11월'));
+    await tester.pumpAndSettle();
+    expect(find.byType(CalendarScreen), findsNothing);
   });
 
   testWidgets('J모드: 시간·AI 꼬리표를 보고 제안을 펼친다', (tester) async {

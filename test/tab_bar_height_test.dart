@@ -8,8 +8,13 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
-            data: MediaQueryData(size: const Size(390, 844), padding: EdgeInsets.only(bottom: inset)),
-            child: const Scaffold(bottomNavigationBar: AxisTabBar(current: MainTab.event, onTap: _noop)),
+            data: MediaQueryData(
+              size: const Size(390, 844),
+              padding: EdgeInsets.only(bottom: inset),
+            ),
+            child: const Scaffold(
+              bottomNavigationBar: AxisTabBar(current: MainTab.event, onTap: _noop),
+            ),
           ),
         ),
       );

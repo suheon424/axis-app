@@ -25,8 +25,12 @@ void main() {
     expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 40);
   });
 
-  testWidgets('0801 prompt bar rises above the keyboard', (tester) async {
+  testWidgets('0801 prompt bar rises 34 above the keyboard and hides the title', (tester) async {
     await _pump(tester, keyboard: 300);
-    expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 308);
+    expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 334);
+    // 0801_ai온보딩_ 입력: 가운데 제목은 숨고 예시 카드는 입력창 위 30에 남는다.
+    expect(find.text('어떤 계획을\n도와드릴까요?'), findsNothing);
+    final cards = tester.getRect(find.textContaining('교통사고')).bottom;
+    expect(cards, lessThan(844 - 334 - 50));
   });
 }
