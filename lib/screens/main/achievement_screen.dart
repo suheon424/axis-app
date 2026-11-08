@@ -34,8 +34,12 @@ class AchievementScreen extends StatelessWidget {
                 children: [
                   HomeTopBar(
                     achievement: true,
-                    onToggle: (_) =>
-                        homeSwitchTo(context, HomeScreen(nickname: nickname, initialState: HomeLoadState.ready)),
+                    onToggle: (_) => homeSwitchTo(
+                      context,
+                      HomeScreen(nickname: nickname, initialState: HomeLoadState.ready),
+                      from: AchievementScreen(nickname: nickname),
+                      forward: false,
+                    ),
                   ),
                   const SizedBox(height: 36),
                   const Text(

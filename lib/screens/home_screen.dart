@@ -188,7 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: EdgeInsets.only(top: top + 10),
                   child: HomeTopBar(
                     achievement: false,
-                    onToggle: (_) => homeSwitchTo(context, AchievementScreen(nickname: widget.nickname)),
+                    onToggle: (_) => homeSwitchTo(
+                      context,
+                      AchievementScreen(nickname: widget.nickname),
+                      from: HomeScreen(nickname: widget.nickname, initialState: HomeLoadState.ready),
+                      forward: true,
+                    ),
                     onAdd: () =>
                         Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AddScheduleScreen())),
                     onLogoLongPress: _pickDemoState,

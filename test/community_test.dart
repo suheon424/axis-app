@@ -4,7 +4,7 @@ import 'package:axis_app/screens/community/community_data.dart';
 import 'package:axis_app/screens/community/community_screen.dart';
 import 'package:axis_app/screens/community/plan_detail_screen.dart';
 import 'package:axis_app/screens/community/plan_overview_tab.dart';
-import 'package:axis_app/theme/app_theme.dart';
+import 'package:axis_app/widgets/kit/kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +37,8 @@ Future<void> _pump(WidgetTester tester, Widget home) async {
 }
 
 void main() {
+  setUpAll(() => AxisCubeCarousel.autoplayEnabled = false);
+
   setUpAll(() async {
     final loader = FontLoader('Pretendard');
     for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
@@ -58,13 +60,13 @@ void main() {
     await _shot(tester, 'community_09_loading');
     await _settle(tester, 1000);
     expect(find.text('비전공생의 CPA 공부 계획'), findsOneWidget);
-    expect(find.text('1 / 4', findRichText: true), findsOneWidget);
+    expect(find.text('1 / 2', findRichText: true), findsOneWidget);
     expect(find.text('혼자 짜는 막막한\n계획은 이제 그만!'), findsOneWidget);
     await _shot(tester, 'community_09');
 
     await tester.tap(find.bySemanticsLabel('다음 후기'));
     await _settle(tester, 500);
-    expect(find.text('2 / 4', findRichText: true), findsOneWidget);
+    expect(find.text('2 / 2', findRichText: true), findsOneWidget);
 
     await tester.ensureVisible(find.text('-20kg 성공한 다이어트 루틴'));
     await tester.tap(find.text('-20kg 성공한 다이어트 루틴'));

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -19,15 +20,172 @@ const homeDividerColor = Color(0x14FFFFFF);
 /// 어두운 카드 안 막대·로딩 막대의 바탕(흰 12%).
 const homeTrackColor = Color(0x1FFFFFFF);
 
-/// 화면을 밀어 넣는 애니메이션 없이 바로 바꾼다(목록 ↔ 달성률 토글).
-void homeSwitchTo(BuildContext context, Widget screen) {
+/// 목록 ↔ 달성률 토글(시안 "③ 목록 ↔ 달성률 · 회전"). 위 상단 줄과 아래 탭 바는 그대로 두고,
+/// 그 사이 화면만 큐브의 두 옆면처럼 90° 돈다: 0.6초, cubic-bezier(0.65, 0, 0.35, 1), 원근 1100,
+/// 돌아가는 동안 앞이 아닌 면은 검정 55%까지 어두워진다. [forward]면 목록 → 달성률(오른쪽 면이 앞으로).
+/// [from]은 지금 화면과 같은 화면(회전하는 동안 나가는 면으로 그린다).
+void homeSwitchTo(BuildContext context, Widget screen, {required Widget from, required bool forward}) {
   Navigator.of(context).pushReplacement(
     PageRouteBuilder<void>(
       pageBuilder: (_, _, _) => screen,
-      transitionDuration: Duration.zero,
+      transitionDuration: homeRotateDuration,
       reverseTransitionDuration: Duration.zero,
+      transitionsBuilder: (context, animation, _, child) =>
+          _HomeRotateTransition(animation: animation, from: from, to: screen, forward: forward, child: child),
     ),
   );
+}
+
+const homeRotateDuration = Duration(milliseconds: 600);
+
+class _HomeRotateTransition extends StatelessWidget {
+  const _HomeRotateTransition({
+    required this.animation,
+    required this.from,
+    required this.to,
+    required this.forward,
+    required this.child,
+  });
+
+  final Animation<double> animation;
+  final Widget from;
+
+  /// 들어오는 면으로 돌릴 새 화면(돌고 나면 사라지고 [child]가 남는다).
+  final Widget to;
+  final bool forward;
+
+  /// 새 경로의 진짜 화면. 도는 동안에는 상단 줄과 탭 바만 보이고, 끝나면 전체가 보인다.
+  final Widget child;
+
+  static const _curve = Cubic(0.65, 0, 0.35, 1);
+  static const _perspective = 1100.0;
+  static const _dim = 0.55;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final t = animation.value;
+        final moving = t > 0 && t < 1;
+        return LayoutBuilder(
+          builder: (context, c) {
+            final mq = MediaQuery.of(context);
+            final size = c.biggest;
+            final top = mq.padding.top + 58; // 상단 줄 아래
+            final bottom = AxisTabBar.height + math.max(mq.viewPadding.bottom, AxisTabBar.homeIndicator);
+            final content = Rect.fromLTRB(0, top, size.width, size.height - bottom);
+            final e = _curve.transform(t);
+            final dir = forward ? 1.0 : -1.0;
+            final outA = -dir * 90 * e;
+            final inA = dir * 90 * (1 - e);
+            Widget face(Widget screen, double a, String key) => Positioned.fill(
+              key: ValueKey(key),
+              child: IgnorePointer(
+                child: _Face(content: content, size: size, angle: a, dim: _dim * a.abs() / 90, child: screen),
+              ),
+            );
+            final faces = [face(from, outA, 'out'), face(to, inA, 'in')]
+              ..sort(
+                (x, y) => ((y.key == const ValueKey('out') ? outA : inA).abs()).compareTo(
+                  (x.key == const ValueKey('out') ? outA : inA).abs(),
+                ),
+              );
+            return Stack(
+              children: [
+                if (moving)
+                  const Positioned.fill(
+                    key: ValueKey('bg'),
+                    child: ColoredBox(color: Colors.black),
+                  ),
+                if (moving) ...faces,
+                // 진짜 새 화면: 도는 동안엔 상단 줄·탭 바만 보이게 가운데를 잘라 낸다.
+                Positioned.fill(
+                  key: const ValueKey('child'),
+                  child: ClipPath(
+                    clipper: _ExceptRect(moving ? content : null),
+                    child: IgnorePointer(ignoring: moving, child: child),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// 화면 한 장의 가운데(상단 줄과 탭 바 사이)만 잘라 큐브 옆면으로 돌린다.
+class _Face extends StatelessWidget {
+  const _Face({required this.content, required this.size, required this.angle, required this.dim, required this.child});
+
+  final Rect content;
+  final Size size;
+  final double angle;
+  final double dim;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final d = size.width / 2; // 큐브 반지름
+    final center = content.center;
+    return Transform(
+      origin: center,
+      // CSS: perspective · translateZ(-d) · rotateY(a) · translateZ(d). 플러터는 z가 화면 안쪽이 +.
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, 1 / _HomeRotateTransition._perspective)
+        ..translateByDouble(0, 0, d, 1)
+        ..rotateY(-angle * math.pi / 180)
+        ..translateByDouble(0, 0, -d, 1),
+      child: ClipRect(
+        clipper: _RectClipper(content),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            child,
+            Positioned.fromRect(
+              rect: content,
+              child: ColoredBox(color: Colors.black.withValues(alpha: dim)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RectClipper extends CustomClipper<Rect> {
+  const _RectClipper(this.rect);
+
+  final Rect rect;
+
+  @override
+  Rect getClip(Size size) => rect;
+
+  @override
+  bool shouldReclip(_RectClipper old) => old.rect != rect;
+}
+
+/// [hole]이 있으면 그 부분만 빼고 보이게 자른다.
+class _ExceptRect extends CustomClipper<Path> {
+  const _ExceptRect(this.hole);
+
+  final Rect? hole;
+
+  @override
+  Path getClip(Size size) {
+    final path = Path()..addRect(Offset.zero & size);
+    if (hole != null) {
+      path
+        ..addRect(hole!)
+        ..fillType = PathFillType.evenOdd;
+    }
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_ExceptRect old) => old.hole != hole;
 }
 
 /// 배경 사진 두 장: 20% 한 장 + 50% 한 장(위 회색 → 아래 파랑으로 물든). [top]은 상태 표시줄 높이.

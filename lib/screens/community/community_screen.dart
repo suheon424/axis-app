@@ -190,21 +190,15 @@ class _Hero extends StatefulWidget {
 }
 
 class _HeroState extends State<_Hero> {
-  final _pages = PageController(viewportFraction: 180 / 370);
+  final _cube = AxisCubeCarouselController();
   int _page = 0;
 
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
-
-  void _go(int page) =>
-      _pages.animateToPage(page, duration: const Duration(milliseconds: 300), curve: Curves.easeOutCubic);
+  /// 후기 카드 두 장이 한 면. 큐브 한 층을 돌리듯 면 단위로 넘어간다.
+  static const _perFace = 2;
 
   @override
   Widget build(BuildContext context) {
-    final count = reviewHighlights.length;
+    final count = (reviewHighlights.length / _perFace).ceil();
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFFE3ECF6),
@@ -273,19 +267,31 @@ class _HeroState extends State<_Hero> {
             ),
           ),
           const SizedBox(height: 19),
-          SizedBox(
-            height: 151,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: PageView.builder(
-                controller: _pages,
-                padEnds: false,
-                clipBehavior: Clip.none,
-                itemCount: count,
-                onPageChanged: (p) => setState(() => _page = p),
-                itemBuilder: (_, i) => Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: _ReviewCard(review: reviewHighlights[i], onTap: () => widget.onReview(reviewHighlights[i])),
+          // 시안 "09 커뮤니티 · 한 층 돌리기": 카드 두 장씩 붙은 면이 기둥처럼 90°씩 돈다.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: LayoutBuilder(
+              builder: (context, c) => AxisCubeCarousel(
+                controller: _cube,
+                size: Size(c.maxWidth, 151),
+                faceCount: count,
+                onChanged: (p) => setState(() => _page = p),
+                faceBuilder: (context, face, dim) => Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var j = 0; j < _perFace; j++) ...[
+                      if (j > 0) const SizedBox(width: 10),
+                      Expanded(
+                        child: face * _perFace + j < reviewHighlights.length
+                            ? _ReviewCard(
+                                review: reviewHighlights[face * _perFace + j],
+                                dim: dim,
+                                onTap: () => widget.onReview(reviewHighlights[face * _perFace + j]),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
@@ -294,7 +300,7 @@ class _HeroState extends State<_Hero> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _PageArrow(left: true, enabled: _page > 0, onTap: () => _go(_page - 1)),
+              _PageArrow(left: true, enabled: true, onTap: _cube.previous),
               const SizedBox(width: 6),
               Text.rich(
                 TextSpan(
@@ -309,7 +315,7 @@ class _HeroState extends State<_Hero> {
                 style: const TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: communityText),
               ),
               const SizedBox(width: 6),
-              _PageArrow(left: false, enabled: _page < count - 1, onTap: () => _go(_page + 1)),
+              _PageArrow(left: false, enabled: true, onTap: _cube.next),
             ],
           ),
           const SizedBox(height: 10),
@@ -388,10 +394,13 @@ class _PageArrow extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
-  const _ReviewCard({required this.review, required this.onTap});
+  const _ReviewCard({required this.review, required this.onTap, this.dim = 0});
 
   final ReviewHighlight review;
   final VoidCallback onTap;
+
+  /// 큐브 옆면으로 돌아간 만큼 덮는 검정 불투명도.
+  final double dim;
 
   @override
   Widget build(BuildContext context) {
@@ -401,6 +410,12 @@ class _ReviewCard extends StatelessWidget {
       builder: (context, pressed) => Container(
         padding: const EdgeInsets.fromLTRB(15, 16, 15, 16),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+        foregroundDecoration: dim > 0
+            ? BoxDecoration(
+                color: Colors.black.withValues(alpha: dim),
+                borderRadius: BorderRadius.circular(8),
+              )
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

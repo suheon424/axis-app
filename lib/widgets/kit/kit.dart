@@ -5,6 +5,7 @@ library;
 export '../../theme/app_theme.dart';
 export '../buttons.dart';
 export '../main_chrome.dart';
+export 'cube_carousel.dart';
 export 'badges.dart';
 export 'calendar.dart';
 export 'cards.dart';

@@ -16,6 +16,8 @@ Future<void> _settle(WidgetTester tester, [int frames = 30]) async {
 }
 
 void main() {
+  setUpAll(() => AxisCubeCarousel.autoplayEnabled = false);
+
   setUpAll(() async {
     final loader = FontLoader('Pretendard');
     for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
