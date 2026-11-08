@@ -128,16 +128,20 @@ class AxisPillSegment extends StatelessWidget {
                       painter: i == selected ? _PillPiecePainter(flipped: i == n - 1 && i > 0) : null,
                       child: Container(
                         constraints: const BoxConstraints(minWidth: _cellWidth, minHeight: _cellHeight),
-                        alignment: Alignment.center,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4.5),
-                        child: Text(
-                          labels[i],
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                            color: i == selected ? AppColors.gray09 : AppColors.gray04,
+                        // alignment 대신 factor 1 Center: 부모(헤더 48) 높이로 늘어나지 않고 칸이 70.5×30 그대로 남는다.
+                        child: Center(
+                          widthFactor: 1,
+                          heightFactor: 1,
+                          child: Text(
+                            labels[i],
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.5,
+                              fontWeight: FontWeight.w500,
+                              color: i == selected ? AppColors.gray09 : AppColors.gray04,
+                            ),
                           ),
                         ),
                       ),
