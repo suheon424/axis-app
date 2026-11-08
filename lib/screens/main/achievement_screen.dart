@@ -37,7 +37,6 @@ class AchievementScreen extends StatelessWidget {
                     onToggle: (_) => homeSwitchTo(
                       context,
                       HomeScreen(nickname: nickname, initialState: HomeLoadState.ready),
-                      from: AchievementScreen(nickname: nickname),
                       forward: false,
                     ),
                   ),
