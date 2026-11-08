@@ -33,4 +33,28 @@ void main() {
     final cards = tester.getRect(find.textContaining('교통사고')).bottom;
     expect(cards, lessThan(844 - 334 - 50));
   });
+
+  testWidgets('computer browser: tapping the field shows the Figma keyboard picture (0801_ai온보딩_ 입력)', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      const MaterialApp(home: AiPlannerScreen(initialStage: AiPlannerStage.home, simulateKeyboard: true)),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 40);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 379 - 34);
+    expect(find.text('어떤 계획을\n도와드릴까요?'), findsNothing);
+    final kb = find.image(const AssetImage('assets/images/planner/ai_keyboard.png'));
+    expect(tester.getRect(kb).top, 844 - 379);
+
+    // 키패드의 "완료"를 누르면 입력이 끝나고 처음 모습으로 돌아간다.
+    await tester.tapAt(const Offset(360, 844 - 379 + 20));
+    await tester.pumpAndSettle();
+    expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 40);
+    expect(find.text('어떤 계획을\n도와드릴까요?'), findsOneWidget);
+  });
 }
