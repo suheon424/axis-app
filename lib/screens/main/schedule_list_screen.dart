@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../widgets/kit/kit.dart';
 import 'add_schedule_screen.dart';
+import 'calendar_screen.dart';
 import 'list_ai.dart';
 import 'list_data.dart';
 import 'list_parts.dart';
@@ -284,7 +285,14 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.only(left: 11),
-            child: AxisMonthHeader(title: '2026년 11월', onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요')),
+            child: AxisMonthHeader(
+              title: '2026년 11월',
+              onPrev: () => _toast('지난 일정은 홈의 달력에서 볼 수 있어요'),
+              // 제목을 누르면 07_04 한 달 캘린더(처음엔 코치마크 v2).
+              onTitleTap: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => const CalendarScreen(showCoachmarks: true))),
+            ),
           ),
           // 피그마: 월 머리글 아래 18 → 회색 기둥(52×87) 위 끝.
           const SizedBox(height: 18),

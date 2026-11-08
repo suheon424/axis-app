@@ -32,7 +32,7 @@ class AxisWeekdayHeader extends StatelessWidget {
 
 /// Calendar/Month Header(130:10071): ‹ 2026년 11월 › (22 Bold). 화살표 칸은 26px 회색 상자.
 class AxisMonthHeader extends StatelessWidget {
-  const AxisMonthHeader({super.key, required this.title, this.onPrev, this.onNext});
+  const AxisMonthHeader({super.key, required this.title, this.onPrev, this.onNext, this.onTitleTap});
 
   /// 예: "2026년 11월"
   final String title;
@@ -41,23 +41,36 @@ class AxisMonthHeader extends StatelessWidget {
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
 
+  /// 제목("2026년 11월")을 눌렀을 때(예: 한 주 달력 → 07_04 한 달 캘린더).
+  final VoidCallback? onTitleTap;
+
   @override
   Widget build(BuildContext context) {
+    final text = Text(
+      title,
+      style: const TextStyle(
+        fontSize: 22,
+        height: 1.3,
+        letterSpacing: -0.22,
+        fontWeight: FontWeight.w700,
+        color: AppColors.gray09,
+      ),
+    );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _MonthArrow(next: false, onTap: onPrev),
         const SizedBox(width: 16),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 22,
-            height: 1.3,
-            letterSpacing: -0.22,
-            fontWeight: FontWeight.w700,
-            color: AppColors.gray09,
+        if (onTitleTap == null)
+          text
+        else
+          Semantics(
+            button: true,
+            label: '$title 달력 보기',
+            excludeSemantics: true,
+            onTap: onTitleTap,
+            child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTitleTap, child: text),
           ),
-        ),
         const SizedBox(width: 16),
         _MonthArrow(next: true, onTap: onNext),
       ],

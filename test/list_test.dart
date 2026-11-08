@@ -1,4 +1,5 @@
 import 'package:axis_app/screens/main/add_schedule_screen.dart';
+import 'package:axis_app/screens/main/calendar_screen.dart';
 import 'package:axis_app/screens/main/list_ai.dart';
 import 'package:axis_app/screens/main/list_sheets.dart';
 import 'package:axis_app/screens/main/map_screen.dart';
@@ -89,6 +90,16 @@ void main() {
     await tapVisible(tester, find.text('일정 추가하기'));
     expect(find.byType(AddScheduleScreen), findsOneWidget);
     expect(find.text('11월 24일 (화)'), findsOneWidget);
+  });
+
+  testWidgets('월 머리글(2026년 11월)을 누르면 07_04 캘린더가 열리고 코치마크 v2가 뜬다', (tester) async {
+    await pumpList(tester);
+    await tester.tap(find.bySemanticsLabel('2026년 11월 달력 보기'));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(find.byType(CalendarScreen), findsOneWidget);
+    expect(find.text('다시 보지 않기'), findsOneWidget);
   });
 
   testWidgets('J모드: 시간·AI 꼬리표를 보고 제안을 펼친다', (tester) async {
