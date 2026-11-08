@@ -182,6 +182,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
         child: SizedBox(
           height: 56,
           child: ClipRect(
+            clipper: const _TabClipper(),
             child: AnimatedBuilder(
               animation: _t,
               builder: (context, _) {
@@ -218,7 +219,9 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
   }
 }
 
-/// 아이콘(24) + 라벨(12). 켜지면 검정 아이콘·SemiBold 검정 글씨(블랙모드는 흰 아이콘·흰 글씨).
+/// Bottom Navigation/Item(130:9663) 한 면. 56 칸 위에서 12 아래에 23 아이콘(가운데), 42 아래에 12 라벨(줄 높이 140%, 가운데).
+/// 라벨은 피그마처럼 칸 아래로 3 남짓 넘친다. 켜지면 검정 아이콘·SemiBold #181920(블랙모드는 흰 아이콘·흰 글씨),
+/// 꺼지면 회색 아이콘·Regular #8B95A1(블랙모드 #494949).
 class _TabFace extends StatelessWidget {
   const _TabFace({required this.tab, required this.on, required this.light});
 
@@ -226,32 +229,62 @@ class _TabFace extends StatelessWidget {
   final bool on;
   final bool light;
 
+  static const iconTop = 12.0;
+  static const iconSize = 23.0;
+  static const labelTop = 42.0;
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      clipBehavior: Clip.none,
       children: [
-        SvgPicture.asset(
-          'assets/icons/tab/${tab._icon}${light ? '_light' : ''}_${on ? 'on' : 'off'}.svg',
-          width: 24,
-          height: 24,
+        Positioned(
+          top: iconTop,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/icons/tab/${tab._icon}${light ? '_light' : ''}_${on ? 'on' : 'off'}.svg',
+              width: iconSize,
+              height: iconSize,
+            ),
+          ),
         ),
-        const SizedBox(height: 6),
-        Text(
-          tab.label,
-          maxLines: 1,
-          style: TextStyle(
-            fontSize: 12,
-            height: 1.4,
-            fontWeight: on ? FontWeight.w600 : FontWeight.w400,
-            color: light
-                ? (on ? const Color(0xFF181920) : const Color(0xFF8B95A1))
-                : (on ? Colors.white : const Color(0xFF494949)),
+        Positioned(
+          top: labelTop,
+          left: 0,
+          right: 0,
+          child: Text(
+            tab.label,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.4,
+              letterSpacing: 0,
+              fontWeight: on ? FontWeight.w600 : FontWeight.w400,
+              color: light
+                  ? (on ? const Color(0xFF181920) : const Color(0xFF8B95A1))
+                  : (on ? Colors.white : const Color(0xFF494949)),
+            ),
           ),
         ),
       ],
     );
   }
+}
+
+/// 칸(56) 아래로 넘치는 라벨이 잘리지 않게 아래만 [_overflow]만큼 더 보여 준다(굴러 들어오는 면은 60 아래라 안 보인다).
+class _TabClipper extends CustomClipper<Rect> {
+  const _TabClipper();
+
+  static const _overflow = 4.0;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, 0, size.width, size.height + _overflow);
+
+  @override
+  bool shouldReclip(_TabClipper old) => false;
 }
 
 /// Flip Shade(위에서 아래로 #384A5E 30% → 0) + Fold Edge(윗변 1px, 가운데가 진한 #384A5E 18%).
