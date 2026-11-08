@@ -224,10 +224,12 @@ class _DimPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var holes = Path();
-    if (circle != null) holes.addOval(circle!);
-    if (card != null) holes.addRRect(RRect.fromRectAndRadius(card!, const Radius.circular(16)));
-    final path = Path.combine(PathOperation.difference, Path()..addRect(Offset.zero & size), holes);
+    // 웹(CanvasKit)에서는 Path.combine 차집합이 구멍 없이 그려져서, 짝홀 채우기로 구멍을 낸다.
+    final path = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size);
+    if (circle != null) path.addOval(circle!);
+    if (card != null) path.addRRect(RRect.fromRectAndRadius(card!, const Radius.circular(16)));
     canvas.drawPath(path, Paint()..color = CalCoachmarkOverlay.dimColor);
   }
 

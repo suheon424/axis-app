@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -66,7 +68,7 @@ class BadgeCelebration extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 14),
                 _SaveImagePill(onTap: () => showAxisToast(context, '이미지를 저장했어요', bottom: 100)),
               ],
             ),
@@ -94,72 +96,136 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 310,
-      constraints: const BoxConstraints(minHeight: 340),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment(0.3, 1),
-          colors: [Color(0xFF2F6FF0), Color(0xFFA9D3FF), Color(0xFFF5FAFF)],
-          stops: [0, 0.4, 1],
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 220,
-            height: 194,
-            child: medal == AxisMedal.awakening
-                ? Image.asset('assets/images/event/badge_celebrate_awakening.png', semanticLabel: medal.title)
-                : Center(
-                    child: Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.002)
-                        ..rotateX(0.5)
-                        ..rotateZ(-math.pi / 5),
-                      child: AxisMedalImage(medal, size: 130),
+    // Frame 53(320×351, 굴곡 24): 배지 그림(위 10) → 제목(18 Bold) → 설명(12 Medium) → axis 로고, 오른쪽 위 Button/Close.
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: CustomPaint(
+        painter: const _CardGradientPainter(),
+        child: Stack(
+          children: [
+            Container(
+              width: 320,
+              constraints: const BoxConstraints(minHeight: 351),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 19),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 220,
+                    height: 194,
+                    child: medal == AxisMedal.awakening
+                        ? Image.asset('assets/images/event/badge_celebrate_awakening.png', semanticLabel: medal.title)
+                        : Center(
+                            child: Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.002)
+                                ..rotateX(0.5)
+                                ..rotateZ(-math.pi / 5),
+                              child: AxisMedalImage(medal, size: 130),
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: '축하합니다!\n'),
+                        TextSpan(
+                          text: medal.title,
+                          style: const TextStyle(color: AppColors.brand),
+                        ),
+                        const TextSpan(text: ' 배지를 받았어요.'),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18, height: 1.3, fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.36,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1F2027),
                     ),
                   ),
-          ),
-          const SizedBox(height: 12),
-          Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(text: '축하합니다!\n'),
-                TextSpan(
-                  text: medal.title,
-                  style: const TextStyle(color: AppColors.brand),
-                ),
-                const TextSpan(text: ' 배지를 받았어요.'),
-              ],
+                  const SizedBox(height: 30),
+                  SvgPicture.asset(
+                    'assets/icons/logo_axis_gray.svg',
+                    width: 60,
+                    height: 16,
+                    excludeFromSemantics: true,
+                  ),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
-            style: AxisText.title18.copyWith(color: Colors.black),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, height: 1.36, fontWeight: FontWeight.w500, color: AppColors.gray07),
-          ),
-          const SizedBox(height: 22),
-          SvgPicture.asset(
-            'assets/icons/wordmark_axis.svg',
-            height: 18,
-            colorFilter: const ColorFilter.mode(AppColors.gray05, BlendMode.srcIn),
-          ),
-        ],
+            Positioned(top: 24, right: 20, child: AxisCloseButton(onPressed: () => Navigator.of(context).pop())),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 반투명 흰 알약(굴곡 20, 흰 1px 테두리) "이미지 저장".
+/// Frame 53의 채우기 세 겹을 피그마 gradientTransform 그대로 그린다.
+/// 아래부터: 세로 선형(#D3EBFF → 흰색), 하늘색 원형 빛(#A0D5FF), 왼쪽 위 파란 원형 빛(#004FED).
+class _CardGradientPainter extends CustomPainter {
+  const _CardGradientPainter();
+
+  static const _layers = <(List<double>, Gradient)>[
+    (
+      [
+        -1.25420229757367e-9,
+        1.7353096008300781,
+        -0.7353096008300781,
+        -1.7353096008300781,
+        5.273559366969494e-16,
+        1.367654800415039,
+      ],
+      LinearGradient(begin: Alignment(-1, 0), end: Alignment(1, 0), colors: [Color(0xFFD3EBFF), Color(0xFFFFFFFF)]),
+    ),
+    (
+      [
+        -0.20555274188518524,
+        0.3133062720298767,
+        0.6865079402923584,
+        -0.20565979182720184,
+        -0.2014390528202057,
+        0.701558530330658,
+      ],
+      RadialGradient(colors: [Color(0xFFA0D5FF), Color(0x00FFFFFF)]),
+    ),
+    (
+      [0.20042461156845093, 0.29939785599708557, 0.5, -0.1965300589799881, 0.1964135766029358, 0.5],
+      RadialGradient(colors: [Color(0xFF004FED), Color(0x00FFFFFF)]),
+    ),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final (t, gradient) in _layers) {
+      // t는 (0~1로 맞춘 칸 좌표) → (그라디언트 단위 사각형) 변환. 그 역으로 단위 사각형을 칸 위에 놓는다.
+      final a = t[0], b = t[1], c = t[2], d = t[3], e = t[4], f = t[5];
+      final det = a * e - b * d;
+      final ia = e / det, ib = -b / det, id = -d / det, ie = a / det;
+      final ic = -(ia * c + ib * f), iff = -(id * c + ie * f);
+      canvas.save();
+      canvas.scale(size.width, size.height);
+      canvas.transform(Float64List.fromList([ia, id, 0, 0, ib, ie, 0, 0, 0, 0, 1, 0, ic, iff, 0, 1]));
+      const unit = Rect.fromLTWH(0, 0, 1, 1);
+      canvas.drawRect(const Rect.fromLTWH(-20, -20, 41, 41), Paint()..shader = gradient.createShader(unit));
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CardGradientPainter old) => false;
+}
+
+/// Frame 76: 검정 40% 알약(130×40, 굴곡 20, 배경 흐림 10) "이미지 저장".
 class _SaveImagePill extends StatelessWidget {
   const _SaveImagePill({required this.onTap});
 
@@ -170,21 +236,23 @@ class _SaveImagePill extends StatelessWidget {
     return PressBuilder(
       semanticLabel: '이미지 저장',
       onTap: onTap,
-      builder: (context, pressed) => Container(
-        constraints: const BoxConstraints(minHeight: 42),
-        padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: pressed ? 0.24 : 0.14),
-          borderRadius: BorderRadius.circular(21),
-          border: Border.all(color: Colors.white),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.download_rounded, size: 20, color: Colors.white),
-            SizedBox(width: 8),
-            Text('이미지 저장', style: AxisText.button),
-          ],
+      builder: (context, pressed) => ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            color: Colors.black.withValues(alpha: pressed ? 0.55 : 0.4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset('assets/icons/list_download.svg', width: 18, height: 18),
+                const SizedBox(width: 8),
+                const Text('이미지 저장', style: AxisText.button),
+              ],
+            ),
+          ),
         ),
       ),
     );
