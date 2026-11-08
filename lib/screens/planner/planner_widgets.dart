@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -383,66 +385,163 @@ class _AiBubble extends StatelessWidget {
 }
 
 /// 아래 고정 입력창 "무엇을 도와드릴까요?" + 보내기(↑). 글자를 쓰면 보내기가 켜진다.
-class AiPromptField extends StatelessWidget {
-  const AiPromptField({super.key, required this.controller, required this.focusNode, required this.onSend});
+class AiPromptField extends StatefulWidget {
+  const AiPromptField({
+    super.key,
+    required this.controller,
+    required this.focusNode,
+    required this.onSend,
+    this.spin = true,
+  });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final VoidCallback onSend;
 
+  /// 각도 그라디언트(채우기·테두리)를 [spinDuration]마다 360° 돌릴지.
+  final bool spin;
+
+  static const spinDuration = Duration(milliseconds: 3200);
+
+  /// 테스트에서 끝없는 회전 때문에 pumpAndSettle이 멈추지 않게 끌 수 있다.
+  @visibleForTesting
+  static bool spinEnabled = true;
+
+  @override
+  State<AiPromptField> createState() => _AiPromptFieldState();
+}
+
+class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProviderStateMixin {
+  late final _spin = AnimationController(vsync: this, duration: AiPromptField.spinDuration);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_spinning) _spin.repeat();
+  }
+
+  bool get _spinning => widget.spin && AiPromptField.spinEnabled;
+
+  @override
+  void didUpdateWidget(AiPromptField old) {
+    super.didUpdateWidget(old);
+    if (_spinning && !_spin.isAnimating) _spin.repeat();
+    if (!widget.spin && _spin.isAnimating) _spin.stop();
+  }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
+
+  TextEditingController get controller => widget.controller;
+  FocusNode get focusNode => widget.focusNode;
+  VoidCallback get onSend => widget.onSend;
+
   @override
   Widget build(BuildContext context) {
     final ready = controller.text.trim().isNotEmpty;
-    return Container(
-      constraints: const BoxConstraints(minHeight: 50),
-      padding: const EdgeInsets.only(left: 20, right: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF005BF1), width: 2),
-        gradient: const LinearGradient(colors: [Color(0xFF001841), Color(0xFF00153A), Color(0xFF021E4D)]),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              minLines: 1,
-              maxLines: 4,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
-              cursorColor: Colors.white,
-              style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.white),
-              decoration: const InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
-                hintText: '무엇을 도와드릴까요?',
-                hintStyle: TextStyle(fontSize: 14, height: 1.4, color: Colors.white),
-              ),
-            ),
-          ),
-          Semantics(
-            button: true,
-            enabled: ready,
-            label: '보내기',
-            excludeSemantics: true,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: ready ? onSend : null,
-              child: SizedBox(
-                width: 40,
-                height: 44,
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 150),
-                  opacity: ready ? 1 : 0.5,
-                  child: const Icon(Icons.arrow_upward_rounded, size: 18, color: Colors.white),
+    return CustomPaint(
+      painter: _PromptGradientPainter(_spin),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 50),
+        padding: const EdgeInsets.only(left: 20, right: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+                cursorColor: Colors.white,
+                style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.white),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                  hintText: '무엇을 도와드릴까요?',
+                  hintStyle: TextStyle(fontSize: 14, height: 1.4, color: Colors.white),
                 ),
               ),
             ),
-          ),
-        ],
+            Semantics(
+              button: true,
+              enabled: ready,
+              label: '보내기',
+              excludeSemantics: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: ready ? onSend : null,
+                child: SizedBox(
+                  width: 40,
+                  height: 44,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 150),
+                    opacity: 1, // 피그마: 비어 있어도 흰 화살표
+                    child: const Icon(Icons.arrow_upward_rounded, size: 18, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Frame 105(입력창) 채우기·테두리: 같은 각도 그라디언트(#005BF0 14.5% · #136BFF 33.5% · #005FFF 87.9% · #003DAB 97.2%,
+/// 피그마 gradientTransform 그대로) 위에 채우기만 검정 70%. 테두리는 안쪽 2. [turns]만큼 그라디언트를 중심으로 돌린다.
+class _PromptGradientPainter extends CustomPainter {
+  _PromptGradientPainter(this.turns) : super(repaint: turns);
+
+  final Animation<double> turns;
+
+  // 피그마 gradientTransform [[a, b, tx], [c, d, ty]]: 노드(0~1) → 그라디언트 공간.
+  static const _a = -0.8781932592391968, _b = 0.27170079946517944, _tx = 1.1297459602355957;
+  static const _c = -0.5806764960289001, _d = -0.03502766788005829, _ty = 0.8927838802337646;
+
+  static const _c1 = Color(0xFF005BF0), _c2 = Color(0xFF136BFF), _c3 = Color(0xFF005FFF), _c4 = Color(0xFF003DAB);
+
+  /// 0과 1 자리(97.2% → 다음 바퀴 14.5% 사이)의 색.
+  static final _wrap = Color.lerp(_c4, _c1, (1 - 0.972) / (1 - 0.972 + 0.145))!;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 그라디언트 공간 → 화면 픽셀: 픽셀 = S · A⁻¹ · (g − t), 그리고 중심(0.5, 0.5)을 축으로 회전.
+    final det = _a * _d - _b * _c;
+    final ia = _d / det, ib = -_b / det, ic = -_c / det, id = _a / det;
+    final toNode = Matrix4(ia, ic, 0, 0, ib, id, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)..translateByDouble(-_tx, -_ty, 0, 1);
+    final local = Matrix4.diagonal3Values(size.width, size.height, 1)
+      ..multiply(toNode)
+      ..translateByDouble(0.5, 0.5, 0, 1)
+      ..rotateZ(turns.value * 2 * math.pi)
+      ..translateByDouble(-0.5, -0.5, 0, 1);
+    final shader = ui.Gradient.sweep(
+      const Offset(0.5, 0.5),
+      [_wrap, _c1, _c2, _c3, _c4, _wrap],
+      [0, 0.145, 0.335, 0.879, 0.972, 1],
+      TileMode.clamp,
+      0,
+      2 * math.pi,
+      local.storage,
+    );
+    final rrect = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8));
+    canvas.drawRRect(rrect, Paint()..shader = shader);
+    canvas.drawRRect(rrect, Paint()..color = Colors.black.withValues(alpha: 0.7));
+    canvas.drawRRect(
+      rrect.deflate(1),
+      Paint()
+        ..shader = shader
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PromptGradientPainter old) => false;
 }

@@ -15,6 +15,8 @@ Future<void> _pump(WidgetTester tester, {double keyboard = 0, double inset = 0})
 }
 
 void main() {
+  setUpAll(() => AiPromptField.spinEnabled = false);
+
   testWidgets('0801 prompt bar sits 40 above the screen bottom (Figma)', (tester) async {
     await _pump(tester);
     expect(tester.getRect(find.byType(AiPromptField)).bottom, 844 - 40);

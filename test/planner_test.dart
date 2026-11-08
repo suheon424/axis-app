@@ -39,6 +39,8 @@ Future<void> _open(WidgetTester tester, {AiPlannerStage? stage = AiPlannerStage.
 }
 
 void main() {
+  setUpAll(() => AiPromptField.spinEnabled = false);
+
   setUpAll(() async {
     final loader = FontLoader('Pretendard');
     for (final w in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
