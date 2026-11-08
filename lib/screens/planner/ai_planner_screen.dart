@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -83,7 +85,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   void _answer(AiChatMessage m, bool agreed) {
     setState(() => m.answer = agreed);
-    showAxisToast(context, agreed ? '오늘 일정표를 수정했어요' : '제안을 취소했어요', bottom: 90);
+    showAxisToast(context, agreed ? '오늘 일정표를 수정했어요' : '제안을 취소했어요', bottom: 68);
   }
 
   @override
@@ -92,7 +94,8 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
       value: lightScreenOverlay.copyWith(statusBarColor: AiPlannerBackground.top),
       child: Scaffold(
         backgroundColor: AiPlannerBackground.bottom,
-        resizeToAvoidBottomInset: true,
+        // 키패드는 아래 입력창이 직접 비켜선다(_main의 AnimatedPadding).
+        resizeToAvoidBottomInset: false,
         // 피그마 08 · 0801 · 0802에는 탭 바가 없다(위 뒤로 버튼으로 나간다).
         body: AiPlannerBackground(
           child: AnimatedSwitcher(
@@ -104,11 +107,20 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                     onTap: _endIntro,
                     child: AiPlannerIntro(onFinished: _endIntro),
                   )
-                : SafeArea(key: const ValueKey('main'), child: _main()),
+                : SafeArea(key: const ValueKey('main'), bottom: false, child: _main()),
           ),
         ),
       ),
     );
+  }
+
+  static const _barGap = 40.0;
+
+  double _barBottom(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final keyboard = mq.viewInsets.bottom;
+    if (keyboard > 0) return keyboard + 8;
+    return math.max(_barGap, mq.viewPadding.bottom + 6);
   }
 
   Widget _main() {
@@ -133,8 +145,11 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
                 : AiPlannerHome(key: const ValueKey('home'), onSuggestion: _send),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        // 피그마 0801·0802(높이 774 프레임): 입력창 아래가 화면 끝에서 40 위. 키패드가 뜨면 입력창이 키패드 바로 위(8)로 올라온다.
+        AnimatedPadding(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.fromLTRB(20, 12, 20, _barBottom(context)),
           child: AiPromptField(controller: _input, focusNode: _focus, onSend: _send),
         ),
       ],

@@ -134,7 +134,8 @@ class AiPlannerHome extends StatelessWidget {
                 const Text('어떤 계획을\n도와드릴까요?', textAlign: TextAlign.center, style: _title),
                 const Spacer(flex: 6),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 6),
+                  // 예시 카드 아래와 입력창 위 사이 30(피그마 0801: 카드 끝 654, 입력창 684).
+                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
