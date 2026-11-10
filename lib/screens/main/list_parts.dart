@@ -99,7 +99,7 @@ class ListCheckbox extends StatelessWidget {
   }
 }
 
-/// "틀어진 일정 맞추기" 떠 있는 알약(흰 바탕 + 파란 테두리 + 뒤로 번지는 파란 빛).
+/// "틀어진 일정 맞추기" 떠 있는 알약([AxisAiPill]). 하단바 위 24에 고정.
 class ListFixButton extends StatelessWidget {
   const ListFixButton({super.key, required this.onTap});
 
@@ -107,43 +107,7 @@ class ListFixButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PressBuilder(
-      semanticLabel: '틀어진 일정 맞추기',
-      onTap: onTap,
-      builder: (context, pressed) => Container(
-        constraints: const BoxConstraints(minHeight: 38),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: pressed ? AppColors.brandSoft : Colors.white,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: const Color(0xFF005BF1)),
-          boxShadow: const [BoxShadow(color: Color(0x66005BF1), blurRadius: 8, spreadRadius: 0.5)],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Color(0x260D0C48), blurRadius: 10)],
-              ),
-              child: ListAiOrb(size: 22),
-            ),
-            SizedBox(width: 8),
-            Text(
-              '틀어진 일정 맞추기',
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.4,
-                letterSpacing: -0.32,
-                fontWeight: FontWeight.w600,
-                color: AppColors.brand,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return AxisAiPill(icon: const AxisAiPlusOrb(), label: '틀어진 일정 맞추기', onTap: onTap);
   }
 }
 

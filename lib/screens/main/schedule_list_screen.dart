@@ -264,12 +264,20 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                         )
                       else ...[
                         _listSection(),
-                        if (_dayItems.isNotEmpty) ...[const SizedBox(height: 40), ListFixButton(onTap: _runAi)],
-                        const SizedBox(height: 40),
+                        // 아래 떠 있는 버튼에 마지막 줄이 가리지 않게 비워 둔다.
+                        SizedBox(height: _dayItems.isNotEmpty ? 40 + 37 + 24 : 40),
                       ],
                     ],
                   ),
                 ),
+                // 목록·지도 모두 AI 버튼은 스크롤과 상관없이 하단바 위 24에 고정.
+                if (!_mapTab && _dayItems.isNotEmpty)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 24,
+                    child: Center(child: ListFixButton(onTap: _runAi)),
+                  ),
                 if (_mapTab)
                   Positioned(
                     left: 0,
