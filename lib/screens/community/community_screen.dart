@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 
 import '../../widgets/kit/kit.dart';
@@ -214,24 +215,36 @@ class _HeroState extends State<_Hero> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 피그마 09_커뮤니티: 검색창 306×40(x 20) + 11 띄우고 종 28(Icon/Nav/Bell), 종 오른쪽 위에 알림 1.
           Padding(
-            padding: const EdgeInsets.only(left: 20, right: 13),
+            padding: const EdgeInsets.only(left: 20),
             child: Row(
               children: [
-                Expanded(child: _SearchPill(onTap: widget.onSearch)),
-                const SizedBox(width: 3),
-                AxisIconButton(
-                  icon: KitIcon.navBookmark,
-                  tooltip: '저장한 계획',
-                  color: Colors.white,
-                  onPressed: widget.onBookmarks,
-                ),
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    AxisIconButton(icon: KitIcon.navBell, tooltip: '알림', color: Colors.white, onPressed: widget.onBell),
-                    const Positioned(right: 3, top: 2, child: IgnorePointer(child: AxisNotificationBadge(count: 1))),
-                  ],
+                SizedBox(width: 306, child: _SearchPill(onTap: widget.onSearch)),
+                const SizedBox(width: 11),
+                Semantics(
+                  button: true,
+                  label: '알림',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: widget.onBell,
+                    child: SizedBox(
+                      width: 28,
+                      height: 40,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          SvgPicture.asset('assets/icons/community/bell.svg', width: 28, height: 28),
+                          const Positioned(
+                            left: 17,
+                            top: 4,
+                            child: IgnorePointer(child: AxisNotificationBadge(count: 1)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -346,13 +359,13 @@ class _SearchPill extends StatelessWidget {
         onTap: onTap,
         child: Container(
           constraints: const BoxConstraints(minHeight: 40),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          padding: const EdgeInsets.only(left: 8, right: 10, top: 10, bottom: 10),
           decoration: BoxDecoration(color: const Color(0x801F2027), borderRadius: BorderRadius.circular(6)),
-          child: const Row(
+          child: Row(
             children: [
-              AxisIcon(KitIcon.navSearch, size: 16, color: Colors.white),
-              SizedBox(width: 12),
-              Flexible(
+              SvgPicture.asset('assets/icons/community/search.svg', width: 18, height: 18),
+              const SizedBox(width: 14),
+              const Flexible(
                 child: Text(
                   '관심 있는 계획을 검색해보세요',
                   maxLines: 1,

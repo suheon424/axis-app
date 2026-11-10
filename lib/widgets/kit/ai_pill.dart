@@ -124,14 +124,15 @@ class _AiPillPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // 알약: 흰 바탕 + 바깥쪽 1px 선. 한쪽(처음엔 오른쪽)이 진한 파랑, 반대쪽이 연한 파랑.
+    // 알약: 흰 바탕 + 바깥쪽 2px 선. 한쪽(처음엔 오른쪽)이 진한 파랑, 반대쪽(처음엔 왼쪽)이 연한 파랑.
+    // 연한 쪽은 아이콘 원의 밝은 테두리와 늘 같은 방향을 향해 함께 돈다.
     final pill = RRect.fromRectAndRadius(rect, const Radius.circular(100));
     canvas.drawRRect(pill, Paint()..color = pressed ? AppColors.brandSoft : Colors.white);
     canvas.drawRRect(
-      pill.inflate(0.5),
+      pill.inflate(1),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
+        ..strokeWidth = 2
         ..shader = SweepGradient(
           colors: const [_blue, _light, _light, _blue],
           stops: const [0, 0.3, 0.7, 1],
@@ -191,9 +192,10 @@ class _PlusOrbPainter extends CustomPainter {
     );
   }
 
-  /// 처음(0)은 피그마 자리(왼쪽 위, 가운데에서 (-2.85, -2.85)), [t]만큼 시계 방향으로 돈 자리.
+  /// 그라디언트 중심. 밝은 테두리는 중심 반대쪽에 생기므로, 알약 선의 밝은(연한) 쪽(처음엔 왼쪽 180°)과
+  /// 같은 방향이 되도록 중심을 그 반대(처음엔 오른쪽 0°)에 두고 선과 같은 속도로 돌린다.
   static Alignment _center(double t) {
-    final a = -3 * math.pi / 4 + t * 2 * math.pi;
+    final a = t * 2 * math.pi;
     const r = 2.85 * math.sqrt2 / 10.5;
     return Alignment(r * math.cos(a), r * math.sin(a));
   }

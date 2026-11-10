@@ -30,6 +30,7 @@ flutter:
     - assets/images/main/
     - assets/images/kit/
     - assets/icons/kit/
+    - assets/icons/community/
     - assets/images/my/
     - assets/images/event/
     - assets/images/planner/

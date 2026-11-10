@@ -69,9 +69,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
           fit: StackFit.expand,
           children: [
             Image.asset('assets/images/bg_welcome.png', fit: BoxFit.cover),
-            // 로고 영역 (프레임 상단에서 103px)
+            // 로고 영역 (프레임 상단에서 103px, 기기에서 너무 위라 20 내림)
             Positioned(
-              top: 103,
+              top: 123,
               left: 0,
               right: 0,
               child: _reveal(

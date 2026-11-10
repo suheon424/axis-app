@@ -208,7 +208,6 @@ class _Banner extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: const BoxDecoration(
             color: Color(0xFFF4F5FA),
-            borderRadius: BorderRadius.all(Radius.circular(8)),
             boxShadow: [BoxShadow(color: Colors.white, blurRadius: 10)],
             gradient: RadialGradient(
               center: Alignment(1, -0.546),

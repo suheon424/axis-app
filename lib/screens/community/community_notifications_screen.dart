@@ -57,9 +57,9 @@ class CommunityNotificationsScreen extends StatelessWidget {
       body: ValueListenableBuilder(
         valueListenable: communityUnread,
         builder: (context, unread, _) => ListView(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
           children: [
-            const _GroupLabel('오늘'),
+            _GroupLabel('오늘', communityNoticesToday.length),
             for (final (i, n) in communityNoticesToday.indexed)
               _NoticeRow(
                 notice: n,
@@ -67,8 +67,8 @@ class CommunityNotificationsScreen extends StatelessWidget {
                 divider: i < communityNoticesToday.length - 1,
                 onTap: () => _open(context, i, n),
               ),
-            const SizedBox(height: 20),
-            const _GroupLabel('이전 알림'),
+            const SizedBox(height: 28),
+            _GroupLabel('이전 알림', communityNoticesEarlier.length),
             for (final (i, n) in communityNoticesEarlier.indexed)
               _NoticeRow(
                 notice: n,
@@ -83,16 +83,35 @@ class CommunityNotificationsScreen extends StatelessWidget {
   }
 }
 
+/// 묶음 머리줄: 12-4 내가 쓴 댓글의 "댓글 4"(MyCountHeader)와 같은 모양.
+/// 14 SemiBold 이름 + 파란 개수, 아래 1px gray04 선(최소 높이 36, 선 위 8).
 class _GroupLabel extends StatelessWidget {
-  const _GroupLabel(this.text);
+  const _GroupLabel(this.text, this.count);
 
   final String text;
+  final int count;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Text(text, style: const TextStyle(fontSize: 12, height: 1.4, color: AppColors.gray06)),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 36),
+      padding: const EdgeInsets.only(bottom: 8),
+      alignment: Alignment.bottomLeft,
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.gray04)),
+      ),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: '$text '),
+            TextSpan(
+              text: '$count',
+              style: TextStyle(color: count > 0 ? AppColors.brand : AppColors.text),
+            ),
+          ],
+        ),
+        style: const TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w600, color: AppColors.text),
+      ),
     );
   }
 }
