@@ -22,12 +22,12 @@ const homeDividerColor = Color(0x14FFFFFF);
 /// 어두운 카드 안 막대·로딩 막대의 바탕(흰 12%).
 const homeTrackColor = Color(0x1FFFFFFF);
 
-/// 목록 ↔ 달성률 토글(시안 "③ 목록 ↔ 달성률 · 회전"). 배경 사진·상단 줄·탭 바는 그대로 두고,
-/// 그 위의 내용([HomeRotateLayer])만 큐브의 두 옆면처럼 90° 돈다: 0.6초, cubic-bezier(0.65, 0, 0.35, 1), 원근 1100,
-/// 돌아가는 동안 앞이 아닌 면은 55%까지 어두워진다. [forward]면 목록 → 달성률(오른쪽 면이 앞으로).
+/// 목록 ↔ 달성률 토글. 09 커뮤니티 상단 슬라이드([AxisCubeCarousel])와 같은 네모 큐브로 돈다: 0.5초,
+/// cubic-bezier(0.34, 1.3, 0.64, 1), 원근 900, 옆으로 돌아간 면은 35%까지 어두워진다.
+/// 상단 줄과 탭 바는 그대로 두고 그 사이 칸만 돈다. [forward]면 목록 → 달성률(오른쪽 면이 앞으로).
 ///
-/// 끊기지 않게 두 화면의 내용을 사진으로 떠서 돌린다: 누른 순간 지금 내용을 찍어 두고, 새 화면은 한 번 그린 뒤
-/// 찍는다. 회전은 그 다음 프레임부터 시작하므로 새 화면을 만드는 시간이 회전 중간에 끼지 않는다.
+/// 면은 배경까지 포함한 화면 전체 사진이라 불투명하다(뒤가 비쳐 보이지 않는다). 누른 순간 지금 화면을 찍어 두고,
+/// 새 화면은 한 번 그린 뒤 찍는다. 회전은 그 다음 프레임부터 시작하므로 새 화면을 만드는 시간이 회전 중간에 끼지 않는다.
 Future<void> homeSwitchTo(BuildContext context, Widget screen, {required bool forward}) async {
   if (homeRotating.value) return;
   // 큐브 장면(웹에서는 사진으로 뜰 수 없는 HTML 요소)을 그림으로 바꿔 둔 한 프레임 뒤에 찍는다.
@@ -51,12 +51,12 @@ Future<void> homeSwitchTo(BuildContext context, Widget screen, {required bool fo
   );
 }
 
-const homeRotateDuration = Duration(milliseconds: 600);
+const homeRotateDuration = Duration(milliseconds: 500);
 
 /// 목록 ↔ 달성률이 도는 중인지. 도는 동안 큐브 장면은 그림으로 대신 보인다.
 final homeRotating = ValueNotifier<bool>(false);
 
-/// 홈 화면에서 토글로 돌아가는 내용(배경 사진·상단 줄 제외). 화면 전체 크기로 화면 왼쪽 위에 둔다.
+/// 홈 화면에서 토글로 돌아가는 내용(배경 사진·상단 줄 제외). 도는 동안 제자리의 내용은 숨긴다.
 class HomeRotateLayer extends StatelessWidget {
   const HomeRotateLayer({super.key, required this.child});
 
@@ -65,22 +65,9 @@ class HomeRotateLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hidden = context.dependOnInheritedWidgetOfExactType<_HomeRotateScope>()?.hidden ?? false;
-    // 도는 동안에도 그리기는 해서(사진을 뜰 수 있게) 잘라서만 숨긴다.
-    return ClipRect(
-      clipper: hidden ? const _RectClipper(Rect.zero) : null,
-      child: _HomeLayerBoundary(child: child),
-    );
+    return Visibility.maintain(visible: !hidden, child: child);
   }
 }
-
-class _HomeLayerBoundary extends SingleChildRenderObjectWidget {
-  const _HomeLayerBoundary({super.child});
-
-  @override
-  RenderObject createRenderObject(BuildContext context) => _RenderHomeLayer();
-}
-
-class _RenderHomeLayer extends RenderRepaintBoundary {}
 
 class _HomeRotateScope extends InheritedWidget {
   const _HomeRotateScope({required this.hidden, required super.child});
@@ -91,20 +78,19 @@ class _HomeRotateScope extends InheritedWidget {
   bool updateShouldNotify(_HomeRotateScope old) => old.hidden != hidden;
 }
 
-_RenderHomeLayer? _findLayer(RenderObject? root) {
-  if (root == null) return null;
-  if (root is _RenderHomeLayer) return root;
-  _RenderHomeLayer? found;
-  root.visitChildren((c) => found ??= _findLayer(c));
-  return found;
+/// [context] 화면 전체(배경 포함)를 담은 가장 가까운 그리기 경계를 이미지로 뜬다.
+ui.Image? _snapshot(BuildContext context) {
+  RenderObject? r = context.findRenderObject();
+  while (r != null && r is! RenderRepaintBoundary) {
+    r = r.parent;
+  }
+  if (r is! RenderRepaintBoundary || !r.hasSize) return null;
+  return _capture(r, MediaQuery.devicePixelRatioOf(context));
 }
 
-/// [context] 화면의 [HomeRotateLayer]를 이미지로 뜬다.
-ui.Image? _snapshot(BuildContext context) {
-  final layer = _findLayer(context.findRenderObject());
-  if (layer == null || !layer.hasSize) return null;
+ui.Image? _capture(RenderRepaintBoundary b, double dpr) {
   try {
-    return layer.toImageSync(pixelRatio: MediaQuery.devicePixelRatioOf(context));
+    return b.toImageSync(pixelRatio: dpr);
   } catch (_) {
     return null;
   }
@@ -113,7 +99,7 @@ ui.Image? _snapshot(BuildContext context) {
 class _HomeRotate extends StatefulWidget {
   const _HomeRotate({required this.from, required this.forward, required this.child});
 
-  /// 나가는 화면의 내용 사진.
+  /// 나가는 화면 전체 사진.
   final ui.Image from;
   final bool forward;
 
@@ -125,11 +111,12 @@ class _HomeRotate extends StatefulWidget {
 }
 
 class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderStateMixin {
-  static const _curve = Cubic(0.65, 0, 0.35, 1);
-  static const _perspective = 1100.0;
-  static const _dim = 0.55;
+  // 09 커뮤니티 상단 슬라이드와 같은 값.
+  static const _curve = Cubic(0.34, 1.3, 0.64, 1);
+  static const _perspective = 900.0;
+  static const _sideDim = 0.35;
 
-  final _childKey = GlobalKey();
+  final _boundaryKey = GlobalKey();
   late final _c = AnimationController(vsync: this, duration: homeRotateDuration)..addListener(_tick);
   ui.Image? _from;
   ui.Image? _to;
@@ -143,16 +130,13 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
 
   void _tick() => setState(() {});
 
-  /// 새 화면이 한 번 그려진 뒤 내용 사진을 뜨고 회전을 시작한다.
+  /// 새 화면이 한 번(내용까지) 그려진 뒤 사진을 뜨고, 제자리 내용은 숨긴 채 회전을 시작한다.
   void _start() {
     if (!mounted) return;
-    final layer = _findLayer(_childKey.currentContext?.findRenderObject());
-    if (layer != null) {
-      try {
-        _to = layer.toImageSync(pixelRatio: MediaQuery.devicePixelRatioOf(context));
-      } catch (_) {}
-    }
+    final b = _boundaryKey.currentContext?.findRenderObject();
+    if (b is RenderRepaintBoundary && b.hasSize) _to = _capture(b, MediaQuery.devicePixelRatioOf(context));
     if (_to == null) return _finish();
+    setState(() {});
     _c.forward().whenComplete(_finish);
   }
 
@@ -180,9 +164,10 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
     final from = _from;
     final to = _to;
     final child = _HomeRotateScope(
-      hidden: from != null,
-      child: KeyedSubtree(
-        key: _childKey,
+      // 첫 프레임은 새 내용을 사진으로 뜰 수 있게 그대로 그린다(나가는 면이 그 위를 덮는다).
+      hidden: to != null,
+      child: RepaintBoundary(
+        key: _boundaryKey,
         child: IgnorePointer(ignoring: from != null, child: widget.child),
       ),
     );
@@ -199,13 +184,10 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
         final dir = widget.forward ? 1.0 : -1.0;
         final outA = -dir * 90 * e;
         final inA = dir * 90 * (1 - e);
-        final outFace = _face(from, dpr, outA, content, size);
-        // 새 내용을 찍기 전 첫 프레임에는 나가는 면만 제자리에 둔다.
-        final faces = to == null
-            ? [outFace]
-            : (outA.abs() > inA.abs()
-                  ? [outFace, _face(to, dpr, inA, content, size)]
-                  : [_face(to, dpr, inA, content, size), outFace]);
+        // 등 돌린 면(|각| ≥ 90)은 그리지 않고, 먼 면부터 그린다.
+        final faces = <(double, ui.Image)>[(outA, from), if (to != null) (inA, to)]
+          ..removeWhere((f) => f.$1.abs() >= 90)
+          ..sort((a, b) => b.$1.abs().compareTo(a.$1.abs()));
         return Stack(
           fit: StackFit.expand,
           children: [
@@ -213,7 +195,10 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
             // 원근으로 커진 면이 상단 줄·탭 바를 덮지 않게 가운데 칸 안에서만 그린다.
             ClipRect(
               clipper: _RectClipper(content),
-              child: Stack(fit: StackFit.expand, children: faces),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [for (final f in faces) _face(f.$2, dpr, f.$1, content, size)],
+              ),
             ),
           ],
         );
@@ -221,10 +206,10 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
     );
   }
 
-  /// 내용 사진의 가운데(상단 줄과 탭 바 사이)만 잘라 큐브 옆면으로 돌린다.
+  /// 화면 사진의 가운데(상단 줄과 탭 바 사이)만 잘라 큐브 옆면으로 돌린다.
   Widget _face(ui.Image image, double dpr, double angle, Rect content, Size size) {
     final d = size.width / 2; // 큐브 반지름
-    final v = (255 * (1 - _dim * angle.abs() / 90)).round();
+    final dim = _sideDim * math.min(1, angle.abs() / 30);
     return Positioned.fill(
       child: Transform(
         origin: content.center,
@@ -237,17 +222,16 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
         child: ClipRect(
           clipper: _RectClipper(content),
           child: Stack(
+            fit: StackFit.expand,
             children: [
               Positioned(
                 left: 0,
                 top: 0,
-                // 어두워지는 정도는 내용에만(투명한 곳은 그대로) 곱한다.
-                child: RawImage(
-                  image: image,
-                  scale: dpr,
-                  color: Color.fromARGB(255, v, v, v),
-                  colorBlendMode: BlendMode.modulate,
-                ),
+                child: RawImage(image: image, scale: dpr),
+              ),
+              Positioned.fromRect(
+                rect: content,
+                child: ColoredBox(color: Colors.black.withValues(alpha: dim)),
               ),
             ],
           ),

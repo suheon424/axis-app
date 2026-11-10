@@ -24,7 +24,7 @@ class AchievementScreen extends StatelessWidget {
       value: darkScreenOverlay.copyWith(statusBarColor: _statusColor),
       child: Scaffold(
         backgroundColor: Colors.black,
-        bottomNavigationBar: const AxisTabBar(current: MainTab.home),
+        bottomNavigationBar: const AxisTabBar(current: MainTab.home, light: false),
         body: Stack(
           children: [
             Positioned.fill(child: HomeBackground(top: top)),

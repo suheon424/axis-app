@@ -494,17 +494,17 @@ class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProvider
   }
 }
 
-/// Frame 105(입력창, 0801_ai온보딩): 채우기 검정, 반지름 8, 테두리 안쪽 2의 선형 그라디언트
-/// (#03215B 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%, 가운데 → 오른쪽 끝), 안쪽 그림자 #0141B6 x −10 흐림 15.
+/// Frame 105(입력창, 0801_ai온보딩): 채우기 검정 90%, 반지름 8, 테두리 안쪽 2의 선형 그라디언트
+/// (#1A3466 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%, 가운데 → 오른쪽 끝), 안쪽 그림자 #0141B6 x −10 흐림 15.
 /// 밝은 쪽(오른쪽)과 안쪽 그림자가 함께 [turns]만큼 테두리를 따라 360° 돈다.
 class _PromptGradientPainter extends CustomPainter {
   _PromptGradientPainter(this.turns) : super(repaint: turns);
 
   final Animation<double> turns;
 
-  // 피그마 테두리 색(#A0D5FF → #005FFF → #003DAB → #03215B)을 밝은 쪽(0°)에서 양옆으로 대칭으로 둘렀다.
+  // 피그마 테두리 색(#A0D5FF → #005FFF → #003DAB → #1A3466)을 밝은 쪽(0°)에서 양옆으로 대칭으로 둘렀다.
   static const _light = Color(0xFFA0D5FF), _blue = Color(0xFF005FFF), _deep = Color(0xFF003DAB);
-  static const _dark = Color(0xFF03215B);
+  static const _dark = Color(0xFF1A3466);
   static const _sweepColors = [_light, _blue, _deep, _dark, _dark, _deep, _blue, _light];
   static const _sweepStops = [0.0, 0.1, 0.22, 0.34, 0.66, 0.78, 0.9, 1.0];
   static const _shadow = Color(0xFF0141B6);
@@ -518,7 +518,7 @@ class _PromptGradientPainter extends CustomPainter {
     final dir = Offset(math.cos(a), math.sin(a)); // 밝은 쪽 방향(박스 비율 공간)
     final center = size.center(Offset.zero);
 
-    canvas.drawRRect(rrect, Paint()..color = Colors.black);
+    canvas.drawRRect(rrect, Paint()..color = Colors.black.withValues(alpha: 0.9));
 
     // 안쪽 그림자: 박스 밖을 칠한 모양을 밝은 쪽 반대로 10 밀어 흐리게 그리고, 박스 안만 남긴다.
     canvas.save();
