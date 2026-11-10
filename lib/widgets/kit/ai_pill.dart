@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../theme/app_theme.dart';
 import 'kit_buttons.dart';
@@ -143,26 +144,24 @@ class _AiPillPainter extends CustomPainter {
   bool shouldRepaint(_AiPillPainter old) => old.pressed != pressed || old.turns != turns;
 }
 
-/// AI 알약 안의 동그란 "+" 아이콘(시안 AI/Orb Frame 290): 남색 #2F5498 위에 가운데는 비고 가장자리로
-/// #004FED → #A0D5FF로 밝아지는 원형 그라디언트(중심은 오른쪽 위), 흰 + 10.5.
+/// AI 알약 안의 동그란 "+" 아이콘. 피그마 Frame 290(218:11185)을 SVG로 뽑은 값 그대로:
+/// 21 원 #2F5598 위에 원형 그라디언트(중심 (7.65, 7.65), 반지름 14.24: 투명 → 76.9% #004FED → #A0D5FF),
+/// 흰 +는 피그마 벡터 경로(assets/images/kit/ai_orb_plus.svg).
 class AxisAiPlusOrb extends StatelessWidget {
   const AxisAiPlusOrb({super.key, this.size = 21, this.turns});
 
   final double size;
 
-  /// 주면 원형 그라디언트(밝은 테두리)가 이 값(0~1)만큼 원을 따라 돈다.
+  /// 주면 원형 그라디언트(밝은 테두리)가 이 값(0~1)만큼 원을 따라 돈다. + 는 그대로.
   final Animation<double>? turns;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Color(0x260D0C48), blurRadius: 10)],
-      ),
-      child: SizedBox.square(
-        dimension: size,
-        child: CustomPaint(painter: _PlusOrbPainter(turns ?? const AlwaysStoppedAnimation(0))),
+    return SizedBox.square(
+      dimension: size,
+      child: CustomPaint(
+        painter: _PlusOrbPainter(turns ?? const AlwaysStoppedAnimation(0)),
+        child: SvgPicture.asset('assets/images/kit/ai_orb_plus.svg', width: size, height: size),
       ),
     );
   }
@@ -178,31 +177,24 @@ class _PlusOrbPainter extends CustomPainter {
     final rect = Offset.zero & size;
     final c = rect.center;
     final r = size.shortestSide / 2;
-    canvas.drawCircle(c, r, Paint()..color = const Color(0xFF2F5498));
+    canvas.drawCircle(c, r, Paint()..color = const Color(0xFF2F5598));
     canvas.drawCircle(
       c,
       r,
       Paint()
-        // 시안: 가운데(왼쪽 위)는 남색, 오른쪽 아래 가장자리가 밝다. 그 중심을 원을 따라 돌린다.
         ..shader = RadialGradient(
           center: _center(turns.value),
-          radius: 0.678,
+          radius: 14.2382 / 21,
           colors: const [Color(0x00000000), Color(0xFF004FED), Color(0xFFA0D5FF)],
-          stops: const [0, 0.769, 1],
+          stops: const [0, 0.769231, 1],
         ).createShader(rect),
     );
-    // 흰 + (10.5 / 21 크기, 굵기 약 3.5). 시안처럼 끝이 각진 십자.
-    final arm = size.width * 0.25;
-    final t = size.width * 0.17;
-    final white = Paint()..color = Colors.white;
-    canvas.drawRect(Rect.fromCenter(center: c, width: arm * 2, height: t), white);
-    canvas.drawRect(Rect.fromCenter(center: c, width: t, height: arm * 2), white);
   }
 
-  /// 처음(0)은 왼쪽 위(-0.25, -0.25), [t]만큼 시계 방향으로 돈 자리.
+  /// 처음(0)은 피그마 자리(왼쪽 위, 가운데에서 (-2.85, -2.85)), [t]만큼 시계 방향으로 돈 자리.
   static Alignment _center(double t) {
     final a = -3 * math.pi / 4 + t * 2 * math.pi;
-    const r = 0.354;
+    const r = 2.85 * math.sqrt2 / 10.5;
     return Alignment(r * math.cos(a), r * math.sin(a));
   }
 
