@@ -101,7 +101,7 @@ const eventCatalog = <EventKind, EventInfo>{
     kind: EventKind.invite,
     listTitle: '친구 초대 이벤트',
     heroTitle: '친구 초대하면\n둘 다 1,000P!',
-    bannerTitle: '친구  초대하면\n둘 다 1,000P!',
+    bannerTitle: '친구\n초대하면\n둘 다 1,000P!',
     bannerCaption: '3명 초대하면\n스타벅스 아메리카노 추가',
     period: '11.01 – 11.27',
     daysLeft: 4,

@@ -10,11 +10,11 @@ import 'kit_buttons.dart';
 ///
 /// 시안(07_07 J모드 · 제안 펼침_이동/삭제 Frame 278): 흰 알약 + 바깥쪽 1px 선(왼쪽 #A3C1F5 → 오른쪽 #1C67EF),
 /// 뒤에 파란 각도 그라디언트 선(1.4)을 가진 조금 큰 알약을 흐림 8로 번지게 깐다.
-/// 선과 번짐의 그라디언트는 [spinDuration]마다 360° 돈다(0801 입력창과 같은 빠르기).
+/// 왼쪽 아이콘은 두 버튼 모두 같은 AI 동그라미([AxisAiPlusOrb]).
+/// 선·번짐·아이콘 원의 그라디언트는 [spinDuration]마다 함께 360° 돈다(0801 입력창과 같은 빠르기).
 class AxisAiPill extends StatefulWidget {
-  const AxisAiPill({super.key, required this.icon, required this.label, required this.onTap});
+  const AxisAiPill({super.key, required this.label, required this.onTap});
 
-  final Widget icon;
   final String label;
   final VoidCallback onTap;
 
@@ -57,7 +57,7 @@ class _AxisAiPillState extends State<AxisAiPill> with SingleTickerProviderStateM
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              widget.icon,
+              AxisAiPlusOrb(turns: _spin),
               const SizedBox(width: 8),
               Text(
                 widget.label,
@@ -146,9 +146,12 @@ class _AiPillPainter extends CustomPainter {
 /// AI 알약 안의 동그란 "+" 아이콘(시안 AI/Orb Frame 290): 남색 #2F5498 위에 가운데는 비고 가장자리로
 /// #004FED → #A0D5FF로 밝아지는 원형 그라디언트(중심은 오른쪽 위), 흰 + 10.5.
 class AxisAiPlusOrb extends StatelessWidget {
-  const AxisAiPlusOrb({super.key, this.size = 21});
+  const AxisAiPlusOrb({super.key, this.size = 21, this.turns});
 
   final double size;
+
+  /// 주면 원형 그라디언트(밝은 테두리)가 이 값(0~1)만큼 원을 따라 돈다.
+  final Animation<double>? turns;
 
   @override
   Widget build(BuildContext context) {
@@ -159,13 +162,17 @@ class AxisAiPlusOrb extends StatelessWidget {
       ),
       child: SizedBox.square(
         dimension: size,
-        child: CustomPaint(painter: _PlusOrbPainter()),
+        child: CustomPaint(painter: _PlusOrbPainter(turns ?? const AlwaysStoppedAnimation(0))),
       ),
     );
   }
 }
 
 class _PlusOrbPainter extends CustomPainter {
+  _PlusOrbPainter(this.turns) : super(repaint: turns);
+
+  final Animation<double> turns;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
@@ -176,16 +183,17 @@ class _PlusOrbPainter extends CustomPainter {
       c,
       r,
       Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(0.27, -0.27),
+        // 시안: 가운데(왼쪽 위)는 남색, 오른쪽 아래 가장자리가 밝다. 그 중심을 원을 따라 돌린다.
+        ..shader = RadialGradient(
+          center: _center(turns.value),
           radius: 0.678,
-          colors: [Color(0x00000000), Color(0xFF004FED), Color(0xFFA0D5FF)],
-          stops: [0, 0.769, 1],
+          colors: const [Color(0x00000000), Color(0xFF004FED), Color(0xFFA0D5FF)],
+          stops: const [0, 0.769, 1],
         ).createShader(rect),
     );
     // 흰 + (10.5 / 21 크기, 굵기 약 3).
     final arm = size.width * 0.25;
-    final t = size.width * 0.14;
+    final t = size.width * 0.16;
     final white = Paint()..color = Colors.white;
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromCenter(center: c, width: arm * 2, height: t), Radius.circular(t / 2)),
@@ -197,6 +205,13 @@ class _PlusOrbPainter extends CustomPainter {
     );
   }
 
+  /// 처음(0)은 왼쪽 위(-0.25, -0.25), [t]만큼 시계 방향으로 돈 자리.
+  static Alignment _center(double t) {
+    final a = -3 * math.pi / 4 + t * 2 * math.pi;
+    const r = 0.354;
+    return Alignment(r * math.cos(a), r * math.sin(a));
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(_PlusOrbPainter old) => old.turns != turns;
 }

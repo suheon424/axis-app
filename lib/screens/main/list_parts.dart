@@ -107,7 +107,7 @@ class ListFixButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AxisAiPill(icon: const AxisAiPlusOrb(), label: '틀어진 일정 맞추기', onTap: onTap);
+    return AxisAiPill(label: '틀어진 일정 맞추기', onTap: onTap);
   }
 }
 

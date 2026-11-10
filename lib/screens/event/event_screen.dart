@@ -208,6 +208,7 @@ class _Banner extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           decoration: const BoxDecoration(
             color: Color(0xFFF4F5FA),
+            borderRadius: BorderRadius.all(Radius.circular(8)),
             boxShadow: [BoxShadow(color: Colors.white, blurRadius: 10)],
             gradient: RadialGradient(
               center: Alignment(1, -0.546),
@@ -230,19 +231,20 @@ class _Banner extends StatelessWidget {
                     width: art.width,
                     child: Image.asset(art.asset, fit: BoxFit.contain),
                   ),
+                  // 글자 그라디언트(검정 → #0057ED)는 글 상자 폭에 걸리므로 폭을 글에 맞춘다.
                   Positioned(
                     left: 30,
                     top: 109,
-                    right: 20,
                     child: ShaderMask(
                       blendMode: BlendMode.srcIn,
                       shaderCallback: (r) =>
-                          const LinearGradient(colors: [Colors.black, AppColors.primary]).createShader(r),
+                          const LinearGradient(colors: [Colors.black, Color(0xFF0057ED)]).createShader(r),
                       child: Text(
                         info.bannerTitle,
                         style: const TextStyle(
                           fontSize: 26,
                           height: 1.19,
+                          letterSpacing: -0.52,
                           fontWeight: FontWeight.w800,
                           color: Colors.black,
                         ),

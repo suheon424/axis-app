@@ -538,6 +538,6 @@ class MapOptimizeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AxisAiPill(icon: const MapAiGlyph(), label: '동선 최적화하기', onTap: onTap);
+    return AxisAiPill(label: '동선 최적화하기', onTap: onTap);
   }
 }
