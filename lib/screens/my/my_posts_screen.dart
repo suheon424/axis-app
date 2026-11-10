@@ -150,7 +150,14 @@ class _PostRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(padding: const EdgeInsets.only(top: 16), child: AxisEventIcon(post.icon)),
+          // thumb: 40 정사각 사진, 굴곡 8, 줄 위에서 20.
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(post.thumb, width: 40, height: 40, fit: BoxFit.cover),
+            ),
+          ),
           const SizedBox(width: 15),
           Expanded(
             child: Column(

@@ -75,9 +75,10 @@ const samplePointEntries = [
 
 /// 내가 쓴 게시물.
 class MyPost {
-  const MyPost(this.icon, this.title, this.summary, this.bookmarks, this.meta, this.kind);
+  const MyPost(this.thumb, this.title, this.summary, this.bookmarks, this.meta, this.kind);
 
-  final AxisEventIconType icon;
+  /// 40 정사각 사진(굴곡 8).
+  final String thumb;
   final String title;
   final String summary;
   final int bookmarks;
@@ -91,7 +92,7 @@ class MyPost {
 
 const sampleMyPosts = [
   MyPost(
-    AxisEventIconType.attendance,
+    'assets/images/my/post_running.png',
     '한강 러닝 5km 4주 플랜',
     '퇴근 후 30분, 여의도 한강공원 코스',
     128,
@@ -99,7 +100,7 @@ const sampleMyPosts = [
     '플랜',
   ),
   MyPost(
-    AxisEventIconType.planKing,
+    'assets/images/my/post_exam.png',
     '주말 몰아서 끝내는 정처기 계획',
     '토·일 4시간씩 6주, 기출 위주로 합격까지',
     86,
@@ -107,7 +108,7 @@ const sampleMyPosts = [
     '플랜',
   ),
   MyPost(
-    AxisEventIconType.affirmation,
+    'assets/images/my/post_morning.png',
     '직장인 아침 루틴 30일 플랜',
     '6시 기상부터 출근 전 1시간 쓰는 법',
     342,
