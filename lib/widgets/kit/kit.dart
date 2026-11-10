@@ -14,6 +14,7 @@ export 'dialogs.dart';
 export 'icons.dart';
 export 'kit_buttons.dart';
 export 'media.dart';
+export 'more_menu.dart';
 export 'nav.dart';
 export 'progress.dart';
 export 'rows.dart';

@@ -156,6 +156,8 @@ class AxisRankBadge extends StatelessWidget {
 class AxisNotificationBadge extends StatelessWidget {
   const AxisNotificationBadge({super.key, this.count});
 
+  static const _nudge = 0.25;
+
   final int? count;
 
   @override
@@ -169,10 +171,24 @@ class AxisNotificationBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       // 피그마 New는 9pt이지만 앱 최소 글자 크기(12)를 따른다.
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontSize: 12, height: 1.2, fontWeight: FontWeight.w600, color: Colors.white),
+      // 대문자·숫자는 글꼴 칸 안에서 위로 쏠려 보여서, 줄 높이를 글자 크기로 맞추고 시각 중심만큼 내린다.
+      child: Center(
+        widthFactor: 1,
+        heightFactor: 1,
+        child: Transform.translate(
+          offset: const Offset(0, _nudge),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 12,
+              height: 1,
+              leadingDistribution: TextLeadingDistribution.even,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }

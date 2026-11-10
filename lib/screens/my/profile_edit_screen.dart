@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../widgets/character_picker.dart';
 import '../../widgets/kit/kit.dart';
 import 'my_data.dart';
 import 'my_widgets.dart';
@@ -17,6 +18,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   late final _nickname = TextEditingController(text: myProfile.value.nickname)..addListener(_refresh);
   late final _intro = TextEditingController(text: myProfile.value.intro);
   late int _character = myProfile.value.character;
+  late int? _background = myProfile.value.background;
 
   void _refresh() => setState(() {});
 
@@ -27,23 +29,45 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     super.dispose();
   }
 
+  /// 06_온보딩 완료(프로필 캐릭터)와 같은 고르기: 배경색 알약 + 미리보기 + Avatar/Character 가로 스와이프.
   Future<void> _pickCharacter() async {
-    final picked = await showAxisSheet<int>(
+    var character = _character;
+    var color = _background ?? 1;
+    final picked = await showAxisSheet<(int, int)>(
       context,
       title: '캐릭터 선택',
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-        child: Wrap(
-          spacing: 12,
-          runSpacing: 12,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            for (var i = 1; i <= 12; i++)
-              AxisAvatar(character: i, size: 72, selected: i == _character, onTap: () => Navigator.pop(ctx, i)),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+              child: CharacterColorPicker(
+                selected: color,
+                fill: AppColors.searchBg,
+                onChanged: (i) => setSheet(() => color = i),
+              ),
+            ),
+            const SizedBox(height: 24),
+            CharacterPreview(color: characterBackgrounds[color], character: character, size: 160),
+            const SizedBox(height: 24),
+            CharacterStrip(selected: character, onChanged: (c) => setSheet(() => character = c)),
+            const SizedBox(height: 24),
           ],
         ),
       ),
+      footer: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 0, AppSizes.sidePadding, 0),
+        child: AxisCtaButton(label: '선택하기', onPressed: () => Navigator.pop(ctx, (character, color))),
+      ),
     );
-    if (picked != null) setState(() => _character = picked);
+    if (picked != null) {
+      setState(() {
+        _character = picked.$1;
+        _background = picked.$2;
+      });
+    }
   }
 
   void _save() {
@@ -55,6 +79,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       callName: nick == current.nickname ? current.callName : nick,
       intro: _intro.text.trim(),
       character: _character,
+      background: _background,
     );
     showAxisToast(context, '프로필을 저장했어요', bottom: 100);
   }
@@ -78,7 +103,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 onTap: _pickCharacter,
                 child: Column(
                   children: [
-                    MyProfileAvatar(character: _character, size: 96),
+                    MyProfileAvatar(
+                      character: _character,
+                      size: 96,
+                      background: _background == null ? null : characterBackgrounds[_background!],
+                    ),
                     const SizedBox(height: 8),
                     const Text(
                       '사진 변경',

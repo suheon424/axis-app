@@ -35,21 +35,13 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
     if (picked != null) setState(() => _kind = picked);
   }
 
-  Future<void> _more(MyPost post) async {
-    final action = await showAxisSheet<String>(
-      context,
-      title: post.title,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AxisMenuRow(label: '수정하기', showChevron: false, onTap: () => Navigator.pop(ctx, 'edit')),
-            AxisMenuRow(label: '삭제하기', showChevron: false, onTap: () => Navigator.pop(ctx, 'delete')),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+  Future<void> _more(BuildContext anchor, MyPost post) async {
+    final action = await showAxisMoreMenu<String>(
+      anchor,
+      items: const [
+        AxisMoreMenuItem(label: '수정하기', value: 'edit'),
+        AxisMoreMenuItem(label: '삭제하기', value: 'delete', danger: true),
+      ],
     );
     if (!mounted || action == null) return;
     if (action == 'edit') {
@@ -87,7 +79,7 @@ class _MyPostsScreenState extends State<MyPostsScreen> {
               onAction: () => MainTabRouter.open(context, MainTab.explore),
             )
           else
-            for (final p in visible) _PostRow(post: p, onMore: () => _more(p)),
+            for (final p in visible) _PostRow(post: p, onMore: (anchor) => _more(anchor, p)),
         ],
       ),
     );
@@ -136,7 +128,7 @@ class _PostRow extends StatelessWidget {
   const _PostRow({required this.post, required this.onMore});
 
   final MyPost post;
-  final VoidCallback onMore;
+  final ValueChanged<BuildContext> onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +176,10 @@ class _PostRow extends StatelessWidget {
             offset: const Offset(10, -10),
             child: RotatedBox(
               quarterTurns: 1,
-              child: AxisIconButton(icon: KitIcon.navMore, tooltip: '더보기', onPressed: onMore),
+              child: Builder(
+                builder: (anchor) =>
+                    AxisIconButton(icon: KitIcon.navMore, tooltip: '더보기', onPressed: () => onMore(anchor)),
+              ),
             ),
           ),
         ],

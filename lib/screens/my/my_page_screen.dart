@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../widgets/character_picker.dart';
 import '../../widgets/kit/kit.dart';
 import '../welcome_screen.dart';
 import 'my_comments_screen.dart';
@@ -157,7 +158,10 @@ class _ProfileHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              MyProfileAvatar(character: profile.character),
+              MyProfileAvatar(
+                character: profile.character,
+                background: profile.background == null ? null : characterBackgrounds[profile.background!],
+              ),
               const SizedBox(width: 22),
               Expanded(
                 child: Text(

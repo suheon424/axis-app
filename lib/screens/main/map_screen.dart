@@ -347,16 +347,18 @@ class _ScheduleSheet extends StatelessWidget {
                 ? Padding(
                     key: ValueKey('empty$day'),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: const AxisEmptyState(
-                      icon: KitIcon.statePoint,
+                    // 07_05 일정 목록 · 빈 상태와 같은 + 아이콘과 "일정 추가하기" 버튼.
+                    child: AxisEmptyState(
+                      icon: KitIcon.navPlus,
                       title: '이 날은 아직 일정이 없어요',
                       description: '일정을 추가하면 지도에 동선이 그려져요',
+                      actionLabel: '일정 추가하기',
+                      onAction: onAdd,
                     ),
                   )
                 : _Timeline(key: ValueKey(plan.optimized), plan: plan, onTapStop: onTapStop),
           ),
-          const SizedBox(height: 12),
-          _AddScheduleButton(onTap: onAdd),
+          if (plan != null) ...[const SizedBox(height: 12), _AddScheduleButton(onTap: onAdd)],
         ],
       ),
     );

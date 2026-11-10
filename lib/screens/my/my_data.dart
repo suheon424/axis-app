@@ -10,6 +10,7 @@ class MyProfile {
     required this.intro,
     required this.character,
     required this.points,
+    this.background,
   });
 
   final String nickname;
@@ -22,17 +23,28 @@ class MyProfile {
   final int character;
   final int points;
 
+  /// 캐릭터 배경색(characterBackgrounds 번호). 아직 고르지 않았으면 null(연파랑).
+  final int? background;
+
   static const email = 'suhyun@axis.app';
   static const loginMethod = '이메일';
   static const joinedAt = '2026.03.14';
   static const appVersion = '11.23.0';
 
-  MyProfile copyWith({String? nickname, String? callName, String? intro, int? character, int? points}) => MyProfile(
+  MyProfile copyWith({
+    String? nickname,
+    String? callName,
+    String? intro,
+    int? character,
+    int? points,
+    int? background,
+  }) => MyProfile(
     nickname: nickname ?? this.nickname,
     callName: callName ?? this.callName,
     intro: intro ?? this.intro,
     character: character ?? this.character,
     points: points ?? this.points,
+    background: background ?? this.background,
   );
 }
 

@@ -377,10 +377,13 @@ class MyDangerSplitButton extends StatelessWidget {
 
 /// 원형 연파랑 바탕에 캐릭터(AxisAvatar 이미지)를 담은 프로필 사진.
 class MyProfileAvatar extends StatelessWidget {
-  const MyProfileAvatar({super.key, required this.character, this.size = 70});
+  const MyProfileAvatar({super.key, required this.character, this.size = 70, this.background});
 
   final int character;
   final double size;
+
+  /// 고른 배경색. null이면 연파랑.
+  final Color? background;
 
   @override
   Widget build(BuildContext context) {
@@ -388,7 +391,7 @@ class MyProfileAvatar extends StatelessWidget {
       width: size,
       height: size,
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(color: AppColors.blue01, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: background ?? AppColors.blue01, shape: BoxShape.circle),
       // 피그마(12 · 12-1)처럼 정사각형 캐릭터를 원의 90.6% 크기로, 위에서 7.3% 내려 가운데 둔다.
       child: Stack(
         clipBehavior: Clip.none,

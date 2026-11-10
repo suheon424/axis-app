@@ -65,7 +65,7 @@ class _ListDetailSheetState extends State<ListDetailSheet> {
             child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => setState(() => _menuOpen = false)),
           ),
         Positioned(
-          top: 52,
+          top: 50,
           right: 22,
           child: IgnorePointer(
             ignoring: !_menuOpen,
@@ -76,22 +76,12 @@ class _ListDetailSheetState extends State<ListDetailSheet> {
                 scale: _menuOpen ? 1 : 0.92,
                 alignment: Alignment.topRight,
                 duration: const Duration(milliseconds: 150),
-                child: Container(
-                  width: 160,
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.gray02),
-                    boxShadow: const [BoxShadow(color: Color(0x1F000000), blurRadius: 16, offset: Offset(0, 4))],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _MenuItem(label: '날짜 변경', onTap: () => _close(ListSheetAction.changeDate)),
-                      _MenuItem(label: '삭제', color: AppColors.error, onTap: () => _close(ListSheetAction.delete)),
-                    ],
-                  ),
+                child: AxisMoreMenu<ListSheetAction>(
+                  items: const [
+                    AxisMoreMenuItem(label: '날짜 변경', value: ListSheetAction.changeDate),
+                    AxisMoreMenuItem(label: '삭제', value: ListSheetAction.delete, danger: true),
+                  ],
+                  onSelected: _close,
                 ),
               ),
             ),
@@ -134,34 +124,6 @@ class _InfoRow extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _MenuItem extends StatelessWidget {
-  const _MenuItem({required this.label, required this.onTap, this.color = AppColors.gray07});
-
-  final String label;
-  final VoidCallback onTap;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return PressBuilder(
-      semanticLabel: label,
-      onTap: onTap,
-      scale: 1,
-      builder: (context, pressed) => Container(
-        constraints: const BoxConstraints(minHeight: 44),
-        width: double.infinity,
-        alignment: Alignment.centerLeft,
-        color: pressed ? AppColors.gray01 : Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: color),
-        ),
-      ),
     );
   }
 }
