@@ -191,18 +191,12 @@ class _PlusOrbPainter extends CustomPainter {
           stops: const [0, 0.769, 1],
         ).createShader(rect),
     );
-    // 흰 + (10.5 / 21 크기, 굵기 약 3).
+    // 흰 + (10.5 / 21 크기, 굵기 약 3.5). 시안처럼 끝이 각진 십자.
     final arm = size.width * 0.25;
-    final t = size.width * 0.16;
+    final t = size.width * 0.17;
     final white = Paint()..color = Colors.white;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromCenter(center: c, width: arm * 2, height: t), Radius.circular(t / 2)),
-      white,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromCenter(center: c, width: t, height: arm * 2), Radius.circular(t / 2)),
-      white,
-    );
+    canvas.drawRect(Rect.fromCenter(center: c, width: arm * 2, height: t), white);
+    canvas.drawRect(Rect.fromCenter(center: c, width: t, height: arm * 2), white);
   }
 
   /// 처음(0)은 왼쪽 위(-0.25, -0.25), [t]만큼 시계 방향으로 돈 자리.
