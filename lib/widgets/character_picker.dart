@@ -25,9 +25,17 @@ const characterBackgroundNames = ['노랑', '파랑', '초록', '주황', '빨�
 
 /// Avatar/Character(130:9997) 12종을 가로로 넘겨 고르는 줄(60 정사각, 간격 8). [selected]는 1~12.
 class CharacterStrip extends StatefulWidget {
-  const CharacterStrip({super.key, required this.selected, required this.onChanged});
+  const CharacterStrip({
+    super.key,
+    required this.selected,
+    required this.onChanged,
+    this.padding = const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+  });
 
   final int selected;
+
+  /// 줄 양끝 여백. 시트처럼 이미 350 폭 안에 있으면 0으로 두어 그 폭 안에서만 넘긴다.
+  final EdgeInsets padding;
   final ValueChanged<int> onChanged;
 
   @override
@@ -54,7 +62,7 @@ class _CharacterStripState extends State<CharacterStrip> {
       child: ListView.separated(
         controller: _scroll,
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
+        padding: widget.padding,
         itemCount: 12,
         separatorBuilder: (_, _) => const SizedBox(width: _gap),
         itemBuilder: (context, i) => AxisAvatar(
@@ -92,17 +100,23 @@ class CharacterColorPicker extends StatelessWidget {
             style: TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w600, color: AppColors.gray06),
           ),
           const SizedBox(width: 10),
-          for (var i = 0; i < characterBackgrounds.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Semantics(
-              label: '배경색 ${characterBackgroundNames[i]}',
-              child: AxisColorSwatch(
-                color: characterBackgrounds[i],
-                selected: i == selected,
-                onTap: () => onChanged(i),
-              ),
+          // 남는 폭에 스와치 8개를 고르게 나눠 알약 밖으로 넘치지 않게 한다.
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (var i = 0; i < characterBackgrounds.length; i++)
+                  Semantics(
+                    label: '배경색 ${characterBackgroundNames[i]}',
+                    child: AxisColorSwatch(
+                      color: characterBackgrounds[i],
+                      selected: i == selected,
+                      onTap: () => onChanged(i),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
     );

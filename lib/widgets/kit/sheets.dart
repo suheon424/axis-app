@@ -87,7 +87,6 @@ class AxisSheetFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final safeBottom = mq.padding.bottom;
     return Padding(
       padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
       child: ConstrainedBox(
@@ -99,7 +98,7 @@ class AxisSheetFrame extends StatelessWidget {
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             boxShadow: [BoxShadow(color: Color(0x1F000000), offset: Offset(0, -4), blurRadius: 24)],
           ),
-          padding: EdgeInsets.fromLTRB(20, 22, 20, (safeBottom > 20 ? safeBottom : 20) + 8),
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, AppSizes.ctaBottom),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,

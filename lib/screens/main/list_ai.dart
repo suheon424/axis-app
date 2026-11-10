@@ -322,10 +322,9 @@ class _SuggestionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(20, 22, 20, (bottom > 20 ? bottom : 20) + 8),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, AppSizes.ctaBottom),
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
         gradient: LinearGradient(

@@ -10,14 +10,13 @@ class BottomCtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.paddingOf(context).bottom;
     return DecoratedBox(
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFF2F4F6))),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 10, 20, bottom > 0 ? bottom : 28),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, AppSizes.ctaBottom),
         child: Column(mainAxisSize: MainAxisSize.min, children: [child]),
       ),
     );

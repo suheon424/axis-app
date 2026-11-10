@@ -42,7 +42,6 @@ class BadgeCelebration extends StatelessWidget {
     final text =
         message ??
         (medal == AxisMedal.awakening ? '일정을 7회 완료했어요. 꾸준함이 시작됐어요!' : '‘${badgeFor(medal).condition}’ 조건을 달성했어요!');
-    final bottom = MediaQuery.paddingOf(context).bottom;
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -76,7 +75,7 @@ class BadgeCelebration extends StatelessWidget {
           Positioned(
             left: 20,
             right: 20,
-            bottom: (bottom > 0 ? bottom : 27),
+            bottom: AppSizes.ctaBottom,
             child: AxisCtaButton(
               label: '공유하기',
               onPressed: () => showAxisToast(context, '배지 카드 링크를 복사했어요', bottom: 100),

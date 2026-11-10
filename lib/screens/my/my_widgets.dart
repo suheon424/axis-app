@@ -58,13 +58,12 @@ class MyBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inset = MediaQuery.paddingOf(context).bottom;
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: AppColors.gray02)),
       ),
-      padding: EdgeInsets.fromLTRB(20, 10, 20, inset + 12),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, AppSizes.ctaBottom),
       // 버튼 안의 Alignment가 높이를 꽉 채우지 않도록 세로 제약을 풀어 준다.
       child: Column(mainAxisSize: MainAxisSize.min, children: [child]),
     );

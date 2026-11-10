@@ -41,26 +41,25 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
-              child: CharacterColorPicker(
-                selected: color,
-                fill: AppColors.searchBg,
-                onChanged: (i) => setSheet(() => color = i),
-              ),
+            // 시트 안쪽이 이미 좌우 20(가로 350)이라 알약·미리보기·스와이프 줄 모두 그 폭에 맞춘다.
+            CharacterColorPicker(
+              selected: color,
+              fill: AppColors.searchBg,
+              onChanged: (i) => setSheet(() => color = i),
             ),
             const SizedBox(height: 24),
             CharacterPreview(color: characterBackgrounds[color], character: character, size: 160),
             const SizedBox(height: 24),
-            CharacterStrip(selected: character, onChanged: (c) => setSheet(() => character = c)),
+            CharacterStrip(
+              selected: character,
+              padding: EdgeInsets.zero,
+              onChanged: (c) => setSheet(() => character = c),
+            ),
             const SizedBox(height: 24),
           ],
         ),
       ),
-      footer: (ctx) => Padding(
-        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 0, AppSizes.sidePadding, 0),
-        child: AxisCtaButton(label: '선택하기', onPressed: () => Navigator.pop(ctx, (character, color))),
-      ),
+      footer: (ctx) => AxisCtaButton(label: '선택하기', onPressed: () => Navigator.pop(ctx, (character, color))),
     );
     if (picked != null) {
       setState(() {

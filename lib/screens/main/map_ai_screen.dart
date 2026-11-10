@@ -265,7 +265,6 @@ class _SuggestionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safe = MediaQuery.paddingOf(context).bottom;
     return Container(
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -277,7 +276,7 @@ class _SuggestionSheet extends StatelessWidget {
         ),
         boxShadow: [BoxShadow(color: Color(0x1F000000), offset: Offset(0, -4), blurRadius: 24)],
       ),
-      padding: EdgeInsets.fromLTRB(20, 22, 20, (safe > 20 ? safe : 20) + 8),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, AppSizes.ctaBottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

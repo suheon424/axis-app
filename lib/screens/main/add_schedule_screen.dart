@@ -233,7 +233,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, AppSizes.ctaBottom),
                 child: AxisCtaButton(label: '저장하기', enabled: hasTitle, onPressed: _submit),
               ),
             ],

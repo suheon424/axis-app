@@ -31,7 +31,6 @@ class _CharacterScreenState extends State<CharacterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
     final name = widget.nickname.isEmpty ? '액시스' : widget.nickname;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: lightScreenOverlay.copyWith(statusBarColor: AppColors.searchBg),
@@ -96,7 +95,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             Container(
               color: Colors.white,
-              padding: EdgeInsets.only(top: 21, bottom: safeBottom > 22 ? safeBottom : 22),
+              padding: const EdgeInsets.only(top: 21, bottom: AppSizes.ctaBottom),
               child: Column(
                 children: [
                   CharacterStrip(selected: _character + 1, onChanged: (c) => setState(() => _character = c - 1)),

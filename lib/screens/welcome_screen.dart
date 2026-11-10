@@ -61,7 +61,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: darkScreenOverlay,
       child: Scaffold(
@@ -108,7 +107,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
             Positioned(
               left: 20,
               right: 20,
-              bottom: 46 + (bottomInset > 34 ? bottomInset - 34 : 0),
+              bottom: AppSizes.ctaBottom,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [

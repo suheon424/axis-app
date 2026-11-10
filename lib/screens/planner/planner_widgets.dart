@@ -164,8 +164,8 @@ class AiPlannerHome extends StatelessWidget {
                   const Spacer(flex: 6),
                 ],
                 Padding(
-                  // 예시 카드 아래와 입력창 위 사이 30(피그마 0801: 카드 끝 654, 입력창 684).
-                  padding: const EdgeInsets.fromLTRB(32, 16, 32, 18),
+                  // 예시 카드 아래와 입력창 위 사이 30(피그마 0801: 카드 끝 654, 입력창 684). 폭은 입력창과 같은 350.
+                  padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 16, AppSizes.sidePadding, 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -535,8 +535,11 @@ class _PromptGradientPainter extends CustomPainter {
     );
     canvas.restore();
 
-    // 테두리: 가운데에서 [a] 방향 한쪽만 밝고 양옆으로 갈수록 어두워지는 각도 그라디언트가 통째로 돈다(안쪽 그림자와 같은 방향).
+    // 테두리: 가운데에서 [a] 방향 한쪽만 밝고 양옆으로 갈수록 어두워지는 각도 그라디언트가 통째로 돈다.
+    // 가로로 긴 상자라 각도를 상자 비율 공간에서 잰다: 45°면 밝은 곳이 오른쪽 위 모서리, 안쪽 그림자가 가장 짙은 곳과
+    // 같은 자리에 와서 둘이 한 바퀴를 같은 시간에 같은 자리로 돈다.
     final spin = Matrix4.translationValues(center.dx, center.dy, 0)
+      ..scaleByDouble(size.width / size.height, 1, 1, 1)
       ..rotateZ(a)
       ..translateByDouble(-center.dx, -center.dy, 0, 1);
     canvas.drawRRect(

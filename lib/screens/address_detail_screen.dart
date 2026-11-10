@@ -34,7 +34,6 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
     final s = widget.suggestion;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: lightScreenOverlay,
@@ -142,12 +141,7 @@ class _AddressDetailScreenState extends State<AddressDetailScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    AppSizes.sidePadding,
-                    0,
-                    AppSizes.sidePadding,
-                    safeBottom > 28 ? safeBottom : 28,
-                  ),
+                  padding: EdgeInsets.fromLTRB(AppSizes.sidePadding, 0, AppSizes.sidePadding, AppSizes.ctaBottom),
                   child: AxisCtaButton(label: '완료', onPressed: _register),
                 ),
               ],

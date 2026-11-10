@@ -7,7 +7,13 @@ import 'form_widgets.dart';
 /// 로그인·회원가입·정보입력 화면(02~05)의 공통 틀:
 /// 하늘색 배경 + 상단 네비(상태 표시줄 아래 10) + 스크롤되는 본문(네비 아래 30) + 하단 고정 버튼(바닥에서 28).
 class FormPage extends StatelessWidget {
-  const FormPage({super.key, required this.title, required this.children, required this.bottom, this.bottomGap = 28});
+  const FormPage({
+    super.key,
+    required this.title,
+    required this.children,
+    required this.bottom,
+    this.bottomGap = AppSizes.ctaBottom,
+  });
 
   final String title;
   final List<Widget> children;
@@ -18,7 +24,6 @@ class FormPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeBottom = MediaQuery.paddingOf(context).bottom;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: lightScreenOverlay,
       child: Scaffold(
@@ -40,12 +45,7 @@ class FormPage extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSizes.sidePadding,
-                      0,
-                      AppSizes.sidePadding,
-                      safeBottom > bottomGap ? safeBottom : bottomGap,
-                    ),
+                    padding: EdgeInsets.fromLTRB(AppSizes.sidePadding, 0, AppSizes.sidePadding, bottomGap),
                     child: bottom,
                   ),
                 ],
