@@ -186,6 +186,10 @@ class _CubeFace extends StatelessWidget {
 }
 
 /// 292×292 배너 한 면: 하늘빛 방사형 바탕 + 큰 제목(검정→파랑 그라디언트) + 설명 + 그림.
+/// Banner/Event(205:10599): 292 정사각, 굴곡 8, 흰 그림자 10.
+/// 바탕은 #F4F5FA 위 오른쪽 위(292, 66)를 중심으로 한 타원 방사 그라디언트(#71C3FF 14·18% → #E0F2FF).
+/// 오른쪽 위 3D 그림, 왼쪽 30에서 위 109 큰 제목(26 ExtraBold, 검정 → #0057ED 가로 그라디언트),
+/// 위 218 설명(12, gray06).
 class _Banner extends StatelessWidget {
   const _Banner({required this.info, required this.onTap});
 
@@ -194,41 +198,44 @@ class _Banner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final icon = info.icon;
+    final art = eventBannerArt[info.kind]!;
     return Semantics(
       button: true,
-      label: info.bannerTitle.replaceAll('\n', ' '),
+      label: info.bannerTitle.replaceAll(RegExp(r'\s+'), ' '),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
           clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 5)],
-            gradient: const RadialGradient(
-              center: Alignment(1, -0.55),
-              radius: 1.05,
-              colors: [Color(0xFF71C3FF), Color(0xFF71C3FF), Color(0xFFA8DAFF), Color(0xFFE0F2FF)],
-              stops: [0, 0.18, 0.59, 1],
+          decoration: const BoxDecoration(
+            color: Color(0xFFF4F5FA),
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            boxShadow: [BoxShadow(color: Colors.white, blurRadius: 10)],
+            gradient: RadialGradient(
+              center: Alignment(1, -0.546),
+              radius: 1,
+              colors: [Color(0xFF71C3FF), Color(0xFF71C3FF), Color(0xFFE0F2FF)],
+              stops: [0.14, 0.18, 1],
+              transform: _ScaleYAround(0.795, Alignment(1, -0.546)),
             ),
           ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: 10,
-                top: 9,
-                child: icon == null
-                    ? Image.asset('assets/images/event/event_gift.png', width: 135, height: 135)
-                    : Padding(padding: const EdgeInsets.all(8), child: AxisEventIcon(icon, size: 119)),
-              ),
-              Positioned(
-                left: 30,
-                right: 20,
-                bottom: 38,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShaderMask(
+          child: FittedBox(
+            child: SizedBox(
+              width: 292,
+              height: 292,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: art.left,
+                    top: art.top,
+                    width: art.width,
+                    child: Image.asset(art.asset, fit: BoxFit.contain),
+                  ),
+                  Positioned(
+                    left: 30,
+                    top: 109,
+                    right: 20,
+                    child: ShaderMask(
                       blendMode: BlendMode.srcIn,
                       shaderCallback: (r) =>
                           const LinearGradient(colors: [Colors.black, AppColors.primary]).createShader(r),
@@ -236,23 +243,37 @@ class _Banner extends StatelessWidget {
                         info.bannerTitle,
                         style: const TextStyle(
                           fontSize: 26,
-                          height: 1.2,
-                          letterSpacing: -0.52,
+                          height: 1.19,
                           fontWeight: FontWeight.w800,
                           color: Colors.black,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(info.bannerCaption, style: AxisText.caption),
-                  ],
-                ),
+                  ),
+                  Positioned(left: 30, top: 218, right: 20, child: Text(info.bannerCaption, style: AxisText.caption)),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+/// 방사 그라디언트를 [center] 기준으로 세로만 [scale]배(피그마 타원).
+class _ScaleYAround extends GradientTransform {
+  const _ScaleYAround(this.scale, this.center);
+
+  final double scale;
+  final Alignment center;
+
+  @override
+  Matrix4 transform(Rect bounds, {TextDirection? textDirection}) {
+    final c = center.withinRect(bounds);
+    return Matrix4.translationValues(c.dx, c.dy, 0)
+      ..scaleByDouble(1, scale, 1, 1)
+      ..translateByDouble(-c.dx, -c.dy, 0, 1);
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/kit/kit.dart';
 import 'my_data.dart';
 import 'my_widgets.dart';
+import 'point_shop_screen.dart';
 
 /// 12-2 포인트 내역(130:13052): 파란 보유 포인트 카드 + 전체·적립·사용 칩 + 날짜별 내역.
 /// 내역이 없으면 빈 상태(130:14531). 데모: 카드를 길게 누르면 빈 상태로 바뀐다.
@@ -37,7 +38,10 @@ class _PointHistoryScreenState extends State<PointHistoryScreen> {
         children: [
           GestureDetector(
             onLongPress: () => setState(() => _entries = _entries.isEmpty ? widget.entries : const []),
-            child: _BalanceCard(points: balance, onUse: () => showAxisToast(context, '포인트 상점은 준비 중이에요.')),
+            child: _BalanceCard(
+              points: balance,
+              onUse: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PointShopScreen())),
+            ),
           ),
           const SizedBox(height: 20),
           Container(

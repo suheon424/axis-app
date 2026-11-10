@@ -70,12 +70,22 @@ class StarRow extends StatelessWidget {
 
 /// 09 인기 템플릿 한 줄: 82px 썸네일(순위·북마크) + Card/Template Info.
 class TemplateRow extends StatelessWidget {
-  const TemplateRow({super.key, required this.template, required this.onTap, this.bookmarked = false, this.onBookmark});
+  const TemplateRow({
+    super.key,
+    required this.template,
+    required this.onTap,
+    this.bookmarked = false,
+    this.onBookmark,
+    this.first = false,
+  });
 
   final CommunityTemplate template;
   final VoidCallback onTap;
   final bool bookmarked;
   final VoidCallback? onBookmark;
+
+  /// 목록 첫 줄(09-5): 위 여백 없이 붙고 아래만 17.
+  final bool first;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +93,7 @@ class TemplateRow extends StatelessWidget {
       onTap: onTap,
       semanticLabel: template.title,
       builder: (context, pressed) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: first ? const EdgeInsets.only(bottom: 16) : const EdgeInsets.symmetric(vertical: 16),
         decoration: const BoxDecoration(
           border: Border(bottom: BorderSide(color: Color(0xFFDEE2E6))),
         ),

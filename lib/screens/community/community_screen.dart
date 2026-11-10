@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../widgets/kit/kit.dart';
+import 'all_templates_screen.dart';
 import 'community_data.dart';
+import 'community_notifications_screen.dart';
 import 'community_widgets.dart';
 import 'plan_detail_screen.dart';
 
@@ -70,7 +72,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Navigator.of(context)
                         .push(MaterialPageRoute<void>(builder: (_) => CommunitySearchScreen(onOpen: _open))),
                 onBookmarks: () => _soon('저장한 계획'),
-                onBell: () => _soon('알림'),
+                onBell: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => const CommunityNotificationsScreen())),
                 onReview: (r) => _open(communityTemplates[r.template], tab: 1),
               ),
               Padding(
@@ -105,7 +109,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         ),
                         GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: () => _soon('전체 템플릿'),
+                          onTap: () =>
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute<void>(builder: (_) => AllTemplatesScreen(onOpen: _open))),
                           child: const Padding(
                             padding: EdgeInsets.only(top: 4, left: 8),
                             child: Row(

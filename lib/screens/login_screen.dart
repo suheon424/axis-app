@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../widgets/form_page.dart';
 import '../widgets/form_widgets.dart';
 import '../widgets/kit/kit_buttons.dart';
+import 'password_reset_screen.dart';
 import 'profile_setup_screen.dart';
 import 'signup_screen.dart';
 
@@ -76,11 +77,10 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileSetupScreen(nickname: email.split('@').first)));
   }
 
-  void _comingSoon() {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('비밀번호 찾기는 준비 중이에요.')));
-  }
+  /// 03-1 비밀번호 찾기(로그인 칸에 적은 이메일을 이어서 채운다).
+  void _findPassword() =>
+      Navigator.of(context)
+          .push(MaterialPageRoute<void>(builder: (_) => PasswordResetScreen(initialEmail: _id.text.trim())));
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _LinkText('비밀번호 찾기', onTap: _comingSoon),
+              _LinkText('비밀번호 찾기', onTap: _findPassword),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text('|', style: _linkStyle),

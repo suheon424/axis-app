@@ -72,6 +72,32 @@ const communityTemplates = [
   ),
 ];
 
+/// 09-5 전체 템플릿: TOP10 다음 순위까지 이어지는 목록.
+const allCommunityTemplates = [
+  ...communityTemplates,
+  CommunityTemplate(
+    rank: 4,
+    title: '공무원 9급 1년 합격 로드맵',
+    description: '하루 6시간, 과목별 회독 순서까지 정리',
+    duration: '12달 소요',
+    footnote: '댓글 58 · 합격의정석',
+    thumb: '$_img/thumb4.png',
+    category: '공부 · 공무원',
+  ),
+  CommunityTemplate(
+    rank: 5,
+    title: '하루 3시간 수능 영어 루틴',
+    description: '단어 · 듣기 · 독해를 3블록으로 나눠요',
+    duration: '3달 소요',
+    footnote: '댓글 27 · 영어쌤민지',
+    thumb: '$_img/thumb5.png',
+    category: '공부 · 어학',
+  ),
+];
+
+/// 09-5 전체 템플릿 수(데모).
+const allCommunityTemplateCount = 128;
+
 /// 09 위쪽 "메이트들의 생생 후기" 카드. [template]은 눌렀을 때 여는 템플릿 순번(0부터).
 class ReviewHighlight {
   const ReviewHighlight(this.title, this.body, this.rating, this.author, this.template);
