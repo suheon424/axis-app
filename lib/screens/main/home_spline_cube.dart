@@ -19,7 +19,7 @@ const homeCubeImage = 'assets/images/main/home_cube.png';
 ///
 /// - [url]이 비었거나 장면을 띄울 수 없는 플랫폼이면 큐브 그림을 보여 준다.
 ///   장면을 띄울 때는 그림을 깔지 않고, 장면이 뜨면 바로 움직이는 큐브가 보인다.
-/// - 장면은 큐브 영역을 그대로 채운다.
+/// - 장면은 큐브 영역의 [sceneScale]배로 그리고 영역 밖은 잘라 낸다(Spline 로고도 잘린다).
 /// - 웹: Spline 공개 링크를 iframe으로 띄운다.
 /// - iOS·Android: webview_flutter로 같은 링크를 띄운다.
 ///
@@ -31,6 +31,7 @@ class SplineCube extends StatefulWidget {
     this.imageSize = const Size(177, 186),
     this.imageOffset = const Offset(0, -8),
     this.fingerOffset = const Offset(0, 9.5),
+    this.sceneScale = 2.0,
   });
 
   final String url;
@@ -41,6 +42,9 @@ class SplineCube extends StatefulWidget {
 
   /// 손가락 버튼이 가운데에서 벗어난 정도.
   final Offset fingerOffset;
+
+  /// 장면(iframe)을 큐브 영역보다 몇 배 크게 그릴지.
+  final double sceneScale;
 
   static const fingerKey = Key('home_spline_finger');
   static const sceneKey = Key('home_spline_scene');
@@ -91,8 +95,18 @@ class _SplineCubeState extends State<SplineCube> {
             ValueListenableBuilder<bool>(
               valueListenable: homeRotating,
               builder: (context, rotating, sceneChild) => Offstage(offstage: rotating, child: sceneChild),
+              // Spline 장면은 iframe 높이에 비례해 큐브를 그린다(260 높이에서 약 89). 피그마 큐브(177×186)
+              // 크기가 되게 iframe을 [sceneScale]배로 키워 가운데에 두고, 큐브 영역 밖(오른쪽 아래 Spline 로고 포함)은 잘라 낸다.
               child: ClipRect(
-                child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+                child: LayoutBuilder(
+                  builder: (context, c) => OverflowBox(
+                    minWidth: c.maxWidth * widget.sceneScale,
+                    maxWidth: c.maxWidth * widget.sceneScale,
+                    minHeight: c.maxHeight * widget.sceneScale,
+                    maxHeight: c.maxHeight * widget.sceneScale,
+                    child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+                  ),
+                ),
               ),
             ),
           ],
