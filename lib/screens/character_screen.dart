@@ -8,7 +8,7 @@ import '../widgets/character_picker.dart';
 import 'home_screen.dart';
 import 'my/my_data.dart';
 
-/// 06_온보딩 완료(프로필 캐릭터). 제목 아래 배경색 알약(32) · 미리보기 Avatar/Profile 160(30) · 이름(16) 순서이고,
+/// 06_온보딩 완료(프로필 캐릭터). 제목 아래 배경색 알약(72, 피그마 32에서 사용자 요청으로 40 더 내림) · 미리보기 Avatar/Profile 160(30) · 이름(16) 순서이고,
 /// 아래 흰 영역에서 캐릭터 12종을 가로로 넘겨 고른다.
 /// 시작하기·다음에 설정하기 → 07_01 홈.
 class CharacterScreen extends StatefulWidget {
@@ -71,7 +71,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 72),
                             CharacterColorPicker(selected: _color, onChanged: (i) => setState(() => _color = i)),
                             const SizedBox(height: 30),
                             CharacterPreview(color: characterBackgrounds[_color], character: _character + 1, size: 160),
