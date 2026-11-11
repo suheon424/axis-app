@@ -95,7 +95,6 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
           bottom: false,
           child: Column(
             children: [
-              const SizedBox(height: 10),
               AxisBackShareBar(title: '템플릿', onShare: () => _toast('공유 링크를 복사했어요')),
               AxisSegmentedTabs(
                 labels: const ['계획서', '후기', '댓글'],

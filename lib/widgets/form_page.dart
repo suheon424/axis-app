@@ -36,7 +36,6 @@ class FormPage extends StatelessWidget {
               bottom: false,
               child: Column(
                 children: [
-                  const SizedBox(height: 10),
                   AxisNavBar(title: title),
                   Expanded(
                     child: SingleChildScrollView(

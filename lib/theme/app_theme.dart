@@ -150,7 +150,7 @@ abstract final class CubeColors {
 abstract final class AppSizes {
   static const buttonHeight = 52.0; // Button/Primary
   static const sidePadding = 20.0;
-  static const navHeight = 40.0;
+  static const navHeight = 50.0;
 
   /// 화면(시트) 맨 아래와 하단 버튼 사이 간격. 모든 화면 공통.
   static const ctaBottom = 28.0;

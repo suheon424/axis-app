@@ -236,55 +236,62 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
           child: GestureDetector(
             behavior: HitTestBehavior.translucent,
             onTap: _openSwipeId == null ? null : _closeSwipe,
-            child: Stack(
+            child: Column(
               children: [
-                SingleChildScrollView(
-                  child: Column(
+                // 07_04~07_09: 상단 제목 줄은 스크롤해도 따라 올라가지 않게 고정(10-x 이벤트 상세와 같은 방식).
+                AxisBackTitleBar(
+                  title: 'Todo',
+                  backgroundColor: AppColors.gray01,
+                  actions: [AxisIconButton(icon: KitIcon.navPlus, tooltip: '일정 추가', onPressed: _openAdd)],
+                ),
+                Expanded(
+                  child: Stack(
                     children: [
-                      const SizedBox(height: 10),
-                      AxisBackTitleBar(
-                        title: 'Todo',
-                        actions: [AxisIconButton(icon: KitIcon.navPlus, tooltip: '일정 추가', onPressed: _openAdd)],
+                      SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 14),
+                            _calendarCard(),
+                            const SizedBox(height: 10),
+                            AxisSegmentedTabs(
+                              labels: const ['목록', '지도'],
+                              selected: _mapTab ? 1 : 0,
+                              onChanged: (i) => setState(() {
+                                _mapTab = i == 1;
+                                _openSwipeId = null;
+                              }),
+                            ),
+                            if (_mapTab)
+                              ColoredBox(
+                                color: Colors.white,
+                                child: MapTab(key: _mapKey, day: _selectedDay),
+                              )
+                            else ...[
+                              _listSection(),
+                              // 아래 떠 있는 버튼에 마지막 줄이 가리지 않게 비워 둔다.
+                              SizedBox(height: _dayItems.isNotEmpty ? 40 + 37 + 24 : 40),
+                            ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 14),
-                      _calendarCard(),
-                      const SizedBox(height: 10),
-                      AxisSegmentedTabs(
-                        labels: const ['목록', '지도'],
-                        selected: _mapTab ? 1 : 0,
-                        onChanged: (i) => setState(() {
-                          _mapTab = i == 1;
-                          _openSwipeId = null;
-                        }),
-                      ),
+                      // 목록·지도 모두 AI 버튼은 스크롤과 상관없이 하단바 위 24에 고정.
+                      if (!_mapTab && _dayItems.isNotEmpty)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 24,
+                          child: Center(child: ListFixButton(onTap: _runAi)),
+                        ),
                       if (_mapTab)
-                        ColoredBox(
-                          color: Colors.white,
-                          child: MapTab(key: _mapKey, day: _selectedDay),
-                        )
-                      else ...[
-                        _listSection(),
-                        // 아래 떠 있는 버튼에 마지막 줄이 가리지 않게 비워 둔다.
-                        SizedBox(height: _dayItems.isNotEmpty ? 40 + 37 + 24 : 40),
-                      ],
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 24,
+                          child: Center(child: MapOptimizeButton(onTap: () => _mapKey.currentState?.openOptimize())),
+                        ),
                     ],
                   ),
                 ),
-                // 목록·지도 모두 AI 버튼은 스크롤과 상관없이 하단바 위 24에 고정.
-                if (!_mapTab && _dayItems.isNotEmpty)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 24,
-                    child: Center(child: ListFixButton(onTap: _runAi)),
-                  ),
-                if (_mapTab)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 24,
-                    child: Center(child: MapOptimizeButton(onTap: () => _mapKey.currentState?.openOptimize())),
-                  ),
               ],
             ),
           ),

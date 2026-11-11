@@ -173,8 +173,8 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 10),
               AxisBackTitleBar(title: _editing ? '일정 수정' : '일정 추가'),
+              const SizedBox(height: 4),
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),

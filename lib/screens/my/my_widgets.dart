@@ -35,11 +35,11 @@ class MySubScaffold extends StatelessWidget {
           bottom: false,
           child: Column(
             children: [
-              const SizedBox(height: 10),
               GestureDetector(
                 onLongPress: onTitleLongPress,
                 child: AxisBackTitleBar(title: title),
               ),
+              const SizedBox(height: 4),
               Expanded(child: body),
             ],
           ),

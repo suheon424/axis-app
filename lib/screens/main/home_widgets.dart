@@ -176,7 +176,7 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
       builder: (context, c) {
         final size = c.biggest;
         final mq = MediaQuery.of(context);
-        final top = mq.padding.top + 58; // 상단 줄 아래
+        final top = mq.padding.top + 50; // 상단 줄 아래
         final bottom = AxisTabBar.height + math.max(mq.viewPadding.bottom, AxisTabBar.homeIndicator);
         final content = Rect.fromLTRB(0, top, size.width, size.height - bottom);
         final dpr = mq.devicePixelRatio;
@@ -317,7 +317,7 @@ class HomeBackground extends StatelessWidget {
   }
 }
 
-/// 상단 줄(높이 48): 왼쪽 axis 로고, 가운데 "목록 | 달성률" 알약 토글, (있으면) 오른쪽 + 버튼.
+/// 상단 줄(상태바 바로 아래 높이 50, 피그마 Header 48h50): 왼쪽 axis 로고, 가운데 "목록 | 달성률" 알약 토글, (있으면) 오른쪽 + 버튼.
 class HomeTopBar extends StatelessWidget {
   const HomeTopBar({super.key, required this.achievement, required this.onToggle, this.onAdd, this.onLogoLongPress});
 
@@ -333,7 +333,7 @@ class HomeTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: 50,
       child: Stack(
         alignment: Alignment.center,
         children: [

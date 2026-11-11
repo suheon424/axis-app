@@ -145,7 +145,6 @@ class ListAiSuggestionScreen extends StatelessWidget {
           bottom: false,
           child: Column(
             children: [
-              const SizedBox(height: 10),
               const AxisBackTitleBar(title: '23일(월) 바뀐 일정 미리보기'),
               const SizedBox(height: 14),
               const Expanded(child: _Preview()),

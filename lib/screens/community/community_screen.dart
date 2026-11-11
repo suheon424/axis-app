@@ -23,7 +23,8 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  static const _heroTop = Color(0xFF002261);
+  /// 09_커뮤니티 상태바·검색 줄(Frame 317) 바탕 #044FCE. 위쪽 배경 이미지 윗부분과 같은 색이다.
+  static const _heroTop = Color(0xFF044FCE);
   bool _loading = false;
   final Set<int> _bookmarks = {};
 
@@ -49,12 +50,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
     );
   }
 
-  void _soon(String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$what은(는) 준비 중이에요.')));
-  }
-
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
@@ -63,112 +58,162 @@ class _CommunityScreenState extends State<CommunityScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         bottomNavigationBar: const AxisTabBar(current: MainTab.explore),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _Hero(
-                topInset: topInset,
-                bookmarkCount: _bookmarks.length,
-                onSearch: () =>
-                    Navigator.of(context)
-                        .push(MaterialPageRoute<void>(builder: (_) => CommunitySearchScreen(onOpen: _open))),
-                onBookmarks: () => _soon('저장한 계획'),
-                onBell: () =>
-                    Navigator.of(context)
-                        .push(MaterialPageRoute<void>(builder: (_) => const CommunityNotificationsScreen())),
-                onReview: (r) => _open(communityTemplates[r.template], tab: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+        body: Column(
+          children: [
+            // 상태바 + 검색 줄은 스크롤해도 따라 올라가지 않게 고정(10-x 이벤트 상세와 같은 방식).
+            _SearchHeader(
+              topInset: topInset,
+              color: _heroTop,
+              onSearch: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => CommunitySearchScreen(onOpen: _open))),
+              onBell: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => const CommunityNotificationsScreen())),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onLongPress: _load,
-                            child: const Text.rich(
-                              TextSpan(
-                                text: '인기 계획 템플릿 ',
-                                children: [
-                                  TextSpan(
-                                    text: 'TOP10',
-                                    style: TextStyle(color: CubeColors.blue),
-                                  ),
-                                ],
-                              ),
-                              style: TextStyle(
-                                fontSize: 20,
-                                height: 1.3,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () =>
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute<void>(builder: (_) => AllTemplatesScreen(onOpen: _open))),
-                          child: const Padding(
-                            padding: EdgeInsets.only(top: 4, left: 8),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '전체보기',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    height: 1.4,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.gray06,
+                    _Hero(onReview: (r) => _open(communityTemplates[r.template], tab: 1)),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onLongPress: _load,
+                                  child: const Text.rich(
+                                    TextSpan(
+                                      text: '인기 계획 템플릿 ',
+                                      children: [
+                                        TextSpan(
+                                          text: 'TOP10',
+                                          style: TextStyle(color: CubeColors.blue),
+                                        ),
+                                      ],
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      height: 1.3,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ),
-                                AxisChevronRight(size: 17, color: AppColors.gray05),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      '템플릿 적용으로 손쉽게 계획을 따라해보세요.',
-                      style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF999999)),
-                    ),
-                    const SizedBox(height: 21),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child: _loading
-                          ? const Column(
-                              key: ValueKey('loading'),
-                              children: [TemplateRowSkeleton(), TemplateRowSkeleton(), TemplateRowSkeleton()],
-                            )
-                          : Column(
-                              key: const ValueKey('list'),
-                              children: [
-                                for (final t in communityTemplates)
-                                  TemplateRow(
-                                    template: t,
-                                    bookmarked: _bookmarks.contains(t.rank),
-                                    onBookmark: () => setState(
-                                      () => _bookmarks.contains(t.rank)
-                                          ? _bookmarks.remove(t.rank)
-                                          : _bookmarks.add(t.rank),
-                                    ),
-                                    onTap: () => _open(t),
+                              ),
+                              GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => Navigator.of(context)
+                                    .push(MaterialPageRoute<void>(builder: (_) => AllTemplatesScreen(onOpen: _open))),
+                                child: const Padding(
+                                  padding: EdgeInsets.only(top: 4, left: 8),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '전체보기',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          height: 1.4,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.gray06,
+                                        ),
+                                      ),
+                                      AxisChevronRight(size: 17, color: AppColors.gray05),
+                                    ],
                                   ),
-                              ],
-                            ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            '템플릿 적용으로 손쉽게 계획을 따라해보세요.',
+                            style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF999999)),
+                          ),
+                          const SizedBox(height: 21),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: _loading
+                                ? const Column(
+                                    key: ValueKey('loading'),
+                                    children: [TemplateRowSkeleton(), TemplateRowSkeleton(), TemplateRowSkeleton()],
+                                  )
+                                : Column(
+                                    key: const ValueKey('list'),
+                                    children: [
+                                      for (final t in communityTemplates)
+                                        TemplateRow(
+                                          template: t,
+                                          bookmarked: _bookmarks.contains(t.rank),
+                                          onBookmark: () => setState(
+                                            () => _bookmarks.contains(t.rank)
+                                                ? _bookmarks.remove(t.rank)
+                                                : _bookmarks.add(t.rank),
+                                          ),
+                                          onTap: () => _open(t),
+                                        ),
+                                    ],
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// 09_커뮤니티 Frame 317(상태바 아래 높이 50, 바탕 #044FCE, 아래 여백 10):
+/// 검색창 306×40(x 20) + 11 띄우고 종 28(Icon/Nav/Bell), 종 오른쪽 위에 알림 1.
+class _SearchHeader extends StatelessWidget {
+  const _SearchHeader({required this.topInset, required this.color, required this.onSearch, required this.onBell});
+
+  final double topInset;
+  final Color color;
+  final VoidCallback onSearch;
+  final VoidCallback onBell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: color,
+      padding: EdgeInsets.only(top: topInset, left: 20, bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(width: 306, child: _SearchPill(onTap: onSearch)),
+          const SizedBox(width: 11),
+          Semantics(
+            button: true,
+            label: '알림',
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onBell,
+              child: SizedBox(
+                width: 28,
+                height: 40,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    SvgPicture.asset('assets/icons/community/bell.svg', width: 28, height: 28),
+                    const Positioned(left: 17, top: 4, child: IgnorePointer(child: AxisNotificationBadge(count: 1))),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -176,20 +221,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
 /// 위쪽 파란 영역: 검색창·북마크·알림, 문구, 3D 말풍선, 후기 카드 캐러셀.
 class _Hero extends StatefulWidget {
-  const _Hero({
-    required this.topInset,
-    required this.bookmarkCount,
-    required this.onSearch,
-    required this.onBookmarks,
-    required this.onBell,
-    required this.onReview,
-  });
+  const _Hero({required this.onReview});
 
-  final double topInset;
-  final int bookmarkCount;
-  final VoidCallback onSearch;
-  final VoidCallback onBookmarks;
-  final VoidCallback onBell;
   final ValueChanged<ReviewHighlight> onReview;
 
   @override
@@ -209,58 +242,28 @@ class _HeroState extends State<_Hero> {
     return Container(
       decoration: const BoxDecoration(
         color: Color(0xFFE3ECF6),
-        image: DecorationImage(image: AssetImage('assets/images/community/hero_bg.png'), fit: BoxFit.fill),
+        image: DecorationImage(
+          image: AssetImage('assets/images/community/hero_bg.png'),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+        ),
       ),
-      padding: EdgeInsets.only(top: widget.topInset + 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 피그마 09_커뮤니티: 검색창 306×40(x 20) + 11 띄우고 종 28(Icon/Nav/Bell), 종 오른쪽 위에 알림 1.
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              children: [
-                SizedBox(width: 306, child: _SearchPill(onTap: widget.onSearch)),
-                const SizedBox(width: 11),
-                Semantics(
-                  button: true,
-                  label: '알림',
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: widget.onBell,
-                    child: SizedBox(
-                      width: 28,
-                      height: 40,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.center,
-                        children: [
-                          SvgPicture.asset('assets/icons/community/bell.svg', width: 28, height: 28),
-                          const Positioned(
-                            left: 17,
-                            top: 4,
-                            child: IgnorePointer(child: AxisNotificationBadge(count: 1)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // 피그마(고정 줄 아래 기준): 말풍선 110×110 위 9·오른쪽 14, 제목 위 29, 후기 카드 위 141.
           SizedBox(
-            height: 112,
+            height: 141,
             child: Stack(
               children: [
                 Positioned(
-                  right: 18,
-                  top: 18,
-                  child: Image.asset('assets/images/community/bubble.png', width: 110, height: 100),
+                  right: 14,
+                  top: 9,
+                  child: Image.asset('assets/images/community/bubble.png', width: 110, height: 110),
                 ),
                 const Positioned(
                   left: 20,
-                  top: 21,
+                  top: 29,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -285,7 +288,6 @@ class _HeroState extends State<_Hero> {
               ],
             ),
           ),
-          const SizedBox(height: 19),
           // 시안 "09 커뮤니티 · 한 층 돌리기": 카드 두 장씩 붙은 면이 기둥처럼 90°씩 돈다.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

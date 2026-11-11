@@ -22,8 +22,8 @@ class EventDetailScaffold extends StatelessWidget {
           bottom: false,
           child: Column(
             children: [
-              const SizedBox(height: 10),
               const AxisBackTitleBar(title: '이벤트 상세'),
+              const SizedBox(height: 4),
               Expanded(
                 child: ListView(padding: const EdgeInsets.only(top: 10, bottom: 30), children: children),
               ),

@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 import 'kit/icons.dart';
 
-/// Nav/Title(130:9407): 뒤로가기 + 가운데 제목(18 Bold gray06), 높이 40.
+/// Nav/Title(130:9407): 뒤로가기 + 가운데 제목(18 Bold gray06), 상태바 바로 아래 높이 50.
 class AxisNavBar extends StatelessWidget {
   const AxisNavBar({super.key, required this.title});
 

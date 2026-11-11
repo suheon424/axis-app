@@ -101,7 +101,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   bottom: false,
                   child: Column(
                     children: [
-                      const SizedBox(height: 5),
                       AxisBackTitleBar(
                         title: widget.title,
                         actions: [
@@ -117,7 +116,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                       Expanded(
                         child: SingleChildScrollView(
-                          padding: const EdgeInsets.only(top: 15, bottom: 24),
+                          padding: const EdgeInsets.only(top: 14, bottom: 24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [

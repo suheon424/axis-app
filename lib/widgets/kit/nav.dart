@@ -5,7 +5,7 @@ import 'icons.dart';
 import 'kit_buttons.dart';
 
 /// Nav/Back Title(130:9961) · Nav/Title(130:9407): 뒤로가기 + 가운데 제목(18 Bold gray06)
-/// + 오른쪽 행동 아이콘들(예: AxisIconButton(icon: KitIcon.navPlus)). 높이 44.
+/// + 오른쪽 행동 아이콘들(예: AxisIconButton(icon: KitIcon.navPlus)). 상태바 바로 아래 붙는 높이 50.
 class AxisBackTitleBar extends StatelessWidget implements PreferredSizeWidget {
   const AxisBackTitleBar({
     super.key,
@@ -27,13 +27,13 @@ class AxisBackTitleBar extends StatelessWidget implements PreferredSizeWidget {
   final Color? backgroundColor;
 
   @override
-  Size get preferredSize => const Size.fromHeight(44);
+  Size get preferredSize => const Size.fromHeight(50);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: backgroundColor,
-      height: 44,
+      height: 50,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Stack(
@@ -61,7 +61,7 @@ class AxisBackTitleBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-/// Nav/Back Share(130:10085): 흰 원형 뒤로가기(그림자) + 가운데 제목 + 공유(그리고 선택적으로 북마크). 높이 48.
+/// Nav/Back Share(130:10085): 흰 원형 뒤로가기(그림자) + 가운데 제목 + 공유(그리고 선택적으로 북마크). 상태바 바로 아래 높이 50.
 class AxisBackShareBar extends StatelessWidget implements PreferredSizeWidget {
   const AxisBackShareBar({super.key, required this.title, this.onBack, this.onShare, this.trailing = const []});
 
@@ -75,7 +75,7 @@ class AxisBackShareBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget> trailing;
 
   @override
-  Size get preferredSize => const Size.fromHeight(48);
+  Size get preferredSize => const Size.fromHeight(50);
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +85,7 @@ class AxisBackShareBar extends StatelessWidget implements PreferredSizeWidget {
     ];
     return Container(
       color: Colors.white,
-      height: 48,
+      height: 50,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Stack(

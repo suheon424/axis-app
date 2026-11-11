@@ -209,7 +209,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
     return Column(
       children: [
         SizedBox(
-          height: 40,
+          height: 50,
           child: Align(
             alignment: Alignment.centerLeft,
             child: Padding(

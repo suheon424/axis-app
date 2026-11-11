@@ -8,7 +8,8 @@ import '../widgets/character_picker.dart';
 import 'home_screen.dart';
 import 'my/my_data.dart';
 
-/// 06_온보딩 완료(프로필 캐릭터). 배경색 8가지와 캐릭터 12종 중에서 고르면 가운데 미리보기가 바뀐다.
+/// 06_온보딩 완료(프로필 캐릭터). 위에서부터 미리보기(Avatar/Profile 160) · 이름 · 배경색 알약 순서이고,
+/// 아래 흰 영역에서 캐릭터 12종을 가로로 넘겨 고른다.
 /// 시작하기·다음에 설정하기 → 07_01 홈.
 class CharacterScreen extends StatefulWidget {
   const CharacterScreen({super.key, required this.nickname});
@@ -43,11 +44,10 @@ class _CharacterScreenState extends State<CharacterScreen> {
                 bottom: false,
                 child: Column(
                   children: [
-                    const SizedBox(height: 10),
                     const AxisNavBar(title: '프로필 설정'),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 30, AppSizes.sidePadding, 24),
+                        padding: const EdgeInsets.fromLTRB(AppSizes.sidePadding, 30, AppSizes.sidePadding, 20),
                         child: Column(
                           children: [
                             const SizedBox(
@@ -71,20 +71,21 @@ class _CharacterScreenState extends State<CharacterScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 50),
-                            CharacterColorPicker(selected: _color, onChanged: (i) => setState(() => _color = i)),
-                            const SizedBox(height: 26),
-                            CharacterPreview(color: characterBackgrounds[_color], character: _character + 1),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 52),
+                            CharacterPreview(color: characterBackgrounds[_color], character: _character + 1, size: 160),
+                            const SizedBox(height: 20),
                             Text(
                               '$name 님',
                               style: const TextStyle(
                                 fontSize: 20,
                                 height: 1.3,
+                                letterSpacing: -0.2,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.gray07,
                               ),
                             ),
+                            const SizedBox(height: 40),
+                            CharacterColorPicker(selected: _color, onChanged: (i) => setState(() => _color = i)),
                           ],
                         ),
                       ),
@@ -95,11 +96,11 @@ class _CharacterScreenState extends State<CharacterScreen> {
             ),
             Container(
               color: Colors.white,
-              padding: const EdgeInsets.only(top: 21, bottom: AppSizes.ctaBottom),
+              padding: const EdgeInsets.only(top: 20, bottom: AppSizes.ctaBottom),
               child: Column(
                 children: [
                   CharacterStrip(selected: _character + 1, onChanged: (c) => setState(() => _character = c - 1)),
-                  const SizedBox(height: 97),
+                  const SizedBox(height: 30),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSizes.sidePadding),
                     child: AxisSplitButton(

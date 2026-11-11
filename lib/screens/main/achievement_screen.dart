@@ -31,7 +31,7 @@ class AchievementScreen extends StatelessWidget {
             Positioned.fill(
               child: HomeRotateLayer(
                 child: Padding(
-                  padding: EdgeInsets.only(top: top + 58),
+                  padding: EdgeInsets.only(top: top + 50 + 8),
                   child: Column(
                     children: [
                       const SizedBox(height: 36),
@@ -84,7 +84,7 @@ class AchievementScreen extends StatelessWidget {
               child: ColoredBox(
                 color: _statusColor,
                 child: Padding(
-                  padding: EdgeInsets.only(top: top + 10),
+                  padding: EdgeInsets.only(top: top),
                   child: HomeTopBar(
                     achievement: true,
                     onToggle: (_) => homeSwitchTo(

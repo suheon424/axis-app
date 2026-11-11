@@ -66,10 +66,10 @@ class _EventScreenState extends State<EventScreen> {
         body: SafeArea(
           bottom: false,
           child: ListView(
-            padding: const EdgeInsets.only(top: 10),
+            padding: EdgeInsets.zero,
             children: [
               const SizedBox(
-                height: 40,
+                height: 50,
                 child: Center(
                   child: Text(
                     '이벤트',

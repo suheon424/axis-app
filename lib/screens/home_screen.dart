@@ -171,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned.fill(
               child: HomeRotateLayer(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(20, top + 58 + 10, 20, 24),
+                  padding: EdgeInsets.fromLTRB(20, top + 50 + 18, 20, 24),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: KeyedSubtree(key: ValueKey(_state), child: _content()),
@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ColoredBox(
                 color: _headerColor,
                 child: Padding(
-                  padding: EdgeInsets.only(top: top + 10),
+                  padding: EdgeInsets.only(top: top),
                   child: HomeTopBar(
                     achievement: false,
                     onToggle: (_) => homeSwitchTo(context, AchievementScreen(nickname: widget.nickname), forward: true),
