@@ -5,9 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-import 'home_spline_viewer_html.dart';
-
-/// iOS·Android: 웹뷰에 `<spline-viewer>` HTML을 띄운다. 그 밖의 플랫폼(데스크톱·테스트)은 null을
+/// iOS·Android: 웹뷰에 Spline 공개 링크를 그대로 띄운다. 그 밖의 플랫폼(데스크톱·테스트)은 null을
 /// 돌려주어 큐브 그림이 그대로 보이게 한다.
 Widget? buildSplineScene({
   required String url,
@@ -37,13 +35,8 @@ class _SplineWebViewState extends State<_SplineWebView> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
-      ..addJavaScriptChannel(
-        'SplineBridge',
-        onMessageReceived: (m) {
-          if (m.message == 'loaded') widget.onLoaded();
-        },
-      )
-      ..loadHtmlString(splineViewerHtml(widget.url), baseUrl: 'https://localhost/');
+      ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) => widget.onLoaded()))
+      ..loadRequest(Uri.parse(widget.url));
   }
 
   @override
