@@ -38,7 +38,7 @@ class EventInfo {
   String get daysLeftLabel => '$daysLeft일 남음';
 }
 
-/// Banner/Event(205:10599) 변형별 그림: 파일, 배너(292) 안 위치, 너비.
+/// Banner/Event(205:10599) 변형별 그림: 파일, 배너(350×282) 안 위치, 너비.
 class EventBannerArt {
   const EventBannerArt(this.asset, this.left, this.top, this.width);
 
@@ -49,12 +49,12 @@ class EventBannerArt {
 }
 
 const eventBannerArt = <EventKind, EventBannerArt>{
-  EventKind.cube: EventBannerArt('assets/images/event/banner_cube.png', 147, 9, 135),
-  EventKind.attendance: EventBannerArt('assets/images/event/banner_attendance.png', 148, 9, 144),
-  EventKind.planKing: EventBannerArt('assets/images/event/banner_plan_king.png', 141, -1, 131),
-  EventKind.affirmation: EventBannerArt('assets/images/event/banner_affirmation.png', 147, 9, 135),
-  EventKind.invite: EventBannerArt('assets/images/event/banner_invite.png', 147, -1, 135),
-  EventKind.badgeCollection: EventBannerArt('assets/images/event/banner_badge.png', 166, 12, 110),
+  EventKind.cube: EventBannerArt('assets/images/event/banner_cube.png', 205, 9, 135),
+  EventKind.attendance: EventBannerArt('assets/images/event/banner_attendance.png', 207, 9, 144),
+  EventKind.planKing: EventBannerArt('assets/images/event/banner_plan_king.png', 200, -1, 131),
+  EventKind.affirmation: EventBannerArt('assets/images/event/banner_affirmation.png', 206, 9, 135),
+  EventKind.invite: EventBannerArt('assets/images/event/banner_invite.png', 206, -1, 135),
+  EventKind.badgeCollection: EventBannerArt('assets/images/event/banner_badge.png', 215, 22, 110),
 };
 
 const eventCatalog = <EventKind, EventInfo>{
@@ -101,7 +101,7 @@ const eventCatalog = <EventKind, EventInfo>{
     kind: EventKind.invite,
     listTitle: '친구 초대 이벤트',
     heroTitle: '친구 초대하면\n둘 다 1,000P!',
-    bannerTitle: '친구\n초대하면\n둘 다 1,000P!',
+    bannerTitle: '친구  초대하면\n둘 다 1,000P!',
     bannerCaption: '3명 초대하면\n스타벅스 아메리카노 추가',
     period: '11.01 – 11.27',
     daysLeft: 4,

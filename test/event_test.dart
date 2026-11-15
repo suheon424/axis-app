@@ -92,7 +92,7 @@ void main() {
     expect(find.text('2 / 6', findRichText: true), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('이전'));
     await _settle(tester);
-    await tester.tap(find.byType(PageView), warnIfMissed: false);
+    await tester.tap(find.byType(AxisCubeCarousel), warnIfMissed: false);
     await _settle(tester);
     expect(find.byType(EventCubeScreen), findsOneWidget);
   });

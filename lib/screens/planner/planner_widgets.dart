@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../widgets/kit/kit.dart';
 
@@ -228,12 +229,16 @@ class _SuggestionCard extends StatelessWidget {
 
 /// 대화 한 줄. [answer]는 AI 제안에 대한 사용자 응답(null = 아직).
 class AiChatMessage {
-  AiChatMessage.user(this.text, this.time) : fromAi = false;
-  AiChatMessage.ai(this.text, this.time) : fromAi = true;
+  AiChatMessage.user(this.text, this.time) : fromAi = false, done = false;
+  AiChatMessage.ai(this.text, this.time) : fromAi = true, done = false;
+
+  /// 0802_ai온보딩 · 동의함: 동의한 뒤 AI가 "오늘 일정표를 수정했어요" 하고 바뀐 일정을 알려 주는 말풍선.
+  AiChatMessage.aiDone(this.time) : text = '', fromAi = true, done = true;
 
   final String text;
   final DateTime time;
   final bool fromAi;
+  final bool done;
   bool? answer;
 }
 
@@ -256,7 +261,8 @@ class AiChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      for (final m in messages) m.fromAi ? _AiBubble(message: m, onAnswer: onAnswer) : _UserBubble(message: m),
+      for (final m in messages)
+        m.fromAi ? _AiBubble(key: ObjectKey(m), message: m, onAnswer: onAnswer) : _UserBubble(message: m),
       if (typing) const _AiBubble(),
     ];
     return ListView.separated(
@@ -307,7 +313,7 @@ class _UserBubble extends StatelessWidget {
 
 /// AI 답변 말풍선. [message]가 null이면 입력 중 표시.
 class _AiBubble extends StatelessWidget {
-  const _AiBubble({this.message, this.onAnswer});
+  const _AiBubble({super.key, this.message, this.onAnswer});
 
   final AiChatMessage? message;
   final void Function(AiChatMessage message, bool agreed)? onAnswer;
@@ -318,17 +324,9 @@ class _AiBubble extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 30,
-          height: 30,
-          margin: const EdgeInsets.only(top: 2),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Color(0x260D0C48), blurRadius: 10)],
-          ),
-          child: Image.asset('assets/images/planner/ai_avatar.png', semanticLabel: 'axis AI'),
-        ),
-        const SizedBox(width: 8),
+        // AI/Orb(256:10421) 28: 피그마에서 내보낸 그림 그대로(남색 원 + 안쪽 빛 + 그라디언트 로고).
+        Image.asset('assets/images/planner/ai_orb.png', width: 28, height: 28, semanticLabel: 'axis AI'),
+        const SizedBox(width: 10),
         Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,6 +345,8 @@ class _AiBubble extends StatelessWidget {
                 ),
                 child: m == null
                     ? const Text('답변을 준비하고 있어요…', style: TextStyle(fontSize: 14, height: 1.4, color: AppColors.gray06))
+                    : m.done
+                    ? const _AiDoneBody()
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -362,16 +362,10 @@ class _AiBubble extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          SizedBox(
-                            width: 280,
-                            child: AxisSplitButton(
-                              leftLabel: '취소',
-                              rightLabel: m.answer == true ? '동의함' : '동의',
-                              height: 40,
-                              onLeft: m.answer == null ? () => onAnswer?.call(m, false) : null,
-                              onRight: m.answer == null ? () => onAnswer?.call(m, true) : null,
-                              rightEnabled: m.answer != false,
-                            ),
+                          _AgreeButtons(
+                            answer: m.answer,
+                            onCancel: () => onAnswer?.call(m, false),
+                            onAgree: () => onAnswer?.call(m, true),
                           ),
                         ],
                       ),
@@ -380,6 +374,171 @@ class _AiBubble extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 취소 | 동의 버튼(2Primary, 280×40). 동의를 누르면 파란 사선이 오른쪽에서 왼쪽으로 버튼 전체를 채우고
+/// 0802_ai온보딩 · 동의함의 "동의함" 버튼(280×40, 굴곡 8, #0039B3, 가운데 16 SemiBold 흰 글자)이 된다.
+class _AgreeButtons extends StatefulWidget {
+  const _AgreeButtons({required this.answer, required this.onCancel, required this.onAgree});
+
+  final bool? answer;
+  final VoidCallback onCancel;
+  final VoidCallback onAgree;
+
+  @override
+  State<_AgreeButtons> createState() => _AgreeButtonsState();
+}
+
+class _AgreeButtonsState extends State<_AgreeButtons> with SingleTickerProviderStateMixin {
+  static const agreed = Color(0xFF0039B3);
+  late final _fill = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+    value: widget.answer == true ? 1 : 0,
+  );
+
+  @override
+  void didUpdateWidget(_AgreeButtons old) {
+    super.didUpdateWidget(old);
+    if (widget.answer == true && old.answer != true) _fill.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _fill.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.answer;
+    return SizedBox(
+      width: 280,
+      height: 40,
+      child: AnimatedBuilder(
+        animation: _fill,
+        builder: (context, _) {
+          final t = Curves.easeInOutCubic.transform(_fill.value);
+          if (a == true && _fill.isCompleted) return _done(1);
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              AxisSplitButton(
+                leftLabel: '취소',
+                rightLabel: '동의',
+                height: 40,
+                onLeft: a == null ? widget.onCancel : null,
+                onRight: a == null ? widget.onAgree : null,
+                rightEnabled: a != false,
+              ),
+              if (a == true)
+                IgnorePointer(
+                  child: CustomPaint(
+                    painter: _SweepFillPainter(t),
+                    child: _done(((t - 0.55) / 0.45).clamp(0.0, 1.0), filled: false),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _done(double opacity, {bool filled = true}) => Container(
+    decoration: filled ? BoxDecoration(color: agreed, borderRadius: BorderRadius.circular(8)) : null,
+    alignment: Alignment.center,
+    child: Opacity(
+      opacity: opacity,
+      child: const Text(
+        '동의함',
+        style: TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600, color: Colors.white),
+      ),
+    ),
+  );
+}
+
+/// 버튼 전체(굴곡 8)를 #0039B3 사선 채움으로 덮는다. [t]=0 오른쪽 밖 → 1 왼쪽 끝까지.
+class _SweepFillPainter extends CustomPainter {
+  const _SweepFillPainter(this.t);
+
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final clip = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8)));
+    paintEnableFill(canvas, size, clip, t, _AgreeButtonsState.agreed, size.height * 35.5 / 52);
+  }
+
+  @override
+  bool shouldRepaint(_SweepFillPainter old) => old.t != t;
+}
+
+/// 0802_ai온보딩 · 동의함 "AI follow-up" 말풍선 안: 완료 아이콘(20) · 두 줄 안내(16 SemiBold, 첫 줄 파랑) ·
+/// 바뀐 일정 줄(#F4F5FA, 굴곡 8, 안쪽 12/14, 07:00 PM · 스터디 예습 · 보기 태그).
+class _AiDoneBody extends StatelessWidget {
+  const _AiDoneBody();
+
+  @override
+  Widget build(BuildContext context) {
+    const strong = TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600);
+    return SizedBox(
+      width: 280,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset('assets/images/planner/ai_done.svg', width: 20, height: 20),
+          const SizedBox(height: 12),
+          const Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '오늘 일정표를 수정했어요.\n',
+                  style: TextStyle(color: AppColors.brand),
+                ),
+                TextSpan(
+                  text: '19:00에 스터디 예습 1시간을 넣었어요.',
+                  style: TextStyle(color: Color(0xFF181920)),
+                ),
+              ],
+            ),
+            style: strong,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 47),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(color: AppColors.searchBg, borderRadius: BorderRadius.circular(8)),
+            child: Row(
+              children: [
+                const Text(
+                  '07:00 PM',
+                  style: TextStyle(fontSize: 12, height: 1.36, fontWeight: FontWeight.w500, color: AppColors.gray06),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    '스터디 예습',
+                    style: TextStyle(fontSize: 16, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.gray07),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: const Color(0xFFD3EBFF), borderRadius: BorderRadius.circular(4)),
+                  child: const Text(
+                    '보기',
+                    style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: AppColors.brand),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

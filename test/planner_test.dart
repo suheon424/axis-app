@@ -86,8 +86,10 @@ void main() {
     await _shot(tester, 'planner_0802');
 
     await tester.tap(find.text('동의'));
-    await _settle(tester, 300);
-    expect(find.text('오늘 일정표를 수정했어요'), findsOneWidget);
+    await _settle(tester, 1500);
+    expect(find.text('동의함'), findsOneWidget);
+    expect(find.textContaining('오늘 일정표를 수정했어요', findRichText: true), findsOneWidget);
+    await _shot(tester, 'planner_0802_agreed');
     await _settle(tester, 2600);
 
     await tester.tap(find.bySemanticsLabel('뒤로'));

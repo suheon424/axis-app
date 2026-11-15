@@ -20,7 +20,7 @@ import 'withdraw_screen.dart';
 const _pageBg = AppColors.gray01;
 const _labelGray = Color(0xFF999999);
 
-/// 12_마이페이지(130:14256): 마이 탭 첫 화면. 프로필 + 보유 포인트 + 나의 활동·고객 지원 메뉴 + 로그아웃·탈퇴.
+/// 12_마이페이지(256:10494): 마이 탭 첫 화면. 프로필 + 보유 포인트 + 나의 활동·고객 지원 메뉴 + 로그아웃·탈퇴.
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
 
@@ -122,7 +122,7 @@ class MyPageScreen extends StatelessWidget {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(top: 4, bottom: 24),
+                    padding: const EdgeInsets.only(bottom: 24),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -142,7 +142,8 @@ class MyPageScreen extends StatelessWidget {
   }
 }
 
-/// 위쪽 회색 바탕: 원형 캐릭터 + "수현 님" + 내 정보 수정 + 파란 보유 포인트 줄.
+/// 위쪽 회색 바탕(피그마 12_마이페이지 Frame 170): 가운데 정렬 원형 캐릭터 70 → 10 → "수현 님" → 4 → 한 줄 소개
+/// → 10 → 내 정보 수정 → 24 → 사선 모서리 보유 포인트 버튼(350×52) → 20.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.profile, required this.onEdit, required this.onPoints});
 
@@ -153,80 +154,75 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 23, 20, 21),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
       child: Column(
         children: [
-          Row(
-            children: [
-              MyProfileAvatar(
-                character: profile.character,
-                background: profile.background == null ? null : characterBackgrounds[profile.background!],
-              ),
-              const SizedBox(width: 22),
-              Expanded(
-                child: Text(
-                  '${profile.callName} 님',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    height: 1.3,
-                    letterSpacing: -0.2,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              PressBuilder(
-                semanticLabel: '내 정보 수정',
-                onTap: onEdit,
-                builder: (_, pressed) => Container(
-                  constraints: const BoxConstraints(minHeight: 32, minWidth: 88),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: pressed ? AppColors.gray02 : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E7EE)),
-                  ),
-                  child: const Text(
-                    '내 정보 수정',
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.36,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.neutralText,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          MyProfileAvatar(
+            character: profile.character,
+            background: profile.background == null ? null : characterBackgrounds[profile.background!],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
+          Text(
+            '${profile.callName} 님',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 20,
+              height: 1.3,
+              letterSpacing: -0.2,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            profile.intro,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w500, color: Color(0xFF191F28)),
+          ),
+          const SizedBox(height: 10),
+          PressBuilder(
+            semanticLabel: '내 정보 수정',
+            onTap: onEdit,
+            builder: (_, pressed) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: pressed ? AppColors.gray02 : Colors.transparent,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0xFFE2E7EE)),
+              ),
+              child: const Text(
+                '내 정보 수정',
+                style: TextStyle(fontSize: 12, height: 1.36, fontWeight: FontWeight.w500, color: Color(0xFF4E5968)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           PressBuilder(
             semanticLabel: '보유 포인트 ${formatPoints(profile.points)}P',
             onTap: onPoints,
-            builder: (_, pressed) => Container(
-              constraints: const BoxConstraints(minHeight: 48),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: pressed ? AppColors.brandPressed : AppColors.brand,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 18,
-                    height: 18,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: const Text(
-                      'P',
-                      style: TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w700, color: AppColors.brand),
+            builder: (_, pressed) => CustomPaint(
+              painter: _PointsButtonPainter(pressed: pressed),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 52),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 18,
+                      height: 18,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      child: const Text(
+                        'P',
+                        style: TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w600, color: _pointBody),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(child: Text('보유 포인트', style: _whiteLabel)),
-                  Text('${formatPoints(profile.points)}P', style: _whiteLabel),
-                ],
+                    const SizedBox(width: 8),
+                    const Text('보유 포인트', style: _whiteLabel),
+                    const SizedBox(width: 24),
+                    Text('${formatPoints(profile.points)}P', style: _whiteLabel),
+                  ],
+                ),
               ),
             ),
           ),
@@ -236,6 +232,46 @@ class _ProfileHeader extends StatelessWidget {
   }
 
   static const _whiteLabel = TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w600, color: Colors.white);
+}
+
+const _pointBody = Color(0xFF004FED);
+const _pointCorner = Color(0xFF0041B0);
+
+/// 피그마 Button(보유 포인트)의 Body·Corner 벡터를 그대로 옮긴 모양: 왼쪽은 r8 사각형, 오른쪽 끝 31px는
+/// 사선으로 잘린 진한 모서리(둘 사이 7px 사선 틈). 눌리면 조금 어두워진다.
+class _PointsButtonPainter extends CustomPainter {
+  const _PointsButtonPainter({required this.pressed});
+
+  final bool pressed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    const k = 2.66667;
+    final body = Path()
+      ..moveTo(8, 0)
+      ..lineTo(w - 7, 0)
+      ..lineTo(w - 38, h)
+      ..lineTo(8, h)
+      ..cubicTo(k, h, 0, h - k, 0, h - 8)
+      ..lineTo(0, 8)
+      ..cubicTo(0, k, k, 0, 8, 0)
+      ..close();
+    final corner = Path()
+      ..moveTo(w, 0)
+      ..lineTo(w, h - 8)
+      ..cubicTo(w, h - k, w - k, h, w - 8, h)
+      ..lineTo(w - 31, h)
+      ..close();
+    final dim = pressed ? Colors.black.withValues(alpha: 0.15) : null;
+    Color c(Color base) => dim == null ? base : Color.alphaBlend(dim, base);
+    canvas.drawPath(body, Paint()..color = c(_pointBody));
+    canvas.drawPath(corner, Paint()..color = c(_pointCorner));
+  }
+
+  @override
+  bool shouldRepaint(_PointsButtonPainter old) => old.pressed != pressed;
 }
 
 /// 흰 바탕 메뉴 묶음: 회색 라벨(14 Medium #999) + 메뉴 줄들.

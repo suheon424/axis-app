@@ -115,7 +115,15 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
 
   void _answer(AiChatMessage m, bool agreed) {
     setState(() => m.answer = agreed);
-    showAxisToast(context, agreed ? '오늘 일정표를 수정했어요' : '제안을 취소했어요', bottom: 68);
+    if (!agreed) {
+      showAxisToast(context, '제안을 취소했어요', bottom: 68);
+      return;
+    }
+    // 0802_ai온보딩 · 동의함: 버튼이 "동의함"으로 채워진 뒤 AI가 바뀐 일정을 알려 준다.
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+      setState(() => _messages.add(AiChatMessage.aiDone(DateTime.now())));
+    });
   }
 
   @override

@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -26,7 +24,7 @@ Widget eventDetailScreen(EventKind kind) => switch (kind) {
 const _bannerOrder = [EventKind.cube, ...eventListOrder];
 
 /// 10_이벤트(130:12688): 이벤트 탭 첫 화면.
-/// 위는 큐브처럼 돌아가는 배너(1/6), 아래는 "혜택 가득! 진행 중인 이벤트" 목록. 배너·줄을 누르면 상세로 간다.
+/// 위는 09_커뮤니티처럼 큐브 한 층을 돌리듯 넘어가는 배너(1/6), 아래는 "혜택 가득! 진행 중인 이벤트" 목록. 배너·줄을 누르면 상세로 간다.
 class EventScreen extends StatefulWidget {
   const EventScreen({super.key});
 
@@ -35,25 +33,17 @@ class EventScreen extends StatefulWidget {
 }
 
 class _EventScreenState extends State<EventScreen> {
-  /// 배너는 양옆으로 끝없이 돈다: 큰 페이지 번호에서 시작해 6으로 나눈 나머지를 쓴다.
-  static const _start = 600;
-  final _pages = PageController(viewportFraction: 292 / 390, initialPage: _start);
-  int _page = _start;
-
-  int get _index => _page % _bannerOrder.length;
-
-  @override
-  void dispose() {
-    _pages.dispose();
-    super.dispose();
-  }
+  /// 배너는 09_커뮤니티 후기 카드처럼 큐브 한 층을 돌리듯 넘어간다(옆면은 어두워진다).
+  final _cube = AxisCubeCarouselController();
+  int _index = 0;
 
   void _open(EventKind kind) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => eventDetailScreen(kind)));
   }
 
   void _goTo(int page) {
-    _pages.animateToPage(page, duration: const Duration(milliseconds: 420), curve: Curves.easeOutCubic);
+    if (page > _index + 1) _cube.next();
+    if (page < _index + 1) _cube.previous();
   }
 
   @override
@@ -84,28 +74,19 @@ class _EventScreenState extends State<EventScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                height: 292,
-                child: PageView.builder(
-                  controller: _pages,
-                  onPageChanged: (p) => setState(() => _page = p),
-                  itemBuilder: (context, i) => _CubeFace(
-                    controller: _pages,
-                    index: i,
-                    child: _Banner(
-                      info: eventCatalog[_bannerOrder[i % _bannerOrder.length]]!,
-                      onTap: () => _open(_bannerOrder[i % _bannerOrder.length]),
-                    ),
-                  ),
+              Center(
+                child: AxisCubeCarousel(
+                  controller: _cube,
+                  size: const Size(350, 282),
+                  faceCount: _bannerOrder.length,
+                  onChanged: (i) => setState(() => _index = i),
+                  faceBuilder: (context, i, dim) =>
+                      _Banner(info: eventCatalog[_bannerOrder[i]]!, dim: dim, onTap: () => _open(_bannerOrder[i])),
                 ),
               ),
               const SizedBox(height: 10),
               Center(
-                child: AxisPager(
-                  page: _index + 1,
-                  count: _bannerOrder.length,
-                  onChanged: (p) => _goTo(_page + p - 1 - _index),
-                ),
+                child: AxisPager(page: _index + 1, count: _bannerOrder.length, onChanged: _goTo),
               ),
               const SizedBox(height: 16),
               const AxisSectionDivider(),
@@ -149,51 +130,18 @@ class _EventScreenState extends State<EventScreen> {
   }
 }
 
-/// 옆 페이지를 큐브의 옆면처럼 안쪽 가장자리를 축으로 돌려 얇게 보이게 한다.
-class _CubeFace extends StatelessWidget {
-  const _CubeFace({required this.controller, required this.index, required this.child});
-
-  final PageController controller;
-  final int index;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        var page = index.toDouble();
-        if (controller.hasClients && controller.position.haveDimensions) {
-          page = controller.page ?? page;
-        } else {
-          page = controller.initialPage.toDouble();
-        }
-        final d = (index - page).clamp(-1.0, 1.0);
-        return Opacity(
-          opacity: 1 - 0.5 * d.abs(),
-          child: Transform(
-            alignment: d > 0 ? Alignment.centerLeft : Alignment.centerRight,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.0012)
-              ..rotateY(-d * math.pi * 0.46),
-            child: child,
-          ),
-        );
-      },
-      child: child,
-    );
-  }
-}
-
-/// 292×292 배너 한 면: 하늘빛 방사형 바탕 + 큰 제목(검정→파랑 그라디언트) + 설명 + 그림.
-/// Banner/Event(205:10599): 292 정사각, 굴곡 8, 흰 그림자 10.
-/// 바탕은 #F4F5FA 위 오른쪽 위(292, 66)를 중심으로 한 타원 방사 그라디언트(#71C3FF 14·18% → #E0F2FF).
-/// 오른쪽 위 3D 그림, 왼쪽 30에서 위 109 큰 제목(26 ExtraBold, 검정 → #0057ED 가로 그라디언트),
-/// 위 218 설명(12, gray06).
+/// 350×282 배너 한 면: 하늘빛 방사형 바탕 + 큰 제목(검정→파랑 그라디언트) + 설명 + 그림.
+/// Banner/Event(205:10599): 350×282, 굴곡 8, 흰 그림자(흐림 10, 퍼짐 5).
+/// 바탕은 #F4F5FA 위 오른쪽 위(350, 64)를 중심으로 한 타원(가로 350·세로 224) 방사 그라디언트(#71C3FF 14·18% → #E0F2FF).
+/// 오른쪽 위 3D 그림, 왼쪽 40에서 위 99 큰 제목(26 ExtraBold, 검정 → #0057ED 가로 그라디언트),
+/// 위 208 설명(12, gray06).
 class _Banner extends StatelessWidget {
-  const _Banner({required this.info, required this.onTap});
+  const _Banner({required this.info, required this.dim, required this.onTap});
 
   final EventInfo info;
+
+  /// 옆으로 돌아간 만큼 덮는 검정의 불투명도(0~0.35).
+  final double dim;
   final VoidCallback onTap;
 
   @override
@@ -205,55 +153,56 @@ class _Banner extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          width: 350,
+          height: 282,
           clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF4F5FA),
-            boxShadow: [BoxShadow(color: Colors.white, blurRadius: 10)],
-            gradient: RadialGradient(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF4F5FA),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: const [BoxShadow(color: Colors.white, blurRadius: 10, spreadRadius: 5)],
+            gradient: const RadialGradient(
               center: Alignment(1, -0.546),
-              radius: 1,
+              radius: 350 / 282,
               colors: [Color(0xFF71C3FF), Color(0xFF71C3FF), Color(0xFFE0F2FF)],
               stops: [0.14, 0.18, 1],
-              transform: _ScaleYAround(0.795, Alignment(1, -0.546)),
+              transform: _ScaleYAround(0.64, Alignment(1, -0.546)),
             ),
           ),
-          child: FittedBox(
-            child: SizedBox(
-              width: 292,
-              height: 292,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    left: art.left,
-                    top: art.top,
-                    width: art.width,
-                    child: Image.asset(art.asset, fit: BoxFit.contain),
-                  ),
-                  // 글자 그라디언트(검정 → #0057ED)는 글 상자 폭에 걸리므로 폭을 글에 맞춘다.
-                  Positioned(
-                    left: 30,
-                    top: 109,
-                    child: ShaderMask(
-                      blendMode: BlendMode.srcIn,
-                      shaderCallback: (r) =>
-                          const LinearGradient(colors: [Colors.black, Color(0xFF0057ED)]).createShader(r),
-                      child: Text(
-                        info.bannerTitle,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          height: 1.19,
-                          letterSpacing: -0.52,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.black,
-                        ),
-                      ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: art.left,
+                top: art.top,
+                width: art.width,
+                child: Image.asset(art.asset, fit: BoxFit.contain),
+              ),
+              // 글자 그라디언트(검정 → #0057ED)는 글 상자 폭에 걸리므로 폭을 글에 맞춘다.
+              Positioned(
+                left: 40,
+                top: 99,
+                child: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (r) =>
+                      const LinearGradient(colors: [Colors.black, Color(0xFF0057ED)]).createShader(r),
+                  child: Text(
+                    info.bannerTitle,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      height: 1.19,
+                      letterSpacing: -0.52,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
                     ),
                   ),
-                  Positioned(left: 30, top: 218, right: 20, child: Text(info.bannerCaption, style: AxisText.caption)),
-                ],
+                ),
               ),
-            ),
+              Positioned(left: 40, top: 208, right: 20, child: Text(info.bannerCaption, style: AxisText.caption)),
+              if (dim > 0)
+                Positioned.fill(
+                  child: ColoredBox(color: Colors.black.withValues(alpha: dim)),
+                ),
+            ],
           ),
         ),
       ),
