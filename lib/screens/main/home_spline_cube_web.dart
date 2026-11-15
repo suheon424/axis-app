@@ -48,11 +48,21 @@ class _SplineHtmlViewState extends State<_SplineHtmlView> {
       ..width = '100%'
       ..height = '100%'
       ..border = '0'
-      ..background = 'transparent';
+      ..background = 'transparent'
+      // 장면이 다 그려지기 전의 빈 화면이 보이지 않게, 불러온 뒤 잠깐 기다렸다가 서서히 보인다.
+      // 그동안은 SplineCube가 같은 자리에 큐브 그림을 먼저 보여 준다.
+      ..opacity = '0'
+      ..transition = 'opacity 300ms ease-out';
     el.addEventListener(
       'load',
       ((web.Event _) {
-        if (mounted) widget.onLoaded();
+        _reveal?.cancel();
+        _reveal = Timer(const Duration(milliseconds: 600), () {
+          el.style.opacity = '1';
+          _reveal = Timer(const Duration(milliseconds: 300), () {
+            if (mounted) widget.onLoaded();
+          });
+        });
       }).toJS,
     );
     // iframe 안의 터치는 이 문서로 오지 않는다. iframe을 누르면 창이 포커스를 잃으므로(blur)
@@ -73,11 +83,13 @@ class _SplineHtmlViewState extends State<_SplineHtmlView> {
   }
 
   Timer? _refocus;
+  Timer? _reveal;
   JSFunction? _blur;
 
   @override
   void dispose() {
     _refocus?.cancel();
+    _reveal?.cancel();
     final b = _blur;
     if (b != null) web.window.removeEventListener('blur', b);
     super.dispose();

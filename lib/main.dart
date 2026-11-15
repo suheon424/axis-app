@@ -9,6 +9,7 @@ import 'screens/my/my_page_screen.dart';
 import 'screens/planner/ai_planner_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/asset_warmup.dart';
 import 'widgets/main_chrome.dart';
 
 void main() {
@@ -41,6 +42,7 @@ class AxisApp extends StatelessWidget {
       color: Colors.black,
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
+      builder: (context, child) => AssetWarmup(child: child ?? const SizedBox.shrink()),
       home: const WelcomeScreen(),
     );
   }

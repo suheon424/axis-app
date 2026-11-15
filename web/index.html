@@ -55,6 +55,20 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
+
+    // 달성률 큐브를 처음 열 때 늦게 뜨지 않게, 앱이 뜨고 조금 뒤 보이지 않는 작은 창으로 Spline 장면을 한 번 받아 둔다.
+    // 받은 파일은 브라우저에 남아 홈 화면에서 큐브를 열 때 바로 쓴다. 주소는 home_spline_cube.dart와 같아야 한다.
+    window.addEventListener('flutter-first-frame', () => {
+      setTimeout(() => {
+        const f = document.createElement('iframe');
+        f.src = 'https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/';
+        f.setAttribute('aria-hidden', 'true');
+        f.tabIndex = -1;
+        f.style.cssText = 'position:fixed;left:-10px;top:-10px;width:2px;height:2px;border:0;opacity:0;pointer-events:none;';
+        document.body.appendChild(f);
+        setTimeout(() => f.remove(), 25000);
+      }, 1500);
+    }, { once: true });
   </script>
 </body>
 </html>

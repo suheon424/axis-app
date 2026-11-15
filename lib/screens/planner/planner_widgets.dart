@@ -294,9 +294,9 @@ class _UserBubble extends StatelessWidget {
             decoration: const BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(16),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
               ),
             ),
             child: Text(
@@ -338,9 +338,9 @@ class _AiBubble extends StatelessWidget {
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topRight: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
+                    topRight: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
                   ),
                 ),
                 child: m == null
@@ -653,7 +653,7 @@ class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProvider
   }
 }
 
-/// Frame 105(입력창, 0801_ai온보딩): 채우기 검정 90%, 반지름 8, 테두리 안쪽 2의 선형 그라디언트
+/// Frame 105(입력창, 0801_ai온보딩): 채우기 검정 90%, 반지름 12, 테두리 안쪽 2의 선형 그라디언트
 /// (#1A3466 14.5% · #003DAB 40% · #005FFF 65% · #A0D5FF 100%, 가운데 → 오른쪽 끝), 안쪽 그림자 #0141B6 x −10 흐림 15.
 /// 밝은 쪽(오른쪽)과 안쪽 그림자가 함께 [turns]만큼 테두리를 따라 360° 돈다.
 class _PromptGradientPainter extends CustomPainter {
@@ -672,7 +672,7 @@ class _PromptGradientPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rrect = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(8));
+    final rrect = RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(12));
     final a = turns.value * 2 * math.pi;
     final dir = Offset(math.cos(a), math.sin(a)); // 밝은 쪽 방향(박스 비율 공간)
     final center = size.center(Offset.zero);

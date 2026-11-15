@@ -90,7 +90,9 @@ class _SplineCubeState extends State<SplineCube> {
             // 목록 ↔ 달성률이 도는 동안에는 장면(사진으로 뜰 수 없는 HTML 요소) 대신 그림을 보인다.
             ValueListenableBuilder<bool>(
               valueListenable: homeRotating,
-              builder: (context, rotating, _) => Visibility.maintain(visible: rotating, child: _image(withKey: false)),
+              // 장면을 불러오는 동안에도 큐브 그림을 먼저 보여 준다(늦게 뜨는 것처럼 보이지 않게).
+              builder: (context, rotating, _) =>
+                  Visibility.maintain(visible: rotating || !_loaded, child: _image(withKey: false)),
             ),
             ValueListenableBuilder<bool>(
               valueListenable: homeRotating,
