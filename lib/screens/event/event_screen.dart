@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../widgets/kit/kit.dart';
+import '../../widgets/status_bar_blur.dart';
 import 'event_affirmation_screen.dart';
 import 'event_attendance_screen.dart';
 import 'event_badge_collection_screen.dart';
@@ -53,77 +54,79 @@ class _EventScreenState extends State<EventScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         bottomNavigationBar: const AxisTabBar(current: MainTab.event),
-        body: SafeArea(
-          bottom: false,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const SizedBox(
-                height: 50,
-                child: Center(
-                  child: Text(
-                    '이벤트',
-                    style: TextStyle(
-                      fontSize: 20,
-                      height: 1.3,
-                      letterSpacing: -0.2,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.gray06,
+        body: Stack(
+          children: [
+            ListView(
+              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+              children: [
+                const SizedBox(
+                  height: 50,
+                  child: Center(
+                    child: Text(
+                      '이벤트',
+                      style: TextStyle(
+                        fontSize: 20,
+                        height: 1.3,
+                        letterSpacing: -0.2,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gray06,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: AxisCubeCarousel(
-                  controller: _cube,
-                  size: const Size(350, 282),
-                  faceCount: _bannerOrder.length,
-                  onChanged: (i) => setState(() => _index = i),
-                  faceBuilder: (context, i, dim) =>
-                      _Banner(info: eventCatalog[_bannerOrder[i]]!, dim: dim, onTap: () => _open(_bannerOrder[i])),
+                const SizedBox(height: 20),
+                Center(
+                  child: AxisCubeCarousel(
+                    controller: _cube,
+                    size: const Size(350, 282),
+                    faceCount: _bannerOrder.length,
+                    onChanged: (i) => setState(() => _index = i),
+                    faceBuilder: (context, i, dim) =>
+                        _Banner(info: eventCatalog[_bannerOrder[i]]!, dim: dim, onTap: () => _open(_bannerOrder[i])),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Center(
-                child: AxisPager(page: _index + 1, count: _bannerOrder.length, onChanged: _goTo),
-              ),
-              const SizedBox(height: 16),
-              const AxisSectionDivider(),
-              const SizedBox(height: 32),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text.rich(
-                  const TextSpan(
+                const SizedBox(height: 10),
+                Center(
+                  child: AxisPager(page: _index + 1, count: _bannerOrder.length, onChanged: _goTo),
+                ),
+                const SizedBox(height: 16),
+                const AxisSectionDivider(),
+                const SizedBox(height: 32),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text.rich(
+                    const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '혜택 가득!',
+                          style: TextStyle(color: AppColors.primary),
+                        ),
+                        TextSpan(text: ' 진행 중인 이벤트'),
+                      ],
+                    ),
+                    style: AxisText.sectionTitle.copyWith(color: Colors.black),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ValueListenableBuilder(
+                  valueListenable: EventStatusStore.statuses,
+                  builder: (context, statuses, _) => Column(
                     children: [
-                      TextSpan(
-                        text: '혜택 가득!',
-                        style: TextStyle(color: AppColors.primary),
-                      ),
-                      TextSpan(text: ' 진행 중인 이벤트'),
+                      for (final kind in eventListOrder)
+                        _EventRow(
+                          info: eventCatalog[kind]!,
+                          status: statuses[kind]!,
+                          last: kind == eventListOrder.last,
+                          onTap: () => _open(kind),
+                        ),
                     ],
                   ),
-                  style: AxisText.sectionTitle.copyWith(color: Colors.black),
                 ),
-              ),
-              const SizedBox(height: 10),
-              ValueListenableBuilder(
-                valueListenable: EventStatusStore.statuses,
-                builder: (context, statuses, _) => Column(
-                  children: [
-                    for (final kind in eventListOrder)
-                      _EventRow(
-                        info: eventCatalog[kind]!,
-                        status: statuses[kind]!,
-                        last: kind == eventListOrder.last,
-                        onTap: () => _open(kind),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                const SizedBox(height: 24),
+              ],
+            ),
+            const StatusBarBlur(tint: Colors.white),
+          ],
         ),
       ),
     );

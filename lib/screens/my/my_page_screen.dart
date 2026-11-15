@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../widgets/character_picker.dart';
 import '../../widgets/kit/kit.dart';
+import '../../widgets/status_bar_blur.dart';
 import '../welcome_screen.dart';
 import 'my_comments_screen.dart';
 import 'my_data.dart';
@@ -60,82 +61,86 @@ class MyPageScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: _pageBg,
         bottomNavigationBar: const AxisTabBar(current: MainTab.my),
-        body: SafeArea(
-          bottom: false,
-          child: SingleChildScrollView(
-            child: ValueListenableBuilder(
-              valueListenable: myProfile,
-              builder: (context, profile, _) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _ProfileHeader(
-                    profile: profile,
-                    onEdit: () => _push(context, const ProfileEditScreen()),
-                    onPoints: () => _push(context, const PointHistoryScreen()),
-                  ),
-                  _MenuSection(
-                    label: '나의 활동',
-                    children: [
-                      AxisMenuRow(icon: KitIcon.menuBadge, label: '배지 보관함', onTap: () => _openBadges(context)),
-                      AxisMenuRow(
-                        icon: KitIcon.menuPost,
-                        label: '내가 쓴 게시물',
-                        onTap: () => _push(context, const MyPostsScreen()),
-                      ),
-                      AxisMenuRow(
-                        icon: KitIcon.menuComment,
-                        label: '내가 쓴 댓글',
-                        onTap: () => _push(context, const MyCommentsScreen()),
-                      ),
-                      AxisMenuRow(
-                        icon: KitIcon.menuBookmark,
-                        label: '저장한 템플릿',
-                        onTap: () => _push(context, const SavedTemplatesScreen()),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _MenuSection(
-                    label: '고객 지원',
-                    children: [
-                      AxisMenuRow(
-                        icon: KitIcon.menuNotice,
-                        label: '공지사항',
-                        onTap: () => _push(context, const NoticeScreen()),
-                      ),
-                      AxisMenuRow(
-                        icon: KitIcon.menuAlarm,
-                        label: '알림 설정',
-                        onTap: () => _push(context, const NotificationSettingsScreen()),
-                      ),
-                      AxisMenuRow(
-                        icon: KitIcon.menuSupport,
-                        label: '1:1 문의',
-                        onTap: () => _push(context, const InquiryScreen()),
-                      ),
-                      AxisMenuRow(
-                        icon: KitIcon.menuInfo,
-                        label: '버전 정보',
-                        value: MyProfile.appVersion,
-                        onTap: () => _push(context, const VersionInfoScreen()),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+        // 상태바 자리까지 내용이 올라가고, 그 위에 살짝 블러를 깐다(실제 앱).
+        body: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+              child: ValueListenableBuilder(
+                valueListenable: myProfile,
+                builder: (context, profile, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ProfileHeader(
+                      profile: profile,
+                      onEdit: () => _push(context, const ProfileEditScreen()),
+                      onPoints: () => _push(context, const PointHistoryScreen()),
+                    ),
+                    _MenuSection(
+                      label: '나의 활동',
                       children: [
-                        _FooterLink(label: '로그아웃', onTap: () => _logout(context)),
-                        const SizedBox(width: 4),
-                        _FooterLink(label: '탈퇴하기', onTap: () => _push(context, const WithdrawScreen())),
+                        AxisMenuRow(icon: KitIcon.menuBadge, label: '배지 보관함', onTap: () => _openBadges(context)),
+                        AxisMenuRow(
+                          icon: KitIcon.menuPost,
+                          label: '내가 쓴 게시물',
+                          onTap: () => _push(context, const MyPostsScreen()),
+                        ),
+                        AxisMenuRow(
+                          icon: KitIcon.menuComment,
+                          label: '내가 쓴 댓글',
+                          onTap: () => _push(context, const MyCommentsScreen()),
+                        ),
+                        AxisMenuRow(
+                          icon: KitIcon.menuBookmark,
+                          label: '저장한 템플릿',
+                          onTap: () => _push(context, const SavedTemplatesScreen()),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    _MenuSection(
+                      label: '고객 지원',
+                      children: [
+                        AxisMenuRow(
+                          icon: KitIcon.menuNotice,
+                          label: '공지사항',
+                          onTap: () => _push(context, const NoticeScreen()),
+                        ),
+                        AxisMenuRow(
+                          icon: KitIcon.menuAlarm,
+                          label: '알림 설정',
+                          onTap: () => _push(context, const NotificationSettingsScreen()),
+                        ),
+                        AxisMenuRow(
+                          icon: KitIcon.menuSupport,
+                          label: '1:1 문의',
+                          onTap: () => _push(context, const InquiryScreen()),
+                        ),
+                        AxisMenuRow(
+                          icon: KitIcon.menuInfo,
+                          label: '버전 정보',
+                          value: MyProfile.appVersion,
+                          onTap: () => _push(context, const VersionInfoScreen()),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _FooterLink(label: '로그아웃', onTap: () => _logout(context)),
+                          const SizedBox(width: 4),
+                          _FooterLink(label: '탈퇴하기', onTap: () => _push(context, const WithdrawScreen())),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+            const StatusBarBlur(tint: _pageBg),
+          ],
         ),
       ),
     );
