@@ -35,6 +35,7 @@ class SplineCube extends StatefulWidget {
     this.imageOffset = const Offset(0, -8),
     this.fingerOffset = const Offset(0, 9.5),
     this.sceneScale = 2.0,
+    this.sceneShift = 40,
   });
 
   final String url;
@@ -48,6 +49,9 @@ class SplineCube extends StatefulWidget {
 
   /// 장면(iframe)을 큐브 영역보다 몇 배 크게 그릴지.
   final double sceneScale;
+
+  /// 장면을 칸 가운데에서 아래로 내리는 거리(실제 기기 피드백: 40).
+  final double sceneShift;
 
   static const fingerKey = Key('home_spline_finger');
   static const sceneKey = Key('home_spline_scene');
@@ -90,26 +94,25 @@ class _SplineCubeState extends State<SplineCube> {
           if (scene == null)
             _image()
           else ...[
-            // 목록 ↔ 달성률이 도는 동안에는 장면(사진으로 뜰 수 없는 HTML 요소) 대신 그림을 보인다.
-            ValueListenableBuilder<bool>(
-              valueListenable: homeRotating,
-              // 장면을 불러오는 동안에도 큐브 그림을 먼저 보여 준다(늦게 뜨는 것처럼 보이지 않게).
-              builder: (context, rotating, _) =>
-                  Visibility.maintain(visible: rotating || !_loaded, child: _image(withKey: false)),
-            ),
+            // 큐브는 지금 Spline 링크 장면만 보인다(예전 큐브 그림은 쓰지 않는다). 도는 동안에는 장면을 잠시 숨긴다.
             ValueListenableBuilder<bool>(
               valueListenable: homeRotating,
               builder: (context, rotating, sceneChild) => Offstage(offstage: rotating, child: sceneChild),
               // Spline 장면은 iframe 높이에 비례해 큐브를 그린다(260 높이에서 약 89). 피그마 큐브(177×186)
               // 크기가 되게 iframe을 [sceneScale]배로 키워 가운데에 두고, 큐브 영역 밖(오른쪽 아래 Spline 로고 포함)은 잘라 낸다.
+              // [sceneShift]만큼 장면을 내리고, 잘라 내는 칸도 아래로 그만큼 늘린다(아래 통계 카드가 그 위를 덮는다).
               child: ClipRect(
+                clipper: _ExtendDown(widget.sceneShift),
                 child: LayoutBuilder(
                   builder: (context, c) => OverflowBox(
                     minWidth: c.maxWidth * widget.sceneScale,
                     maxWidth: c.maxWidth * widget.sceneScale,
                     minHeight: c.maxHeight * widget.sceneScale,
                     maxHeight: c.maxHeight * widget.sceneScale,
-                    child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+                    child: Transform.translate(
+                      offset: Offset(0, widget.sceneShift),
+                      child: KeyedSubtree(key: SplineCube.sceneKey, child: scene),
+                    ),
                   ),
                 ),
               ),
@@ -168,4 +171,16 @@ class _FingerButton extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ExtendDown extends CustomClipper<Rect> {
+  const _ExtendDown(this.extra);
+
+  final double extra;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, 0, size.width, size.height + extra);
+
+  @override
+  bool shouldReclip(_ExtendDown old) => old.extra != extra;
 }

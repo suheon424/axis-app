@@ -85,17 +85,13 @@ class _SplineWebViewState extends State<_SplineWebView> {
   @override
   Widget build(BuildContext context) {
     // 누름(손가락 버튼 숨김)은 SplineCube의 Listener가 받는다. 드래그는 웹뷰가 바로 받아 큐브를 돌린다.
-    // 아이폰 웹뷰에서는 장면이 웹(테스트 링크)보다 위로 치우쳐 큐브 윗면이 잘렸다.
-    // 위를 70 비워 장면 가운데를 35 내린다(장면이 조금 작아져 돌릴 때도 덜 잘린다).
-    return Padding(
-      padding: const EdgeInsets.only(top: 70),
-      child: AnimatedOpacity(
-        opacity: _ready ? 1 : 0,
-        duration: const Duration(milliseconds: 300),
-        child: WebViewWidget(
-          controller: _controller,
-          gestureRecognizers: {Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())},
-        ),
+    // 장면 위치는 SplineCube가 웹과 같이 40 내린다.
+    return AnimatedOpacity(
+      opacity: _ready ? 1 : 0,
+      duration: const Duration(milliseconds: 300),
+      child: WebViewWidget(
+        controller: _controller,
+        gestureRecognizers: {Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())},
       ),
     );
   }

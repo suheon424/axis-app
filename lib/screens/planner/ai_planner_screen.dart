@@ -222,7 +222,13 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 4),
-              child: AxisIconButton(icon: KitIcon.navBack, tooltip: '뒤로', onPressed: _back, color: Colors.white),
+              // 위쪽이 밝은 기본 화면에서는 검정, 입력창을 눌러 키보드가 올라오면(위가 파랗게 바뀜) 흰색.
+              child: AxisIconButton(
+                icon: KitIcon.navBack,
+                tooltip: '뒤로',
+                onPressed: _back,
+                color: _focus.hasFocus ? Colors.white : Colors.black,
+              ),
             ),
           ),
         ),

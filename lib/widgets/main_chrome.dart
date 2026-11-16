@@ -56,7 +56,7 @@ class AxisTabBar extends StatefulWidget {
   static const darkBackground = Color(0xFF121212);
   static const height = 54.0;
 
-  /// Tab Bar(130:9415)는 54 바(위 1 + 칸 52 + 아래 1) + 34 Home Indicator = 88. 기기가 아래 여백을 알려주지 않는 웹에서도 34를 둔다.
+  /// Tab Bar(130:9415)는 54 바(칸 54, 위 1px 선은 칸 안쪽) + 34 Home Indicator = 88. 기기가 아래 여백을 알려주지 않는 웹에서도 34를 둔다.
   static const homeIndicator = 34.0;
 
   @override
@@ -84,7 +84,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
               boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 10, offset: Offset(0, -2))],
             ),
       child: Padding(
-        padding: EdgeInsets.only(top: 1, bottom: bottom > AxisTabBar.homeIndicator ? bottom : AxisTabBar.homeIndicator),
+        padding: EdgeInsets.only(bottom: bottom > AxisTabBar.homeIndicator ? bottom : AxisTabBar.homeIndicator),
         child: Row(
           children: [
             for (final tab in MainTab.values)
@@ -115,7 +115,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
   }
 }
 
-/// 탭 한 칸(Bottom Navigation/Item). 52 높이 칸(+ 아래 1) 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
+/// 탭 한 칸(Bottom Navigation/Item). 54 높이 칸 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
 /// 선택 정도(0~1)에 따라 60씩 굴린다. 켜진 버튼이 올라오는 동안 Flip Shade(위가 진한 그림자)와
 /// Fold Edge(윗변 1px 선)가 걷힌다.
 class _TabItem extends StatefulWidget {
@@ -180,7 +180,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: SizedBox(
-          height: 53,
+          height: 54,
           child: ClipRect(
             clipper: const _TabClipper(),
             child: AnimatedBuilder(
@@ -219,7 +219,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
   }
 }
 
-/// Bottom Navigation/Item(130:9663) 한 면. 52 칸 위에서 8 아래에 23 아이콘(가운데), 38 아래에 12 라벨(줄 높이 140%, 가운데).
+/// Bottom Navigation/Item(130:9663) 한 면. 54 칸 위에서 10 아래에 23 아이콘(가운데), 40 아래에 12 라벨(줄 높이 140%, 가운데).
 /// 라벨은 피그마처럼 칸 아래로 3 남짓 넘친다. 켜지면 검정 아이콘·SemiBold #181920(블랙모드는 흰 아이콘·흰 글씨),
 /// 꺼지면 회색 아이콘·Regular #8B95A1(블랙모드 #494949).
 class _TabFace extends StatelessWidget {
@@ -229,9 +229,9 @@ class _TabFace extends StatelessWidget {
   final bool on;
   final bool light;
 
-  static const iconTop = 8.0;
+  static const iconTop = 10.0;
   static const iconSize = 23.0;
-  static const labelTop = 38.0;
+  static const labelTop = 40.0;
 
   @override
   Widget build(BuildContext context) {
