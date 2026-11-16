@@ -614,10 +614,8 @@ class _AiPromptFieldState extends State<AiPromptField> with SingleTickerProvider
                 focusNode: focusNode,
                 minLines: 1,
                 maxLines: 4,
-                // 키보드의 파란 보내기(↑) 키 대신 다른 키처럼 흰 '줄바꿈' 키를 쓴다(실제 기기 피드백).
-                // 보내기는 입력창 오른쪽 흰 화살표로 한다.
-                textInputAction: TextInputAction.newline,
-                keyboardType: TextInputType.multiline,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
                 cursorColor: Colors.white,
                 style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.white),
                 decoration: const InputDecoration(

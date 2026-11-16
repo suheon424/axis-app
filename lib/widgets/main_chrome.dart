@@ -36,7 +36,7 @@ abstract final class MainTabRouter {
 }
 
 /// 하단 탭 바(피그마 Tab Bar 130:9415 · Bottom Navigation 130:9742).
-/// 기본은 흰 바(위 1px #CCD1DD 선 + 옅은 그림자, 높이 58 + 홈 인디케이터 영역). 07_01 홈은 [light]=false로 블랙모드 바.
+/// 기본은 흰 바(위 1px #CCD1DD 선 + 옅은 그림자, 높이 54 + 홈 인디케이터 영역 34 = 88). 07_01 홈은 [light]=false로 블랙모드 바.
 /// 선택된 탭은 검정 아이콘(파란 사선) + 12 SemiBold #181920, 나머지는 #CCD1DD 아이콘 + 12 Regular #8B95A1.
 /// 탭을 바꾸면 피그마 Smart Animate(0.46초, ease in-out)처럼 칸마다 꺼진/켜진 버튼이 위아래로 굴러간다:
 /// 새 탭은 꺼진 버튼이 위로 빠지고 켜진 버튼이 아래에서 올라오며(그림자가 걷힘), 이전 탭은 그 반대로 내려간다.
@@ -54,9 +54,9 @@ class AxisTabBar extends StatefulWidget {
   static const background = Colors.white;
   static const lightBackground = Colors.white;
   static const darkBackground = Color(0xFF121212);
-  static const height = 58.0;
+  static const height = 54.0;
 
-  /// Tab Bar(130:9415)는 58 바 + 34 Home Indicator = 92. 기기가 아래 여백을 알려주지 않는 웹에서도 34를 둔다.
+  /// Tab Bar(130:9415)는 54 바(위 1 + 칸 52 + 아래 1) + 34 Home Indicator = 88. 기기가 아래 여백을 알려주지 않는 웹에서도 34를 둔다.
   static const homeIndicator = 34.0;
 
   @override
@@ -75,7 +75,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
       decoration: light
           ? const BoxDecoration(
               color: AxisTabBar.background,
-              border: Border(top: BorderSide(color: Color(0xFFCCD1DD), width: 0.5)),
+              border: Border(top: BorderSide(color: Color(0xFFCCD1DD))),
               boxShadow: [BoxShadow(color: Color(0x0F000A2B), blurRadius: 10, offset: Offset(0, -2))],
             )
           : const BoxDecoration(
@@ -84,7 +84,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
               boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 10, offset: Offset(0, -2))],
             ),
       child: Padding(
-        padding: EdgeInsets.only(top: 2, bottom: bottom > AxisTabBar.homeIndicator ? bottom : AxisTabBar.homeIndicator),
+        padding: EdgeInsets.only(top: 1, bottom: bottom > AxisTabBar.homeIndicator ? bottom : AxisTabBar.homeIndicator),
         child: Row(
           children: [
             for (final tab in MainTab.values)
@@ -115,7 +115,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
   }
 }
 
-/// 탭 한 칸(Bottom Navigation/Item). 56 높이 칸 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
+/// 탭 한 칸(Bottom Navigation/Item). 52 높이 칸(+ 아래 1) 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
 /// 선택 정도(0~1)에 따라 60씩 굴린다. 켜진 버튼이 올라오는 동안 Flip Shade(위가 진한 그림자)와
 /// Fold Edge(윗변 1px 선)가 걷힌다.
 class _TabItem extends StatefulWidget {
@@ -180,7 +180,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: SizedBox(
-          height: 56,
+          height: 53,
           child: ClipRect(
             clipper: const _TabClipper(),
             child: AnimatedBuilder(
@@ -219,7 +219,7 @@ class _TabItemState extends State<_TabItem> with SingleTickerProviderStateMixin 
   }
 }
 
-/// Bottom Navigation/Item(130:9663) 한 면. 56 칸 위에서 12 아래에 23 아이콘(가운데), 42 아래에 12 라벨(줄 높이 140%, 가운데).
+/// Bottom Navigation/Item(130:9663) 한 면. 52 칸 위에서 8 아래에 23 아이콘(가운데), 38 아래에 12 라벨(줄 높이 140%, 가운데).
 /// 라벨은 피그마처럼 칸 아래로 3 남짓 넘친다. 켜지면 검정 아이콘·SemiBold #181920(블랙모드는 흰 아이콘·흰 글씨),
 /// 꺼지면 회색 아이콘·Regular #8B95A1(블랙모드 #494949).
 class _TabFace extends StatelessWidget {
@@ -229,9 +229,9 @@ class _TabFace extends StatelessWidget {
   final bool on;
   final bool light;
 
-  static const iconTop = 12.0;
+  static const iconTop = 8.0;
   static const iconSize = 23.0;
-  static const labelTop = 42.0;
+  static const labelTop = 38.0;
 
   @override
   Widget build(BuildContext context) {

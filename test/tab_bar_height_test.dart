@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   for (final inset in [0.0, 34.0]) {
-    testWidgets('Tab Bar is Figma 92 tall with bottom inset $inset', (tester) async {
+    testWidgets('Tab Bar is Figma 88 tall with bottom inset $inset', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: MediaQuery(
@@ -18,7 +18,7 @@ void main() {
           ),
         ),
       );
-      expect(tester.getSize(find.byType(AxisTabBar)).height, 92);
+      expect(tester.getSize(find.byType(AxisTabBar)).height, 88);
     });
   }
 }

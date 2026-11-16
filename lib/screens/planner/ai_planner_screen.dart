@@ -222,7 +222,7 @@ class _AiPlannerScreenState extends State<AiPlannerScreen> {
             alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 4),
-              child: AxisIconButton(icon: KitIcon.navBack, tooltip: '뒤로', onPressed: _back, color: AppColors.gray06),
+              child: AxisIconButton(icon: KitIcon.navBack, tooltip: '뒤로', onPressed: _back, color: Colors.white),
             ),
           ),
         ),
