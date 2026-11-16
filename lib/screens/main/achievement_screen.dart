@@ -77,16 +77,19 @@ class AchievementScreen extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-              child: ColoredBox(
-                color: _statusColor,
-                child: Padding(
-                  padding: EdgeInsets.only(top: top),
-                  child: HomeTopBar(
-                    achievement: true,
-                    onToggle: (_) => homeSwitchTo(
-                      context,
-                      HomeScreen(nickname: nickname, initialState: HomeLoadState.ready),
-                      forward: false,
+              // 목록 ↔ 달성률이 도는 동안에는 상단 줄도 큐브 면(사진)에 같이 실려 돌아서, 제자리 줄은 숨긴다.
+              child: HomeRotateLayer(
+                child: ColoredBox(
+                  color: _statusColor,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: top),
+                    child: HomeTopBar(
+                      achievement: true,
+                      onToggle: (_) => homeSwitchTo(
+                        context,
+                        HomeScreen(nickname: nickname, initialState: HomeLoadState.ready),
+                        forward: false,
+                      ),
                     ),
                   ),
                 ),

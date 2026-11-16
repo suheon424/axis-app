@@ -184,16 +184,21 @@ class _HomeScreenState extends State<HomeScreen> {
               top: 0,
               left: 0,
               right: 0,
-              child: ColoredBox(
-                color: _headerColor,
-                child: Padding(
-                  padding: EdgeInsets.only(top: top),
-                  child: HomeTopBar(
-                    achievement: false,
-                    onToggle: (_) => homeSwitchTo(context, AchievementScreen(nickname: widget.nickname), forward: true),
-                    onAdd: () =>
-                        Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AddScheduleScreen())),
-                    onLogoLongPress: _pickDemoState,
+              // 목록 ↔ 달성률이 도는 동안에는 상단 줄도 큐브 면(사진)에 같이 실려 돌아서, 제자리 줄은 숨긴다.
+              child: HomeRotateLayer(
+                child: ColoredBox(
+                  color: _headerColor,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: top),
+                    child: HomeTopBar(
+                      achievement: false,
+                      onToggle: (_) =>
+                          homeSwitchTo(context, AchievementScreen(nickname: widget.nickname), forward: true),
+                      onAdd: () =>
+                          Navigator.of(context)
+                              .push(MaterialPageRoute<void>(builder: (_) => const AddScheduleScreen())),
+                      onLogoLongPress: _pickDemoState,
+                    ),
                   ),
                 ),
               ),

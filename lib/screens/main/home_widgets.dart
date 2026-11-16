@@ -24,7 +24,7 @@ const homeTrackColor = Color(0x1FFFFFFF);
 
 /// 목록 ↔ 달성률 토글. 09 커뮤니티 상단 슬라이드([AxisCubeCarousel])와 같은 네모 큐브로 돈다: 0.5초,
 /// cubic-bezier(0.34, 1.3, 0.64, 1), 원근 900, 옆으로 돌아간 면은 35%까지 어두워진다.
-/// 상단 줄과 탭 바는 그대로 두고 그 사이 칸만 돈다. [forward]면 목록 → 달성률(오른쪽 면이 앞으로).
+/// 탭 바만 그대로 두고 상단 줄(axis 로고·토글)부터 그 위 화면 전체가 같이 돈다. [forward]면 목록 → 달성률(오른쪽 면이 앞으로).
 ///
 /// 면은 배경까지 포함한 화면 전체 사진이라 불투명하다(뒤가 비쳐 보이지 않는다). 누른 순간 지금 화면을 찍어 두고,
 /// 새 화면은 한 번 그린 뒤 찍는다. 회전은 그 다음 프레임부터 시작하므로 새 화면을 만드는 시간이 회전 중간에 끼지 않는다.
@@ -103,7 +103,7 @@ class _HomeRotate extends StatefulWidget {
   final ui.Image from;
   final bool forward;
 
-  /// 새 화면. 도는 동안에는 내용만 숨기고 배경·상단 줄·탭 바는 그대로 보인다.
+  /// 새 화면. 도는 동안에는 내용과 상단 줄을 숨기고 배경·탭 바만 그대로 보인다.
   final Widget child;
 
   @override
@@ -176,7 +176,7 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
       builder: (context, c) {
         final size = c.biggest;
         final mq = MediaQuery.of(context);
-        final top = mq.padding.top + 50; // 상단 줄 아래
+        const top = 0.0; // 상태바·상단 줄까지 같이 돈다(탭 바만 제자리).
         final bottom = AxisTabBar.height + math.max(mq.viewPadding.bottom, AxisTabBar.homeIndicator);
         final content = Rect.fromLTRB(0, top, size.width, size.height - bottom);
         final dpr = mq.devicePixelRatio;
@@ -192,7 +192,7 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
           fit: StackFit.expand,
           children: [
             child,
-            // 원근으로 커진 면이 상단 줄·탭 바를 덮지 않게 가운데 칸 안에서만 그린다.
+            // 원근으로 커진 면이 탭 바를 덮지 않게 탭 바 위에서만 그린다.
             ClipRect(
               clipper: _RectClipper(content),
               child: Stack(
@@ -206,7 +206,7 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
     );
   }
 
-  /// 화면 사진의 가운데(상단 줄과 탭 바 사이)만 잘라 큐브 옆면으로 돌린다.
+  /// 화면 사진에서 탭 바 위쪽 전체를 잘라 큐브 옆면으로 돌린다.
   Widget _face(ui.Image image, double dpr, double angle, Rect content, Size size) {
     final d = size.width / 2; // 큐브 반지름
     final dim = _sideDim * math.min(1, angle.abs() / 30);
