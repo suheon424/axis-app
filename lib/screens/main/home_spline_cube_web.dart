@@ -14,6 +14,9 @@ Widget? buildSplineScene({
   return _SplineHtmlView(url: url, onLoaded: onLoaded, onPressChanged: onPressChanged);
 }
 
+/// 웹은 web/index.html이 앱이 뜬 뒤 장면을 미리 받아 둔다.
+void prewarmSplineScene(String url) {}
+
 int _nextViewId = 0;
 
 class _SplineHtmlView extends StatefulWidget {

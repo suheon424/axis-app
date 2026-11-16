@@ -13,6 +13,9 @@ import 'home_spline_cube_io.dart' if (dart.library.js_interop) 'home_spline_cube
 const splineSceneUrl = 'https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/';
 
 /// 장면을 띄울 수 없을 때(주소가 비었거나 지원하지 않는 플랫폼) 보이는 피그마 큐브 그림.
+/// 앱이 뜬 뒤 큐브 장면을 미리 받아 둔다(실제 앱: 보이지 않는 웹뷰, 웹: index.html).
+void prewarmSplineCube() => platform.prewarmSplineScene(splineSceneUrl);
+
 const homeCubeImage = 'assets/images/main/home_cube.png';
 
 /// 07_02 달성률의 큐브.

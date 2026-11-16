@@ -148,7 +148,7 @@ class MyPageScreen extends StatelessWidget {
 }
 
 /// 위쪽 회색 바탕(피그마 12_마이페이지 Frame 170): 가운데 정렬 원형 캐릭터 70 → 10 → "수현 님" → 4 → 한 줄 소개
-/// → 10 → 내 정보 수정 → 24 → 사선 모서리 보유 포인트 버튼(350×52) → 20.
+/// → 10 → 내 정보 수정 → 24 → 보유 포인트(공통 버튼) → 20. 실제 기기에서 위가 붙어 보여 전체를 20 내렸다.
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.profile, required this.onEdit, required this.onPoints});
 
@@ -159,7 +159,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         children: [
           MyProfileAvatar(
@@ -202,33 +202,28 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          PressBuilder(
-            semanticLabel: '보유 포인트 ${formatPoints(profile.points)}P',
-            onTap: onPoints,
-            builder: (_, pressed) => CustomPaint(
-              painter: _PointsButtonPainter(pressed: pressed),
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 52),
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 18,
-                      height: 18,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: const Text(
-                        'P',
-                        style: TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w600, color: _pointBody),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('보유 포인트', style: _whiteLabel),
-                    const SizedBox(width: 24),
-                    Text('${formatPoints(profile.points)}P', style: _whiteLabel),
-                  ],
+          // 공통 버튼(Button/Primary, 저장하기·로그인과 같은 사선 모서리)에 포인트 줄을 넣는다.
+          AxisCtaButton(
+            label: '보유 포인트 ${formatPoints(profile.points)}P',
+            onPressed: onPoints,
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+            child: Row(
+              children: [
+                Container(
+                  width: 18,
+                  height: 18,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  child: const Text(
+                    'P',
+                    style: TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w600, color: AppColors.brand),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                const Text('보유 포인트', style: _whiteLabel),
+                const SizedBox(width: 24),
+                Text('${formatPoints(profile.points)}P', style: _whiteLabel),
+              ],
             ),
           ),
         ],
@@ -237,46 +232,6 @@ class _ProfileHeader extends StatelessWidget {
   }
 
   static const _whiteLabel = TextStyle(fontSize: 14, height: 1.5, fontWeight: FontWeight.w600, color: Colors.white);
-}
-
-const _pointBody = Color(0xFF004FED);
-const _pointCorner = Color(0xFF0041B0);
-
-/// 피그마 Button(보유 포인트)의 Body·Corner 벡터를 그대로 옮긴 모양: 왼쪽은 r8 사각형, 오른쪽 끝 31px는
-/// 사선으로 잘린 진한 모서리(둘 사이 7px 사선 틈). 눌리면 조금 어두워진다.
-class _PointsButtonPainter extends CustomPainter {
-  const _PointsButtonPainter({required this.pressed});
-
-  final bool pressed;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    const k = 2.66667;
-    final body = Path()
-      ..moveTo(8, 0)
-      ..lineTo(w - 7, 0)
-      ..lineTo(w - 38, h)
-      ..lineTo(8, h)
-      ..cubicTo(k, h, 0, h - k, 0, h - 8)
-      ..lineTo(0, 8)
-      ..cubicTo(0, k, k, 0, 8, 0)
-      ..close();
-    final corner = Path()
-      ..moveTo(w, 0)
-      ..lineTo(w, h - 8)
-      ..cubicTo(w, h - k, w - k, h, w - 8, h)
-      ..lineTo(w - 31, h)
-      ..close();
-    final dim = pressed ? Colors.black.withValues(alpha: 0.15) : null;
-    Color c(Color base) => dim == null ? base : Color.alphaBlend(dim, base);
-    canvas.drawPath(body, Paint()..color = c(_pointBody));
-    canvas.drawPath(corner, Paint()..color = c(_pointCorner));
-  }
-
-  @override
-  bool shouldRepaint(_PointsButtonPainter old) => old.pressed != pressed;
 }
 
 /// 흰 바탕 메뉴 묶음: 회색 라벨(14 Medium #999) + 메뉴 줄들.

@@ -101,7 +101,8 @@ class _ListAiAnalyzingState extends State<ListAiAnalyzing> with SingleTickerProv
                         ],
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    // 01_시작 화면의 로그인 버튼 → 이메일로 로그인하기 간격(18)처럼 상자 → 글자 18(6 + 누름 여백 12).
+                    const SizedBox(height: 6),
                     PressBuilder(
                       semanticLabel: '맞추기 취소',
                       onTap: () => Navigator.of(context).pop(),

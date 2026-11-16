@@ -124,7 +124,8 @@ class _MapAiAnalysisScreenState extends State<MapAiAnalysisScreen> with SingleTi
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  // 상자 → 글자 18(8 + 누름 여백 10): 01_시작 화면 로그인 → 이메일로 로그인하기 간격과 같다.
+                  const SizedBox(height: 8),
                   PressBuilder(
                     semanticLabel: '맞추기 취소',
                     onTap: _cancel,

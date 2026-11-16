@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../screens/main/home_spline_cube.dart' show prewarmSplineCube;
+
 /// 웹에서 앱이 뜬 뒤 그림 파일을 미리 받아 풀어 둔다.
 /// 웹은 그림을 처음 보여 줄 때 서버에서 받아 오느라 화면이 바뀔 때 그림이 늦게 뜨고 버벅인다.
 /// 첫 화면이 그려지고 잠시 뒤부터 하나씩(사이사이 쉬면서) 받아 두면 이후 화면은 바로 그려진다.
@@ -24,8 +26,13 @@ class _AssetWarmupState extends State<AssetWarmup> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!kIsWeb || _started) return;
+    if (_started) return;
     _started = true;
+    if (!kIsWeb) {
+      // 실제 앱은 그림이 기기 안에 있어 미리 받을 필요가 없고, 큐브 장면만 미리 받아 둔다.
+      WidgetsBinding.instance.addPostFrameCallback((_) => prewarmSplineCube());
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Timer(const Duration(milliseconds: 600), _run);
     });

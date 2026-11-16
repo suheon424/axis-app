@@ -147,11 +147,18 @@ class AxisCtaButton extends StatelessWidget {
     required this.onPressed,
     this.enabled = true,
     this.onDisabledPressed,
+    this.child,
+    this.padding = const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool enabled;
+
+  /// 가운데 글자 대신 넣을 내용(예: 마이페이지 보유 포인트 줄). 없으면 [label]을 가운데 쓴다.
+  /// [label]은 그래도 읽어 주기(접근성) 이름으로 쓴다.
+  final Widget? child;
+  final EdgeInsetsGeometry padding;
 
   /// 비활성 상태에서 눌렀을 때 동작(예: 빠진 입력 안내). 없으면 아무 일 없다.
   final VoidCallback? onDisabledPressed;
@@ -179,16 +186,18 @@ class AxisCtaButton extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(minHeight: AppSizes.buttonHeight),
               width: double.infinity,
-              alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: AxisText.button.copyWith(
-                  fontFamily: 'Pretendard',
-                  color: Color.lerp(AppColors.gray06, Colors.white, m.label),
-                ),
-              ),
+              alignment: child == null ? Alignment.center : Alignment.centerLeft,
+              padding: padding,
+              child:
+                  child ??
+                  Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: AxisText.button.copyWith(
+                      fontFamily: 'Pretendard',
+                      color: Color.lerp(AppColors.gray06, Colors.white, m.label),
+                    ),
+                  ),
             ),
           );
         },
