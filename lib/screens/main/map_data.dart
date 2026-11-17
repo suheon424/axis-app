@@ -311,9 +311,17 @@ const stopLatLng = <String, LatLng>{
   's5': LatLng(37.5302, 126.9359),
 };
 
-/// 실버톤 실제 지도 타일(CARTO Positron, OpenStreetMap 데이터).
+/// 실버톤 실제 지도 타일(OpenStreetMap 기본 지도를 회색·밝게 바꿔 쓴다).
 /// 웹과 iOS·Android에서만 받는다(테스트·데스크톱은 바탕색만).
 bool get mapTilesEnabled => kIsWeb || onMobileDevice;
+
+/// 회색(밝기만 남김) → 0.55배로 대비를 줄이고 밝게 올린 실버톤.
+const _silver = ColorFilter.matrix(<double>[
+  0.1176, 0.3927, 0.0399, 0, 112, //
+  0.1176, 0.3927, 0.0399, 0, 113, //
+  0.1265, 0.4224, 0.0429, 0, 112, //
+  0, 0, 0, 1, 0, //
+]);
 
 /// Pin/집: 흰 원 + 검정 테두리 + 집 모양.
 class MapHomePin extends StatelessWidget {
@@ -418,10 +426,10 @@ class MapCanvas extends StatelessWidget {
         children: [
           if (mapTilesEnabled)
             TileLayer(
-              urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              retinaMode: RetinaMode.isHighDensity(context),
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.suhyun.axis',
+              // 기본 OSM 지도를 회색으로 바꾸고 밝게 올려 실버톤으로 보이게 한다.
+              tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: _silver, child: tile),
             ),
           if (showRoute)
             PolylineLayer(
@@ -461,13 +469,13 @@ class MapCanvas extends StatelessWidget {
                     ),
               ],
             ),
-          // 지도 데이터 출처(OpenStreetMap · CARTO) 표기.
+          // 지도 데이터 출처(OpenStreetMap) 표기.
           if (mapTilesEnabled)
             const Align(
               alignment: Alignment.bottomRight,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(0, 0, 6, 4),
-                child: Text('© OpenStreetMap © CARTO', style: TextStyle(fontSize: 12, color: Color(0x99636C78))),
+                child: Text('© OpenStreetMap', style: TextStyle(fontSize: 12, color: Color(0x99636C78))),
               ),
             ),
         ],
