@@ -47,7 +47,7 @@ class AxisTabBar extends StatefulWidget {
   final MainTab current;
   final ValueChanged<MainTab>? onTap;
 
-  /// true면 흰 바, false면 블랙모드 바(07_01 홈_목록 · 홈_달성률: #121212 바탕, 위 1px #1F2027 선,
+  /// true면 흰 바, false면 블랙모드 바(07_01 홈_목록 · 홈_달성률: #121212 바탕, 위 선 없음,
   /// 켜진 탭은 흰 아이콘·흰 SemiBold 글씨, 꺼진 탭은 #494949).
   final bool light;
 
@@ -80,7 +80,6 @@ class _AxisTabBarState extends State<AxisTabBar> {
             )
           : const BoxDecoration(
               color: AxisTabBar.darkBackground,
-              border: Border(top: BorderSide(color: Color(0xFF1F2027))),
               boxShadow: [BoxShadow(color: Color(0x40000000), blurRadius: 10, offset: Offset(0, -2))],
             ),
       child: Padding(
@@ -117,7 +116,7 @@ class _AxisTabBarState extends State<AxisTabBar> {
 
 /// 탭 한 칸(Bottom Navigation/Item). 54 높이 칸 안에 꺼진 버튼과 켜진 버튼을 위아래로 겹쳐 두고
 /// 선택 정도(0~1)에 따라 60씩 굴린다. 켜진 버튼이 올라오는 동안 Flip Shade(위가 진한 그림자)와
-/// Fold Edge(윗변 1px 선)가 걷힌다.
+/// 걷힌다.
 class _TabItem extends StatefulWidget {
   const _TabItem({
     required this.tab,
@@ -287,7 +286,7 @@ class _TabClipper extends CustomClipper<Rect> {
   bool shouldReclip(_TabClipper old) => false;
 }
 
-/// Flip Shade(위에서 아래로 #384A5E 30% → 0) + Fold Edge(윗변 1px, 가운데가 진한 #384A5E 18%).
+/// Flip Shade(위에서 아래로 #384A5E 30% → 0). 피그마에서 Fold Edge 선은 지워졌다.
 class _FlipShade extends StatelessWidget {
   const _FlipShade();
 
@@ -310,20 +309,6 @@ class _FlipShade extends StatelessWidget {
                 _ink.withValues(alpha: 0),
               ],
               stops: const [0, 0.18, 0.52, 1],
-            ),
-          ),
-        ),
-        Align(
-          alignment: Alignment.topCenter,
-          child: SizedBox(
-            height: 1,
-            width: double.infinity,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [_ink.withValues(alpha: 0), _ink.withValues(alpha: 0.18), _ink.withValues(alpha: 0)],
-                ),
-              ),
             ),
           ),
         ),

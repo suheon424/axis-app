@@ -14,8 +14,11 @@ Widget? buildSplineScene({
   required ValueChanged<bool> onPressChanged,
 }) {
   if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return null;
-  return _SplineWebView(url: url, onLoaded: onLoaded);
+  return _SplineWebView(url: url, onLoaded: onLoaded, onPressChanged: onPressChanged);
 }
+
+/// iOS·Android 기기에서 돌고 있는지(테스트·데스크톱은 false).
+bool get onMobileDevice => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
 /// 앱이 뜬 뒤 보이지 않는 웹뷰로 Spline 장면을 한 번 받아 둔다. 받은 파일이 기기에 남아
 /// 홈 달성률 화면에서 큐브가 빨리 뜬다. 30초 뒤 웹뷰는 버린다.
@@ -37,10 +40,11 @@ void prewarmSplineScene(String url) {
 }
 
 class _SplineWebView extends StatefulWidget {
-  const _SplineWebView({required this.url, required this.onLoaded});
+  const _SplineWebView({required this.url, required this.onLoaded, required this.onPressChanged});
 
   final String url;
   final VoidCallback onLoaded;
+  final ValueChanged<bool> onPressChanged;
 
   @override
   State<_SplineWebView> createState() => _SplineWebViewState();
@@ -60,11 +64,25 @@ class _SplineWebViewState extends State<_SplineWebView> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.transparent)
+      // 웹뷰가 터치를 바로 가져가 Flutter 쪽 Listener가 손 뗌을 못 받을 수 있어서,
+      // 페이지 안에서 누름/뗌을 직접 알려 받는다(손가락 버튼 숨김·다시 보임).
+      ..addJavaScriptChannel('AxisPress', onMessageReceived: (m) => widget.onPressChanged(m.message == 'down'))
       ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) => _onPageFinished()))
       ..loadRequest(Uri.parse(widget.url));
   }
 
+  static const _pressScript = '''
+(function(){
+  if (window.__axisPress) return; window.__axisPress = true;
+  var down = false;
+  function send(v){ if (down === v) return; down = v; try { AxisPress.postMessage(v ? 'down' : 'up'); } catch (e) {} }
+  ['pointerdown','touchstart','mousedown'].forEach(function(t){ window.addEventListener(t, function(){ send(true); }, {capture:true, passive:true}); });
+  ['pointerup','pointercancel','touchend','touchcancel','mouseup'].forEach(function(t){ window.addEventListener(t, function(e){ if (e.touches && e.touches.length) return; send(false); }, {capture:true, passive:true}); });
+})();
+''';
+
   void _onPageFinished() {
+    _controller.runJavaScript(_pressScript).catchError((_) {});
     _reveal?.cancel();
     _reveal = Timer(const Duration(milliseconds: 1200), () {
       if (!mounted) return;

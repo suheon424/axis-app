@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.text('나중에 입력할게요'));
     await tester.pumpAndSettle();
     expect(find.byType(CharacterScreen), findsOneWidget);
-    expect(find.text('수현 님'), findsOneWidget);
+    expect(find.text('수현님,\n함께할 액시스 친구들을 골라봐요!'), findsOneWidget);
 
     await tester.tap(find.text('시작하기'));
     await tester.pumpAndSettle();
@@ -239,7 +239,8 @@ void main() {
 
   testWidgets('06 캐릭터: 배경색과 캐릭터를 고르고 다음에 설정하기로도 홈에 간다', (tester) async {
     await _pumpScreen(tester, const CharacterScreen(nickname: '수현'));
-    expect(find.text('모든 준비가 완료되었어요!'), findsOneWidget);
+    expect(find.text('수현님,\n함께할 액시스 친구들을 골라봐요!'), findsOneWidget);
+    expect(find.text('한줄 소개'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('배경색 파랑'));
     await tester.tap(find.bySemanticsLabel('캐릭터 1'));
     await tester.pumpAndSettle();
