@@ -114,7 +114,6 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
   // 09 커뮤니티 상단 슬라이드와 같은 값.
   static const _curve = Cubic(0.34, 1.3, 0.64, 1);
   static const _perspective = 900.0;
-  static const _sideDim = 0.35;
 
   final _boundaryKey = GlobalKey();
   late final _c = AnimationController(vsync: this, duration: homeRotateDuration)..addListener(_tick);
@@ -197,7 +196,18 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
               clipper: _RectClipper(content),
               child: Stack(
                 fit: StackFit.expand,
-                children: [for (final f in faces) _face(f.$2, dpr, f.$1, content, size)],
+                children: [
+                  // 면 둘레로 드러나는 자리를 지금 화면 색을 흐린 사진으로 채워 검은 틈·단차가 안 보이게 한다.
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 40, sigmaY: 40, tileMode: TileMode.clamp),
+                      child: RawImage(image: to ?? from, scale: dpr),
+                    ),
+                  ),
+                  for (final f in faces) _face(f.$2, dpr, f.$1, content, size),
+                ],
               ),
             ),
           ],
@@ -209,7 +219,6 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
   /// 화면 사진에서 탭 바 위쪽 전체를 잘라 큐브 옆면으로 돌린다.
   Widget _face(ui.Image image, double dpr, double angle, Rect content, Size size) {
     final d = size.width / 2; // 큐브 반지름
-    final dim = _sideDim * math.min(1, angle.abs() / 30);
     return Positioned.fill(
       child: Transform(
         origin: content.center,
@@ -228,10 +237,6 @@ class _HomeRotateState extends State<_HomeRotate> with SingleTickerProviderState
                 left: 0,
                 top: 0,
                 child: RawImage(image: image, scale: dpr),
-              ),
-              Positioned.fromRect(
-                rect: content,
-                child: ColoredBox(color: Colors.black.withValues(alpha: dim)),
               ),
             ],
           ),

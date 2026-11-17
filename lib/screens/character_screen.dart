@@ -287,22 +287,54 @@ class _CharacterRowState extends State<CharacterRow> {
             excludeSemantics: true,
             child: GestureDetector(
               onTap: () => widget.onChanged(c),
-              child: Container(
+              child: SizedBox(
                 width: CharacterRow.item,
                 height: CharacterRow.item,
-                decoration: BoxDecoration(
-                  color: AppColors.gray02,
-                  borderRadius: BorderRadius.circular(4),
-                  boxShadow: selected ? _selectedRing : null,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: Image.asset(
-                    AxisAvatar.squareAsset(c),
-                    fit: BoxFit.cover,
-                    cacheWidth: 180,
-                    filterQuality: FilterQuality.medium,
-                  ),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // 피그마 Selected: 파랑 6 · 흰 2 모두 바깥쪽 테두리라 바깥 굴곡이 4+6, 4+2로 커진다.
+                    if (selected) ...const [
+                      Positioned.fill(
+                        left: -6,
+                        top: -6,
+                        right: -6,
+                        bottom: -6,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.brand,
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        left: -2,
+                        top: -2,
+                        right: -2,
+                        bottom: -2,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.all(Radius.circular(6)),
+                          ),
+                        ),
+                      ),
+                    ],
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: ColoredBox(
+                          color: AppColors.gray02,
+                          child: Image.asset(
+                            AxisAvatar.squareAsset(c),
+                            fit: BoxFit.cover,
+                            cacheWidth: 180,
+                            filterQuality: FilterQuality.medium,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

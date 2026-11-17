@@ -173,6 +173,7 @@ class MapTabState extends State<MapTab> {
                     selectedId: _selectedId ?? plan.currentId,
                     onTapPin: _select,
                     onExpand: _openFullMap,
+                    onLongPress: _toggleError,
                   ),
                   MapLoadStatus.loading => const ColoredBox(
                     key: ValueKey('loading'),
@@ -215,8 +216,10 @@ class _SmallMap extends StatelessWidget {
     required this.selectedId,
     required this.onTapPin,
     required this.onExpand,
+    this.onLongPress,
   });
 
+  final VoidCallback? onLongPress;
   final MapDay plan;
   final bool showRoute;
   final String selectedId;
@@ -243,6 +246,7 @@ class _SmallMap extends StatelessWidget {
                   showRoute: showRoute,
                   selectedId: selectedId,
                   onTapPin: onTapPin,
+                  onLongPress: onLongPress,
                 ),
               ),
             ),

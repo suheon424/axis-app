@@ -1,5 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
+import 'home_spline_cube.dart' show onMobileDevice;
 
 import '../../widgets/kit/kit.dart';
 
@@ -297,6 +301,20 @@ const aiMapPins = <String, Offset>{
   's5': Offset(146, 308),
 };
 
+/// 핀의 실제 위치(서울 마포·여의도). 피그마 작은 지도의 핀 자리를 실제 지도에 맞춰 옮겼다.
+const stopLatLng = <String, LatLng>{
+  'home': LatLng(37.5474, 126.9316), // 광흥창역 근처(신수동)
+  's1': LatLng(37.5450, 126.9514), // 공덕역
+  's2': LatLng(37.5457, 126.9497),
+  's3': LatLng(37.5463, 126.9464),
+  's4': LatLng(37.5271, 126.9321), // 여의나루역
+  's5': LatLng(37.5302, 126.9359),
+};
+
+/// 실버톤 실제 지도 타일(CARTO Positron, OpenStreetMap 데이터).
+/// 웹과 iOS·Android에서만 받는다(테스트·데스크톱은 바탕색만).
+bool get mapTilesEnabled => kIsWeb || onMobileDevice;
+
 /// Pin/집: 흰 원 + 검정 테두리 + 집 모양.
 class MapHomePin extends StatelessWidget {
   const MapHomePin({super.key, this.size = 20});
@@ -334,7 +352,11 @@ class MapCanvas extends StatelessWidget {
     this.onTapPin,
     this.routeWidth = 3,
     this.showRoute = true,
+    this.onLongPress,
   });
+
+  /// 지도를 길게 눌렀을 때(데모: 오류 상태로 바꾸기).
+  final VoidCallback? onLongPress;
 
   final String asset;
   final Size size;
@@ -363,37 +385,91 @@ class MapCanvas extends StatelessWidget {
     final order = ['s2', 's1', 's3', 's4', 's5', 'home'];
     final sel = selectedId == 's6' ? 'home' : selectedId;
     if (sel != null && order.remove(sel)) order.add(sel);
+
+    // 피그마에서 핀들이 놓인 자리(지도 그림 안 여백)를 그대로 카메라 여백으로 써서
+    // 실제 지도에서도 핀이 같은 자리 근처에 오게 맞춘다.
+    final ids = pins.keys.where(stopLatLng.containsKey).toList();
+    var minX = double.infinity, minY = double.infinity, maxX = -double.infinity, maxY = -double.infinity;
+    for (final id in ids) {
+      final o = pins[id]!;
+      if (o.dx < minX) minX = o.dx;
+      if (o.dy < minY) minY = o.dy;
+      if (o.dx > maxX) maxX = o.dx;
+      if (o.dy > maxY) maxY = o.dy;
+    }
+    final padding = EdgeInsets.fromLTRB(minX, minY, size.width - maxX, size.height - maxY);
+    List<LatLng> line(List<String> idsInOrder) => [for (final id in idsInOrder) ?stopLatLng[id]];
+
     return SizedBox.fromSize(
       size: size,
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: FlutterMap(
+        options: MapOptions(
+          initialCameraFit: CameraFit.coordinates(
+            coordinates: [for (final id in ids) stopLatLng[id]!],
+            padding: padding,
+            maxZoom: 17,
+          ),
+          minZoom: 11,
+          maxZoom: 18,
+          backgroundColor: mapGround,
+          onLongPress: onLongPress == null ? null : (_, _) => onLongPress!(),
+          interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
+        ),
         children: [
-          Positioned.fill(child: SvgPicture.asset(asset, fit: BoxFit.fill)),
-          if (showRoute)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _RoutePainter(
-                    points: [for (final id in route) ?pins[id]],
-                    removed: [for (final id in removed) ?pins[id]],
-                    width: routeWidth,
-                  ),
-                ),
-              ),
+          if (mapTilesEnabled)
+            TileLayer(
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
+              retinaMode: RetinaMode.isHighDensity(context),
+              userAgentPackageName: 'com.suhyun.axis',
             ),
           if (showRoute)
-            for (final id in order)
-              if (pins[id] != null && (id == 'home' || day.byId(id) != null))
-                Positioned(
-                  key: ValueKey('pin-$id'),
-                  left: pins[id]!.dx - 10 - _hit,
-                  top: pins[id]!.dy - 10 - _hit,
-                  child: _TapPin(
-                    stop: id == 'home' ? homeStop : day.byId(id)!,
-                    blue: id == sel || id == highlightId,
-                    onTap: onTapPin,
+            PolylineLayer(
+              polylines: [
+                if (removed.length > 1)
+                  Polyline(
+                    points: line(removed),
+                    color: AppColors.gray05,
+                    strokeWidth: 2,
+                    pattern: StrokePattern.dashed(segments: const [5, 4]),
                   ),
-                ),
+                if (route.length > 1)
+                  Polyline(
+                    points: line(route),
+                    color: AppColors.brand,
+                    strokeWidth: routeWidth,
+                    strokeCap: StrokeCap.round,
+                    strokeJoin: StrokeJoin.round,
+                  ),
+              ],
+            ),
+          if (showRoute)
+            MarkerLayer(
+              markers: [
+                for (final id in order)
+                  if (stopLatLng[id] != null && (id == 'home' || day.byId(id) != null))
+                    Marker(
+                      key: ValueKey('pin-$id'),
+                      point: stopLatLng[id]!,
+                      width: 20 + _hit * 2,
+                      height: 20 + _hit * 2,
+                      child: _TapPin(
+                        stop: id == 'home' ? homeStop : day.byId(id)!,
+                        blue: id == sel || id == highlightId,
+                        onTap: onTapPin,
+                      ),
+                    ),
+              ],
+            ),
+          // 지도 데이터 출처(OpenStreetMap · CARTO) 표기.
+          if (mapTilesEnabled)
+            const Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 0, 6, 4),
+                child: Text('© OpenStreetMap © CARTO', style: TextStyle(fontSize: 12, color: Color(0x99636C78))),
+              ),
+            ),
         ],
       ),
     );
@@ -424,49 +500,6 @@ class _TapPin extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RoutePainter extends CustomPainter {
-  const _RoutePainter({required this.points, required this.removed, required this.width});
-
-  final List<Offset> points;
-  final List<Offset> removed;
-  final double width;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (removed.length > 1) {
-      final dash = Paint()
-        ..color = AppColors.gray05
-        ..strokeWidth = 2
-        ..style = PaintingStyle.stroke;
-      for (var i = 0; i < removed.length - 1; i++) {
-        final a = removed[i], b = removed[i + 1];
-        final len = (b - a).distance;
-        final dir = (b - a) / len;
-        for (var d = 0.0; d < len; d += 9) {
-          canvas.drawLine(a + dir * d, a + dir * (d + 5).clamp(0, len), dash);
-        }
-      }
-    }
-    if (points.length < 2) return;
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (final p in points.skip(1)) {
-      path.lineTo(p.dx, p.dy);
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = AppColors.brand
-        ..strokeWidth = width
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _RoutePainter old) => old.points != points || old.removed != removed;
 }
 
 /// 흰 동그라미 떠 있는 버튼(접기·펴기).

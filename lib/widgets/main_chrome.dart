@@ -36,7 +36,7 @@ abstract final class MainTabRouter {
 }
 
 /// 하단 탭 바(피그마 Tab Bar 130:9415 · Bottom Navigation 130:9742).
-/// 기본은 흰 바(위 1px #CCD1DD 선 + 옅은 그림자, 높이 54 + 홈 인디케이터 영역 34 = 88). 07_01 홈은 [light]=false로 블랙모드 바.
+/// 기본은 흰 바(위 선 없이 옅은 그림자만, 높이 54 + 홈 인디케이터 영역 34 = 88). 07_01 홈은 [light]=false로 블랙모드 바.
 /// 선택된 탭은 검정 아이콘(파란 사선) + 12 SemiBold #181920, 나머지는 #CCD1DD 아이콘 + 12 Regular #8B95A1.
 /// 탭을 바꾸면 피그마 Smart Animate(0.46초, ease in-out)처럼 칸마다 꺼진/켜진 버튼이 위아래로 굴러간다:
 /// 새 탭은 꺼진 버튼이 위로 빠지고 켜진 버튼이 아래에서 올라오며(그림자가 걷힘), 이전 탭은 그 반대로 내려간다.
@@ -75,7 +75,6 @@ class _AxisTabBarState extends State<AxisTabBar> {
       decoration: light
           ? const BoxDecoration(
               color: AxisTabBar.background,
-              border: Border(top: BorderSide(color: Color(0xFFCCD1DD))),
               boxShadow: [BoxShadow(color: Color(0x0F000A2B), blurRadius: 10, offset: Offset(0, -2))],
             )
           : const BoxDecoration(
