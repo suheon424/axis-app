@@ -151,8 +151,8 @@ class PlanVideo {
 const planVideos = [
   PlanVideo('회독 수 늘리는 법', '3:12', Color(0xFFDCE6FF), '$_img/video1.png'),
   PlanVideo('오답노트 쓰는 법', '4:05', Color(0xFFFFF0D6), '$_img/video2.png'),
-  PlanVideo('시험장 시간 배분', '2:48', Color(0xFFE3F5EC)),
-  PlanVideo('멘탈 관리', '5:20', Color(0xFFF3E8FF)),
+  PlanVideo('시험장 시간 배분', '2:48', Color(0xFFE3F5EC), '$_img/video3.png'),
+  PlanVideo('멘탈 관리', '5:20', Color(0xFFF3E8FF), '$_img/video4.png'),
 ];
 
 class PlanStep {

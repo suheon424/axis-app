@@ -23,8 +23,8 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  /// 09_커뮤니티 상태바·검색 줄(Frame 317) 바탕 #044FCE. 위쪽 배경 이미지 윗부분과 같은 색이다.
-  static const _heroTop = Color(0xFF044FCE);
+  /// 09_커뮤니티(수정): 따로 칠한 윗줄 없이 배경 그림(image 37)이 상태바부터 후기 카드 아래(442)까지 이어진다.
+  static const _heroHeight = 344.0;
   bool _loading = false;
   final Set<int> _bookmarks = {};
 
@@ -53,122 +53,148 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
+    final headerHeight = topInset + 50;
+    final bgHeight = headerHeight + _heroHeight;
+    // 같은 배경을 위쪽에 고정해 그리므로, 고정된 검색 줄 뒤도 스크롤 전과 똑같이 보인다.
+    Widget background() =>
+        Image.asset('assets/images/community/hero_bg.png', width: double.infinity, height: bgHeight, fit: BoxFit.fill);
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: darkScreenOverlay.copyWith(statusBarColor: _heroTop),
+      value: darkScreenOverlay.copyWith(statusBarColor: Colors.transparent),
       child: Scaffold(
         backgroundColor: Colors.white,
         bottomNavigationBar: const AxisTabBar(current: MainTab.explore),
-        body: Column(
+        body: Stack(
           children: [
-            // 상태바 + 검색 줄은 스크롤해도 따라 올라가지 않게 고정(10-x 이벤트 상세와 같은 방식).
-            _SearchHeader(
-              topInset: topInset,
-              color: _heroTop,
-              onSearch: () =>
-                  Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (_) => CommunitySearchScreen(onOpen: _open))),
-              onBell: () =>
-                  Navigator.of(context)
-                      .push(MaterialPageRoute<void>(builder: (_) => const CommunityNotificationsScreen())),
-            ),
-            Expanded(
+            Positioned.fill(
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _Hero(onReview: (r) => _open(communityTemplates[r.template], tab: 1)),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Container(
+                      color: const Color(0xFFDFEBF7),
+                      child: Stack(
                         children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Positioned(top: 0, left: 0, right: 0, height: bgHeight, child: background()),
+                          Column(
                             children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onLongPress: _load,
-                                  child: const Text.rich(
-                                    TextSpan(
-                                      text: '인기 계획 템플릿 ',
-                                      children: [
-                                        TextSpan(
-                                          text: 'TOP10',
-                                          style: TextStyle(color: CubeColors.blue),
-                                        ),
-                                      ],
-                                    ),
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      height: 1.3,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => Navigator.of(context)
-                                    .push(MaterialPageRoute<void>(builder: (_) => AllTemplatesScreen(onOpen: _open))),
-                                child: const Padding(
-                                  padding: EdgeInsets.only(top: 4, left: 8),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        '전체보기',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          height: 1.4,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.gray06,
-                                        ),
-                                      ),
-                                      AxisChevronRight(size: 17, color: AppColors.gray05),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              SizedBox(height: headerHeight),
+                              _Hero(onReview: (r) => _open(communityTemplates[r.template], tab: 1)),
                             ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '템플릿 적용으로 손쉽게 계획을 따라해보세요.',
-                            style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF999999)),
-                          ),
-                          const SizedBox(height: 21),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            child: _loading
-                                ? const Column(
-                                    key: ValueKey('loading'),
-                                    children: [TemplateRowSkeleton(), TemplateRowSkeleton(), TemplateRowSkeleton()],
-                                  )
-                                : Column(
-                                    key: const ValueKey('list'),
-                                    children: [
-                                      for (final t in communityTemplates)
-                                        TemplateRow(
-                                          template: t,
-                                          bookmarked: _bookmarks.contains(t.rank),
-                                          onBookmark: () => setState(
-                                            () => _bookmarks.contains(t.rank)
-                                                ? _bookmarks.remove(t.rank)
-                                                : _bookmarks.add(t.rank),
-                                          ),
-                                          onTap: () => _open(t),
-                                        ),
-                                    ],
-                                  ),
                           ),
                         ],
                       ),
                     ),
+                    _templates(),
                   ],
                 ),
               ),
             ),
+            // 상태바 + 검색 줄은 스크롤해도 따라 올라가지 않게 고정(10-x 이벤트 상세와 같은 방식).
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: headerHeight,
+              child: ClipRect(
+                child: OverflowBox(alignment: Alignment.topCenter, maxHeight: bgHeight, child: background()),
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _SearchHeader(
+                topInset: topInset,
+                onSearch: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => CommunitySearchScreen(onOpen: _open))),
+                onBell: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => const CommunityNotificationsScreen())),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _templates() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 40, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onLongPress: _load,
+                  child: const Text.rich(
+                    TextSpan(
+                      text: '인기 계획 템플릿 ',
+                      children: [
+                        TextSpan(
+                          text: 'TOP10',
+                          style: TextStyle(color: CubeColors.blue),
+                        ),
+                      ],
+                    ),
+                    style: TextStyle(fontSize: 20, height: 1.3, fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () =>
+                    Navigator.of(context)
+                        .push(MaterialPageRoute<void>(builder: (_) => AllTemplatesScreen(onOpen: _open))),
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 4, left: 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        '전체보기',
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.gray06,
+                        ),
+                      ),
+                      AxisChevronRight(size: 17, color: AppColors.gray05),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text('템플릿 적용으로 손쉽게 계획을 따라해보세요.', style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF999999))),
+          const SizedBox(height: 21),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: _loading
+                ? const Column(
+                    key: ValueKey('loading'),
+                    children: [TemplateRowSkeleton(), TemplateRowSkeleton(), TemplateRowSkeleton()],
+                  )
+                : Column(
+                    key: const ValueKey('list'),
+                    children: [
+                      for (final t in communityTemplates)
+                        TemplateRow(
+                          template: t,
+                          bookmarked: _bookmarks.contains(t.rank),
+                          onBookmark: () => setState(
+                            () => _bookmarks.contains(t.rank) ? _bookmarks.remove(t.rank) : _bookmarks.add(t.rank),
+                          ),
+                          onTap: () => _open(t),
+                        ),
+                    ],
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -177,17 +203,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
 /// 09_커뮤니티 Frame 317(상태바 아래 높이 50, 바탕 #044FCE, 아래 여백 10):
 /// 검색창 306×40(x 20) + 11 띄우고 종 28(Icon/Nav/Bell), 종 오른쪽 위에 알림 1.
 class _SearchHeader extends StatelessWidget {
-  const _SearchHeader({required this.topInset, required this.color, required this.onSearch, required this.onBell});
+  const _SearchHeader({required this.topInset, required this.onSearch, required this.onBell});
 
   final double topInset;
-  final Color color;
   final VoidCallback onSearch;
   final VoidCallback onBell;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: color,
+    return Padding(
       padding: EdgeInsets.only(top: topInset, left: 20, bottom: 10),
       child: Row(
         children: [
@@ -239,31 +263,24 @@ class _HeroState extends State<_Hero> {
   @override
   Widget build(BuildContext context) {
     final count = (reviewHighlights.length / _perFace).ceil();
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFFE3ECF6),
-        image: DecorationImage(
-          image: AssetImage('assets/images/community/hero_bg.png'),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-        ),
-      ),
+    return SizedBox(
+      width: double.infinity,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 피그마(고정 줄 아래 기준): 말풍선 110×110 위 9·오른쪽 14, 제목 위 29, 후기 카드 위 141.
+          // 피그마(고정 줄 아래 기준): 말풍선 110×110 위 13·오른쪽 14, 제목 위 33, 후기 카드 위 141.
           SizedBox(
             height: 141,
             child: Stack(
               children: [
                 Positioned(
                   right: 14,
-                  top: 9,
+                  top: 13,
                   child: Image.asset('assets/images/community/bubble.png', width: 110, height: 110),
                 ),
                 const Positioned(
                   left: 20,
-                  top: 29,
+                  top: 33,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -534,47 +551,78 @@ class _CommunitySearchScreenState extends State<CommunitySearchScreen> {
     final searched = _query.trim().isNotEmpty;
     final results = _results;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: lightScreenOverlay.copyWith(statusBarColor: Colors.white),
+      value: lightScreenOverlay.copyWith(statusBarColor: const Color(0xFFF4F5FA)),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF4F5FA),
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(4, 12, 20, 0),
+              // 09_커뮤니티_검색 Frame 128: 높이 50, 아래 선 #CCD1DD. 뒤로 24(x 20) · 입력 14 SemiBold(x 56) ·
+              // 마이크 17×18 · 세로선 1×19 · 파란 검색 18.
+              Container(
+                height: 50,
+                padding: const EdgeInsets.only(left: 10, right: 20),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: Color(0xFFCCD1DD))),
+                ),
                 child: Row(
                   children: [
                     AxisIconButton.back(onPressed: () => Navigator.of(context).maybePop()),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 2),
                     Expanded(
-                      child: Container(
-                        constraints: const BoxConstraints(minHeight: 40),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(color: AppColors.gray01, borderRadius: BorderRadius.circular(8)),
-                        child: Row(
-                          children: [
-                            const AxisIcon(KitIcon.navSearch, size: 16, color: AppColors.gray06),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextField(
-                                controller: _q,
-                                autofocus: widget.initialQuery.isEmpty,
-                                textInputAction: TextInputAction.search,
-                                onSubmitted: (v) => setState(() => _query = v),
-                                onChanged: (v) => setState(() => _query = v),
-                                style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.gray07),
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 10),
-                                  hintText: '관심 있는 계획을 검색해보세요',
-                                  hintStyle: TextStyle(fontSize: 14, height: 1.4, color: AppColors.subIcon),
-                                ),
-                              ),
-                            ),
-                          ],
+                      child: TextField(
+                        controller: _q,
+                        autofocus: widget.initialQuery.isEmpty,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: (v) => setState(() => _query = v),
+                        onChanged: (v) => setState(() => _query = v),
+                        cursorColor: AppColors.brand,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.gray07,
                         ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          hintText: '관심 있는 계획을 검색해보세요',
+                          hintStyle: TextStyle(
+                            fontSize: 14,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0x801F2027),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Semantics(
+                      button: true,
+                      label: '음성 검색',
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(const SnackBar(content: Text('음성 검색은 준비 중이에요'))),
+                        child: SvgPicture.asset('assets/icons/community/mic.svg', width: 17, height: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Container(width: 1, height: 19, color: const Color(0xFFCCD1DD)),
+                    const SizedBox(width: 14),
+                    Semantics(
+                      button: true,
+                      label: '검색',
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          FocusScope.of(context).unfocus();
+                          setState(() => _query = _q.text);
+                        },
+                        child: const AxisIcon(KitIcon.navSearch, size: 18, color: AppColors.brand),
                       ),
                     ),
                   ],

@@ -62,6 +62,12 @@ final class AxisAppleMap: NSObject, FlutterPlatformView, MKMapViewDelegate {
   private var fitted = false
   private var padding = UIEdgeInsets(top: 40, left: 40, bottom: 40, right: 40)
   private var removedLine: MKPolyline?
+  /// 지도 전체를 덮는 옅은 회색 막. muted 지도의 남은 색감을 눌러 더 회색으로 보이게 한다.
+  private let wash = MKPolygon(
+    points: [
+      MKMapPoint(x: 0, y: 0), MKMapPoint(x: MKMapSize.world.width, y: 0),
+      MKMapPoint(x: MKMapSize.world.width, y: MKMapSize.world.height), MKMapPoint(x: 0, y: MKMapSize.world.height),
+    ], count: 4)
 
   private static let brand = UIColor(red: 0, green: 0x4F / 255.0, blue: 0xED / 255.0, alpha: 1)
   private static let ink = UIColor(red: 0x1F / 255.0, green: 0x20 / 255.0, blue: 0x27 / 255.0, alpha: 1)
@@ -106,16 +112,17 @@ final class AxisAppleMap: NSObject, FlutterPlatformView, MKMapViewDelegate {
     }
     map.removeOverlays(map.overlays)
     map.removeAnnotations(map.annotations)
+    map.addOverlay(wash, level: .aboveLabels)
     let removed = coords(a["removed"])
     if removed.count > 1 {
       let line = MKPolyline(coordinates: removed, count: removed.count)
       removedLine = line
-      map.addOverlay(line)
+      map.addOverlay(line, level: .aboveLabels)
     } else {
       removedLine = nil
     }
     let route = coords(a["route"])
-    if route.count > 1 { map.addOverlay(MKPolyline(coordinates: route, count: route.count)) }
+    if route.count > 1 { map.addOverlay(MKPolyline(coordinates: route, count: route.count), level: .aboveLabels) }
     var all: [CLLocationCoordinate2D] = []
     for case let pin as [String: Any] in (a["pins"] as? [Any] ?? []) {
       guard let id = pin["id"] as? String, let lat = pin["lat"] as? Double, let lng = pin["lng"] as? Double else { continue }
@@ -137,6 +144,12 @@ final class AxisAppleMap: NSObject, FlutterPlatformView, MKMapViewDelegate {
   }
 
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+    if overlay === wash {
+      let r = MKPolygonRenderer(polygon: wash)
+      r.fillColor = UIColor(red: 0xEE / 255.0, green: 0xEF / 255.0, blue: 0xF2 / 255.0, alpha: 0.5)
+      r.lineWidth = 0
+      return r
+    }
     guard let line = overlay as? MKPolyline else { return MKOverlayRenderer(overlay: overlay) }
     let r = MKPolylineRenderer(polyline: line)
     if line === removedLine {
@@ -189,11 +202,22 @@ final class AxisAppleMap: NSObject, FlutterPlatformView, MKMapViewDelegate {
         ink.setStroke()
         c.setLineWidth(1)
         c.strokeEllipse(in: circle.insetBy(dx: 0.5, dy: 0.5))
-        let cfg = UIImage.SymbolConfiguration(pointSize: 8, weight: .bold)
-        if let house = UIImage(systemName: "house.fill", withConfiguration: cfg)?.withTintColor(ink, renderingMode: .alwaysOriginal) {
-          let s = house.size
-          house.draw(in: CGRect(x: circle.midX - s.width / 2, y: circle.midY - s.height / 2, width: s.width, height: s.height))
-        }
+        // 피그마 Pin/집 글리프(home_glyph.svg, 9×9)를 원 지름의 42% 크기로 가운데에 그린다.
+        let g: CGFloat = 20 * 0.42
+        let k = g / 9
+        let o = CGPoint(x: circle.midX - g / 2, y: circle.midY - g / 2)
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: o.x + x * k, y: o.y + y * k) }
+        let house = UIBezierPath()
+        house.move(to: pt(7.0425, 3.61801))
+        house.addLine(to: pt(6.62962, 3.03039))
+        house.addLine(to: pt(4.5, 0))
+        house.addLine(to: pt(0.003375, 6.403))
+        house.addLine(to: pt(0, 9))
+        house.addLine(to: pt(9, 9))
+        house.addLine(to: pt(9, 6.403))
+        house.close()
+        ink.setFill()
+        house.fill()
         return
       }
       (pin.blue ? brand : ink).setFill()

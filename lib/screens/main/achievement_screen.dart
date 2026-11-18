@@ -50,7 +50,7 @@ class AchievementScreen extends StatelessWidget {
                       const Flexible(
                         child: SizedBox(
                           height: 260,
-                          child: SplineCube(imageOffset: Offset(0, -6), fingerOffset: Offset(0, 24)),
+                          child: SplineCube(imageOffset: Offset(0, -6), fingerOffset: Offset(0, 4)),
                         ),
                       ),
                       const Padding(
