@@ -1,4 +1,6 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -315,6 +317,9 @@ const stopLatLng = <String, LatLng>{
 /// 웹과 iOS·Android에서만 받는다(테스트·데스크톱은 바탕색만).
 bool get mapTilesEnabled => kIsWeb || onMobileDevice;
 
+/// 아이폰 앱에서는 Apple 지도(MapKit, 라이트 + muted)를 쓴다.
+bool get useAppleMap => onMobileDevice && defaultTargetPlatform == TargetPlatform.iOS;
+
 /// 회색(밝기만 남김) → 0.55배로 대비를 줄이고 밝게 올린 실버톤.
 const _silver = ColorFilter.matrix(<double>[
   0.1176, 0.3927, 0.0399, 0, 112, //
@@ -407,6 +412,43 @@ class MapCanvas extends StatelessWidget {
     }
     final padding = EdgeInsets.fromLTRB(minX, minY, size.width - maxX, size.height - maxY);
     List<LatLng> line(List<String> idsInOrder) => [for (final id in idsInOrder) ?stopLatLng[id]];
+
+    // 아이폰 앱: Apple 지도(라이트 + muted)로 그린다.
+    if (useAppleMap) {
+      List<List<double>> pts(List<String> l) => [
+        for (final p in line(l)) [p.latitude, p.longitude],
+      ];
+      return SizedBox.fromSize(
+        size: size,
+        child: _AppleMap(
+          params: {
+            'padding': [padding.top, padding.left, padding.bottom, padding.right],
+            'routeWidth': routeWidth,
+            'route': showRoute ? pts(route) : const <List<double>>[],
+            'removed': showRoute ? pts(removed) : const <List<double>>[],
+            'pins': [
+              if (showRoute)
+                for (final id in order)
+                  if (stopLatLng[id] != null && (id == 'home' || day.byId(id) != null))
+                    {
+                      'id': id,
+                      'lat': stopLatLng[id]!.latitude,
+                      'lng': stopLatLng[id]!.longitude,
+                      'home': id == 'home',
+                      'label': id == 'home' ? '' : '${day.byId(id)!.number}',
+                      'blue': id == sel || id == highlightId,
+                    },
+            ],
+          },
+          onTapPin: onTapPin == null
+              ? null
+              : (id) {
+                  final stop = id == 'home' ? homeStop : day.byId(id);
+                  if (stop != null) onTapPin!(stop);
+                },
+        ),
+      );
+    }
 
     return SizedBox.fromSize(
       size: size,
@@ -643,6 +685,45 @@ class MapAiGlyph extends StatelessWidget {
           child: Image.asset(AxisAiOrb.asset, width: size * 2.5, height: size * 2.5),
         ),
       ),
+    );
+  }
+}
+
+/// iOS 플랫폼 뷰(AppDelegate.swift의 AxisAppleMap)로 띄우는 Apple 지도.
+class _AppleMap extends StatefulWidget {
+  const _AppleMap({required this.params, required this.onTapPin});
+
+  final Map<String, Object?> params;
+  final ValueChanged<String>? onTapPin;
+
+  @override
+  State<_AppleMap> createState() => _AppleMapState();
+}
+
+class _AppleMapState extends State<_AppleMap> {
+  MethodChannel? _channel;
+
+  void _created(int id) {
+    _channel = MethodChannel('axis/apple_map_$id')
+      ..setMethodCallHandler((call) async {
+        if (call.method == 'pinTap' && call.arguments is String) widget.onTapPin?.call(call.arguments as String);
+      });
+  }
+
+  @override
+  void didUpdateWidget(_AppleMap old) {
+    super.didUpdateWidget(old);
+    if (!mapEquals(old.params, widget.params)) _channel?.invokeMethod('update', widget.params);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return UiKitView(
+      viewType: 'axis/apple_map',
+      creationParams: widget.params,
+      creationParamsCodec: const StandardMessageCodec(),
+      onPlatformViewCreated: _created,
+      gestureRecognizers: {Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer())},
     );
   }
 }

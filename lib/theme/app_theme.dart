@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -215,14 +214,15 @@ ThemeData buildAppTheme() {
     scaffoldBackgroundColor: Colors.white,
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
-    // Figma 프로토타입의 기본 이동(오른쪽에서 밀려 들어오기)을 두 플랫폼 모두 같게 맞춘다.
+    // 옆으로 밀려 들어오는 효과 없이 새 화면이 그 자리에서 바로(짧게 서서히) 뜬다.
+    // 홈 목록 ↔ 달성률 큐브 전환은 따로 그리므로 여기 영향을 받지 않는다.
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.linux: CupertinoPageTransitionsBuilder(),
-        TargetPlatform.windows: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.android: _QuickFadeTransitionsBuilder(),
+        TargetPlatform.iOS: _QuickFadeTransitionsBuilder(),
+        TargetPlatform.macOS: _QuickFadeTransitionsBuilder(),
+        TargetPlatform.linux: _QuickFadeTransitionsBuilder(),
+        TargetPlatform.windows: _QuickFadeTransitionsBuilder(),
       },
     ),
     textSelectionTheme: const TextSelectionThemeData(cursorColor: AppColors.primary),
@@ -230,4 +230,26 @@ ThemeData buildAppTheme() {
   return base.copyWith(
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating, backgroundColor: AppColors.gray07),
   );
+}
+
+/// 새 화면을 0.15초 동안 서서히 띄우고(닫을 때는 반대로) 옆으로 밀지 않는다.
+class _QuickFadeTransitionsBuilder extends PageTransitionsBuilder {
+  const _QuickFadeTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 150);
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+      child: child,
+    );
+  }
 }

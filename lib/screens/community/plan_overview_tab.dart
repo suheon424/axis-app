@@ -201,9 +201,21 @@ class _PlanOverviewTabState extends State<PlanOverviewTab> {
               Expanded(
                 child: Text('계획 순서', style: AxisText.sectionTitle.copyWith(color: communityText)),
               ),
+              // 피그마 계획 순서 Background(149×38): 칸 70.5×30, 선택 12 SemiBold #191F28 · 나머지 12 Medium #EDEEF6.
               SizedBox(
-                width: 176,
                 child: AxisPillSegment(
+                  selectedStyle: const TextStyle(
+                    fontSize: 12,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF191F28),
+                  ),
+                  unselectedStyle: const TextStyle(
+                    fontSize: 12,
+                    height: 1.36,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFEDEEF6),
+                  ),
                   labels: const ['주차별', '하루 루틴'],
                   selected: _orderView,
                   onChanged: (i) {

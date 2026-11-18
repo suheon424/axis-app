@@ -158,9 +158,11 @@ class AiPlannerHome extends StatelessWidget {
                   const Spacer()
                 else ...[
                   const Spacer(flex: 5),
-                  // Frame 237 1(130:11818): 투명 바탕 100px 플러스(뒤에 동그란 그림자 없음).
-                  Image.asset('assets/images/planner/ai_plus.png', width: 100, height: 100),
-                  const SizedBox(height: 5),
+                  // Frame 237 1(130:11818): 투명 바탕 플러스, 피그마에서 100 → 60으로 줄였다(제목까지 8).
+                  // 제목 자리는 그대로 두고 로고만 작아지게 위를 37 비운다.
+                  const SizedBox(height: 37),
+                  Image.asset('assets/images/planner/ai_plus.png', width: 60, height: 60),
+                  const SizedBox(height: 8),
                   const Text('어떤 계획을\n도와드릴까요?', textAlign: TextAlign.center, style: _title),
                   const Spacer(flex: 6),
                 ],

@@ -92,7 +92,18 @@ class _IndicatorPainter extends CustomPainter {
 /// 칸은 70.5×30. 선택된 칸은 흰 조각(왼쪽 반원 + 오른쪽 사선, 옆 칸으로 6.7 넘어감) 위 #0F1014 14 Medium(줄 높이 150%, 07_01 인스턴스 값),
 /// 나머지는 #BDC3D0. 두 번째 칸이 선택되면 조각을 180° 돌려 그린다(피그마 07_01 홈_달성률).
 class AxisPillSegment extends StatelessWidget {
-  const AxisPillSegment({super.key, required this.labels, required this.selected, required this.onChanged});
+  const AxisPillSegment({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+    this.selectedStyle,
+    this.unselectedStyle,
+  });
+
+  /// 흰 화면 위 계획 순서 토글(0901 Background)처럼 글자 모양이 다른 곳에서 바꾼다.
+  final TextStyle? selectedStyle;
+  final TextStyle? unselectedStyle;
 
   final List<String> labels;
   final int selected;
@@ -136,12 +147,21 @@ class AxisPillSegment extends StatelessWidget {
                           child: Text(
                             labels[i],
                             maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.5,
-                              fontWeight: FontWeight.w500,
-                              color: i == selected ? AppColors.gray09 : AppColors.gray04,
-                            ),
+                            style: i == selected
+                                ? (selectedStyle ??
+                                      const TextStyle(
+                                        fontSize: 14,
+                                        height: 1.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.gray09,
+                                      ))
+                                : (unselectedStyle ??
+                                      const TextStyle(
+                                        fontSize: 14,
+                                        height: 1.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.gray04,
+                                      )),
                           ),
                         ),
                       ),
