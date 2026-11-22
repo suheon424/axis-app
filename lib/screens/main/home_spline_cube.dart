@@ -45,7 +45,7 @@ class SplineCube extends StatefulWidget {
     this.imageOffset = const Offset(0, -8),
     this.fingerOffset = const Offset(0, 9.5),
     this.sceneScale = splineSceneScale,
-    this.sceneShift = -16,
+    this.sceneShift = -8,
   });
 
   final String url;
@@ -60,7 +60,7 @@ class SplineCube extends StatefulWidget {
   /// 장면(iframe)을 큐브 영역보다 몇 배 크게 그릴지.
   final double sceneScale;
 
-  /// 장면을 칸 가운데에서 아래로 내리는 거리(음수면 올린다, 실제 기기 피드백: -16).
+  /// 장면을 칸 가운데에서 아래로 내리는 거리(음수면 올린다, 실제 기기 피드백: -8).
   final double sceneShift;
 
   static const fingerKey = Key('home_spline_finger');
