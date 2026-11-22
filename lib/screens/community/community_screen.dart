@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
@@ -96,22 +98,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               top: 0,
               left: 0,
               right: 0,
-              height: headerHeight + 24,
-              // 이벤트 화면처럼 색 그라데이션만 깐다: 위는 배경 그림 윗부분과 같은 파랑, 아래로 갈수록 투명.
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        _headerTint.withValues(alpha: 0.95),
-                        _headerTint.withValues(alpha: 0.75),
-                        _headerTint.withValues(alpha: 0),
-                      ],
-                      stops: [0, (headerHeight - 10) / (headerHeight + 24), 1],
-                    ),
-                  ),
+              height: headerHeight,
+              // 카톡·인스타처럼 뒤 내용을 흐리게 비치는 불투명 블러 바탕(배경 그림 윗부분 파랑 60%, 멈춰 있을 땐 뒤 그라데이션이 그대로 비친다).
+              child: ClipRect(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                  child: ColoredBox(color: _headerTint.withValues(alpha: 0.6)),
                 ),
               ),
             ),
