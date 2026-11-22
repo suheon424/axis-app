@@ -25,6 +25,9 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> {
   /// 09_커뮤니티(수정): 따로 칠한 윗줄 없이 배경 그림(image 37)이 상태바부터 후기 카드 아래(442)까지 이어진다.
   static const _heroHeight = 344.0;
+
+  /// 고정 검색 줄 뒤 그라데이션 색(배경 그림 맨 윗부분 색).
+  static const _headerTint = Color(0xFF0550CF);
   bool _loading = false;
   final Set<int> _bookmarks = {};
 
@@ -94,18 +97,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
               left: 0,
               right: 0,
               height: headerHeight + 24,
-              // 검색 줄 아래 24는 배경 그림이 투명해지며 스크롤된 내용 위로 스며든다(인스타처럼).
+              // 이벤트 화면처럼 색 그라데이션만 깐다: 위는 배경 그림 윗부분과 같은 파랑, 아래로 갈수록 투명.
               child: IgnorePointer(
-                child: ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (r) => LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: const [Colors.white, Colors.white, Color(0x00FFFFFF)],
-                    stops: [0, headerHeight / r.height, 1],
-                  ).createShader(r),
-                  child: ClipRect(
-                    child: OverflowBox(alignment: Alignment.topCenter, maxHeight: bgHeight, child: background()),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        _headerTint.withValues(alpha: 0.95),
+                        _headerTint.withValues(alpha: 0.75),
+                        _headerTint.withValues(alpha: 0),
+                      ],
+                      stops: [0, (headerHeight - 10) / (headerHeight + 24), 1],
+                    ),
                   ),
                 ),
               ),
