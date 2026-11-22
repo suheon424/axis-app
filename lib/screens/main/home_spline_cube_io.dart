@@ -134,7 +134,19 @@ class SplineWarmHost extends StatelessWidget {
         builder: (context, attached, _) {
           final c = _SharedScene.controller;
           if (!warming || attached > 0 || c == null) return const SizedBox.shrink();
-          return IgnorePointer(child: WebViewWidget(controller: c));
+          // 달성률 화면의 장면과 같은 크기(큐브 칸 = 화면 너비 × 260의 2배)로 그려 둔다. 크기가 다르면
+          // 화면에 붙일 때 장면이 크기를 다시 맞추지 못해 큐브가 크고 어긋나게 보인다.
+          final w = MediaQuery.sizeOf(context).width * 2;
+          return ClipRect(
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              minWidth: w,
+              maxWidth: w,
+              minHeight: 520,
+              maxHeight: 520,
+              child: IgnorePointer(child: WebViewWidget(controller: c)),
+            ),
+          );
         },
       ),
     );
@@ -171,7 +183,14 @@ class _SplineWebViewState extends State<_SplineWebView> {
       _SharedScene.attached.value++;
       _counted = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) setState(() => _canShow = true);
+        if (!mounted) return;
+        setState(() => _canShow = true);
+        // 붙인 뒤 장면이 새 크기에 맞춰 다시 그려지게 알린다.
+        for (final ms in const [50, 400]) {
+          Timer(Duration(milliseconds: ms), () {
+            if (mounted) _controller.runJavaScript("window.dispatchEvent(new Event('resize'))").catchError((_) {});
+          });
+        }
       });
     });
     _onReady();
