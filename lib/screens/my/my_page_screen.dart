@@ -214,6 +214,7 @@ class _ProfileHeader extends StatelessWidget {
               child: SizedBox(
                 height: 50,
                 child: Stack(
+                  alignment: Alignment.centerLeft,
                   children: [
                     Positioned.fill(child: SvgPicture.asset('assets/images/my/points_card.svg', fit: BoxFit.fill)),
                     Padding(
