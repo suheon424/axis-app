@@ -49,7 +49,7 @@ class AchievementScreen extends StatelessWidget {
                       // 화면이 작으면 큐브 칸이 줄어든다.
                       const Flexible(
                         child: SizedBox(
-                          height: 260,
+                          height: splineBoxHeight,
                           child: SplineCube(imageOffset: Offset(0, -6), fingerOffset: Offset(0, 4)),
                         ),
                       ),

@@ -6,6 +6,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'home_spline_cube.dart' show splineBoxHeight, splineSceneScale;
+
 /// iOS·Android: 웹뷰에 Spline 공개 링크를 그대로 띄운다. 그 밖의 플랫폼(데스크톱·테스트)은 null을
 /// 돌려주어 큐브 그림이 그대로 보이게 한다.
 Widget? buildSplineScene({
@@ -134,16 +136,17 @@ class SplineWarmHost extends StatelessWidget {
         builder: (context, attached, _) {
           final c = _SharedScene.controller;
           if (!warming || attached > 0 || c == null) return const SizedBox.shrink();
-          // 달성률 화면의 장면과 같은 크기(큐브 칸 = 화면 너비 × 260의 2배)로 그려 둔다. 크기가 다르면
+          // 달성률 화면의 장면과 같은 크기(큐브 칸 = 화면 너비 × 260에 장면 배율을 곱한 크기)로 그려 둔다. 크기가 다르면
           // 화면에 붙일 때 장면이 크기를 다시 맞추지 못해 큐브가 크고 어긋나게 보인다.
-          final w = MediaQuery.sizeOf(context).width * 2;
+          final w = MediaQuery.sizeOf(context).width * splineSceneScale;
+          const h = splineBoxHeight * splineSceneScale;
           return ClipRect(
             child: OverflowBox(
               alignment: Alignment.topLeft,
               minWidth: w,
               maxWidth: w,
-              minHeight: 520,
-              maxHeight: 520,
+              minHeight: h,
+              maxHeight: h,
               child: IgnorePointer(child: WebViewWidget(controller: c)),
             ),
           );

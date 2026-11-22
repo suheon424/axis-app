@@ -24,6 +24,10 @@ bool get onMobileDevice => platform.onMobileDevice;
 
 const homeCubeImage = 'assets/images/main/home_cube.png';
 
+/// 달성률 큐브 칸 높이와 장면 배율. 미리 그려 두는 웹뷰도 같은 크기로 그린다.
+const splineBoxHeight = 260.0;
+const splineSceneScale = 1.76;
+
 /// 07_02 달성률의 큐브.
 ///
 /// - [url]이 비었거나 장면을 띄울 수 없는 플랫폼이면 큐브 그림을 보여 준다.
@@ -40,8 +44,8 @@ class SplineCube extends StatefulWidget {
     this.imageSize = const Size(177, 186),
     this.imageOffset = const Offset(0, -8),
     this.fingerOffset = const Offset(0, 9.5),
-    this.sceneScale = 2.0,
-    this.sceneShift = 40,
+    this.sceneScale = splineSceneScale,
+    this.sceneShift = -16,
   });
 
   final String url;
@@ -56,7 +60,7 @@ class SplineCube extends StatefulWidget {
   /// 장면(iframe)을 큐브 영역보다 몇 배 크게 그릴지.
   final double sceneScale;
 
-  /// 장면을 칸 가운데에서 아래로 내리는 거리(실제 기기 피드백: 40).
+  /// 장면을 칸 가운데에서 아래로 내리는 거리(음수면 올린다, 실제 기기 피드백: -16).
   final double sceneShift;
 
   static const fingerKey = Key('home_spline_finger');
@@ -185,7 +189,7 @@ class _ExtendDown extends CustomClipper<Rect> {
   final double extra;
 
   @override
-  Rect getClip(Size size) => Rect.fromLTRB(0, 0, size.width, size.height + extra);
+  Rect getClip(Size size) => Rect.fromLTRB(0, -40, size.width, size.height + (extra > 0 ? extra : 0));
 
   @override
   bool shouldReclip(_ExtendDown old) => old.extra != extra;
