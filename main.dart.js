@@ -54498,7 +54498,7 @@ s=t.p
 r=A.a([],s)
 q=$.afm()
 p.a.toString
-B.b.E(r,A.a([new A.hP(q,new A.aVf(),A.k_(new A.jr(new A.aVg(p,new A.R4("https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/",p.gato(),p.gayd(),o)),o),B.t,new A.a5T(40,o)),o,t.D0)],s))
+B.b.E(r,A.a([new A.hP(q,new A.aVf(),A.k_(new A.jr(new A.aVg(p,new A.R4("https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/",p.gato(),p.gayd(),o)),o),B.t,new A.a5T(-16,o)),o,t.D0)],s))
 p.a.toString
 if(!p.d)s=!p.e
 else s=!0
@@ -54525,15 +54525,17 @@ $S:575}
 A.aVg.prototype={
 $2(a,b){var s,r
 this.a.a.toString
-s=b.b*2
-r=b.d*2
-return A.Aj(B.p,A.ks(new A.hH(this.b,B.ari),new A.f(0,40)),r,s,r,s)},
+s=b.b*1.76
+r=b.d*1.76
+return A.Aj(B.p,A.ks(new A.hH(this.b,B.ari),new A.f(0,-16)),r,s,r,s)},
 $S:571}
 A.a60.prototype={
 m(a){var s=null,r=A.o7(4,4,s)
 return new A.Vs(A.yl(A.M(B.p,A.e7("assets/icons/home_ic_swipe.svg",s,!1,B.aF,28,s,28),B.h,B.uY,s,s,s,60,s,s,s,s,60),r),s)}}
 A.a5T.prototype={
-rH(a){return new A.u(0,0,a.a,a.b+this.b)},
+rH(a){var s=this.b
+s=s>0?s:0
+return new A.u(0,-40,a.a,a.b+s)},
 rS(a){return a.b!==this.b}}
 A.R4.prototype={
 O(){return new A.abo()},
