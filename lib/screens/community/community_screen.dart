@@ -93,9 +93,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
               top: 0,
               left: 0,
               right: 0,
-              height: headerHeight,
-              child: ClipRect(
-                child: OverflowBox(alignment: Alignment.topCenter, maxHeight: bgHeight, child: background()),
+              height: headerHeight + 24,
+              // 검색 줄 아래 24는 배경 그림이 투명해지며 스크롤된 내용 위로 스며든다(인스타처럼).
+              child: IgnorePointer(
+                child: ShaderMask(
+                  blendMode: BlendMode.dstIn,
+                  shaderCallback: (r) => LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: const [Colors.white, Colors.white, Color(0x00FFFFFF)],
+                    stops: [0, headerHeight / r.height, 1],
+                  ).createShader(r),
+                  child: ClipRect(
+                    child: OverflowBox(alignment: Alignment.topCenter, maxHeight: bgHeight, child: background()),
+                  ),
+                ),
               ),
             ),
             Positioned(

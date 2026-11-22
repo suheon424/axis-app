@@ -28,7 +28,8 @@ class BadgeDetailScreen extends StatelessWidget {
             children: [
               const AxisBackTitleBar(title: '배지 상세'),
               const SizedBox(height: 4),
-              Expanded(
+              FadeExpanded(
+                fadeColor: Colors.white,
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
                   children: [

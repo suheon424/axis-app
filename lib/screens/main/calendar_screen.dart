@@ -114,7 +114,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           ),
                         ],
                       ),
-                      Expanded(
+                      FadeExpanded(
+                        fadeColor: AppColors.gray01,
                         child: SingleChildScrollView(
                           padding: const EdgeInsets.only(top: 14, bottom: 24),
                           child: Column(
