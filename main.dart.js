@@ -54498,7 +54498,7 @@ s=t.p
 r=A.a([],s)
 q=$.afm()
 p.a.toString
-B.b.E(r,A.a([new A.hP(q,new A.aVf(),A.k_(new A.jr(new A.aVg(p,new A.R4("https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/",p.gato(),p.gayd(),o)),o),B.t,new A.a5T(-16,o)),o,t.D0)],s))
+B.b.E(r,A.a([new A.hP(q,new A.aVf(),A.k_(new A.jr(new A.aVg(p,new A.R4("https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX70GHD/",p.gato(),p.gayd(),o)),o),B.t,new A.a5T(-8,o)),o,t.D0)],s))
 p.a.toString
 if(!p.d)s=!p.e
 else s=!0
@@ -54527,7 +54527,7 @@ $2(a,b){var s,r
 this.a.a.toString
 s=b.b*1.76
 r=b.d*1.76
-return A.Aj(B.p,A.ks(new A.hH(this.b,B.ari),new A.f(0,-16)),r,s,r,s)},
+return A.Aj(B.p,A.ks(new A.hH(this.b,B.ari),new A.f(0,-8)),r,s,r,s)},
 $S:571}
 A.a60.prototype={
 m(a){var s=null,r=A.o7(4,4,s)
