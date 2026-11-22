@@ -244,8 +244,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                   backgroundColor: AppColors.gray01,
                   actions: [AxisIconButton(icon: KitIcon.navPlus, tooltip: '일정 추가', onPressed: _openAdd)],
                 ),
-                FadeExpanded(
-                  fadeColor: AppColors.gray01,
+                Expanded(
                   child: Stack(
                     children: [
                       // 아래로 끝까지 올려 튕길 때 드러나는 바닥이 회색 대신 목록과 같은 흰색이 되게 깔아 둔다.

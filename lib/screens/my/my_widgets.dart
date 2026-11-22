@@ -40,7 +40,7 @@ class MySubScaffold extends StatelessWidget {
                 child: AxisBackTitleBar(title: title),
               ),
               const SizedBox(height: 4),
-              FadeExpanded(fadeColor: Colors.white, child: body),
+              Expanded(child: body),
             ],
           ),
         ),

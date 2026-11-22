@@ -44,8 +44,7 @@ class _BadgeStorageScreenState extends State<BadgeStorageScreen> {
             children: [
               const AxisBackTitleBar(title: '배지 보관함'),
               const SizedBox(height: 4),
-              FadeExpanded(
-                fadeColor: Colors.white,
+              Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
                   children: [

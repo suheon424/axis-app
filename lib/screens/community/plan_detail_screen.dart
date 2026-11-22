@@ -101,8 +101,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
                 selected: _tab,
                 onChanged: (i) => setState(() => _tab = i),
               ),
-              FadeExpanded(
-                fadeColor: Colors.white,
+              Expanded(
                 child: ColoredBox(
                   color: AppColors.gray01,
                   child: AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: body),

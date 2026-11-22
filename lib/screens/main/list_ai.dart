@@ -148,7 +148,7 @@ class ListAiSuggestionScreen extends StatelessWidget {
             children: [
               const AxisBackTitleBar(title: '23일(월) 바뀐 일정 미리보기'),
               const SizedBox(height: 14),
-              FadeExpanded(fadeColor: AppColors.gray01, child: _Preview()),
+              const Expanded(child: _Preview()),
               _SuggestionPanel(
                 onClose: () => Navigator.of(context).pop(),
                 onKeep: () => Navigator.of(context).pop(false),

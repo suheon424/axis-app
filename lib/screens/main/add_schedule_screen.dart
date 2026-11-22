@@ -175,8 +175,7 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
             children: [
               AxisBackTitleBar(title: _editing ? '일정 수정' : '일정 추가'),
               const SizedBox(height: 4),
-              FadeExpanded(
-                fadeColor: Colors.white,
+              Expanded(
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   children: [
