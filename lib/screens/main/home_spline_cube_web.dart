@@ -17,6 +17,8 @@ Widget? buildSplineScene({
 /// 웹은 web/index.html이 앱이 뜬 뒤 장면을 미리 받아 둔다.
 void prewarmSplineScene(String url) {}
 
+Widget splineWarmHost() => const SizedBox.shrink();
+
 bool get onMobileDevice => false;
 
 int _nextViewId = 0;

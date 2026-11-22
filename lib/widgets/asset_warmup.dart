@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../screens/main/home_spline_cube.dart' show onMobileDevice, prewarmSplineCube;
+import '../screens/main/home_spline_cube.dart' show onMobileDevice, prewarmSplineCube, splineWarmHost;
 
 /// 앱이 뜬 뒤 그림 파일을 미리 받아 풀어 둔다(웹·실제 앱 모두).
 /// 웹은 그림을 처음 보여 줄 때 서버에서 받아 오느라 화면이 바뀔 때 그림이 늦게 뜨고 버벅인다.
@@ -72,5 +72,15 @@ class _AssetWarmupState extends State<AssetWarmup> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    if (!onMobileDevice) return widget.child;
+    // 큐브 웹뷰를 앱 화면 뒤에 잠깐 붙여 미리 그려 둔다(앱 화면이 덮고 있어 보이지 않는다).
+    return Stack(
+      textDirection: TextDirection.ltr,
+      children: [
+        Positioned.fill(child: splineWarmHost()),
+        Positioned.fill(child: widget.child),
+      ],
+    );
+  }
 }

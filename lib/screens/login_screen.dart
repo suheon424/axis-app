@@ -18,11 +18,13 @@ const loginFailedMessage = '이메일 또는 비밀번호가 일치하지 않아
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.verify = defaultVerify, this.prefill = false});
 
-  /// true면 시연용 계정(demo@axis.app / 1234)이 미리 채워져 있어 바로 로그인을 누를 수 있다("이메일로 로그인하기").
+  /// 시연용 계정(회원가입 자동 입력과 같은 h4s2h4@hansung.ac.kr / 0000)은 일반 로그인·"이메일로 로그인하기" 모두 미리 채워져
+  /// 바로 로그인을 누를 수 있다. [prefill]은 예전 호출과의 호환용으로 남겨 둔다.
   final bool prefill;
 
-  static const demoEmail = 'demo@axis.app';
-  static const demoPassword = '1234';
+  static const demoEmail = 'h4s2h4@hansung.ac.kr';
+  static const demoPassword = '0000';
+  static const demoName = '수현';
 
   /// 계정 확인. 서버가 없는 시연용이라 기본값은 두 칸에 아무 값이나 넣으면 통과한다.
   /// 03 로그인 · 실패 화면은 [verify]를 바꿔(테스트) 볼 수 있다.
@@ -35,8 +37,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late final _id = TextEditingController(text: widget.prefill ? LoginScreen.demoEmail : '');
-  late final _pw = TextEditingController(text: widget.prefill ? LoginScreen.demoPassword : '');
+  late final _id = TextEditingController(text: LoginScreen.demoEmail);
+  late final _pw = TextEditingController(text: LoginScreen.demoPassword);
   bool _failed = false;
 
   @override
@@ -74,7 +76,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _failed = true);
       return;
     }
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileSetupScreen(nickname: email.split('@').first)));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(
+          nickname: email == LoginScreen.demoEmail ? LoginScreen.demoName : email.split('@').first,
+        ),
+      ),
+    );
   }
 
   /// 03-1 비밀번호 찾기(로그인 칸에 적은 이메일을 이어서 채운다).

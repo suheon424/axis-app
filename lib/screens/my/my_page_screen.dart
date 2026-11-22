@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../widgets/character_picker.dart';
 import '../../widgets/kit/kit.dart';
@@ -202,28 +203,55 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          // 공통 버튼(Button/Primary, 저장하기·로그인과 같은 사선 모서리)에 포인트 줄을 넣는다.
-          AxisCtaButton(
-            label: '보유 포인트 ${formatPoints(profile.points)}P',
-            onPressed: onPoints,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
-            child: Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Text(
-                    'P',
-                    style: TextStyle(fontSize: 12, height: 1, fontWeight: FontWeight.w600, color: AppColors.brand),
-                  ),
+          // 12_마이페이지 Frame 276(350×50, r8): 왼쪽 파랑 #004FED에 P 배지·"보유 포인트",
+          // 사선으로 갈린 오른쪽 진한 파랑 #0041B0에 포인트(16 SemiBold).
+          PressBuilder(
+            onTap: onPoints,
+            semanticLabel: '보유 포인트 ${formatPoints(profile.points)}P',
+            builder: (_, pressed) => AnimatedOpacity(
+              opacity: pressed ? 0.85 : 1,
+              duration: const Duration(milliseconds: 100),
+              child: SizedBox(
+                height: 50,
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: SvgPicture.asset('assets/images/my/points_card.svg', fit: BoxFit.fill)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 22),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 18,
+                            height: 18,
+                            alignment: Alignment.center,
+                            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                            child: const Text(
+                              'P',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.brand,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Expanded(child: Text('보유 포인트', style: _whiteLabel)),
+                          Text(
+                            '${formatPoints(profile.points)}P',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              height: 1.4,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                const Text('보유 포인트', style: _whiteLabel),
-                const SizedBox(width: 24),
-                Text('${formatPoints(profile.points)}P', style: _whiteLabel),
-              ],
+              ),
             ),
           ),
         ],

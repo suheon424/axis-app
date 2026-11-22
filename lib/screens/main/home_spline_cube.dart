@@ -16,6 +16,9 @@ const splineSceneUrl = 'https://my.spline.design/rubikscube-wBhd62GkxSstXn6KlWX7
 /// 앱이 뜬 뒤 큐브 장면을 미리 받아 둔다(실제 앱: 보이지 않는 웹뷰, 웹: index.html).
 void prewarmSplineCube() => platform.prewarmSplineScene(splineSceneUrl);
 
+/// 앱 화면 뒤에 깔아 두는 큐브 장면 미리 그리기 자리(실제 앱만, 그 밖은 빈 위젯).
+Widget splineWarmHost() => platform.splineWarmHost();
+
 /// iOS·Android 기기에서 돌고 있는지(웹·테스트·데스크톱은 false).
 bool get onMobileDevice => platform.onMobileDevice;
 

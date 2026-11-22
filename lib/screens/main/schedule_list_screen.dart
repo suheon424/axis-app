@@ -247,6 +247,14 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                 Expanded(
                   child: Stack(
                     children: [
+                      // 아래로 끝까지 올려 튕길 때 드러나는 바닥이 회색 대신 목록과 같은 흰색이 되게 깔아 둔다.
+                      const Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 400,
+                        child: ColoredBox(color: Colors.white),
+                      ),
                       SingleChildScrollView(
                         child: Column(
                           children: [
@@ -269,7 +277,7 @@ class _ScheduleListScreenState extends State<ScheduleListScreen> {
                             else ...[
                               _listSection(),
                               // 아래 떠 있는 버튼에 마지막 줄이 가리지 않게 비워 둔다.
-                              SizedBox(height: _dayItems.isNotEmpty ? 40 + 37 + 24 : 40),
+                              Container(height: _dayItems.isNotEmpty ? 40 + 37 + 24 : 40, color: Colors.white),
                             ],
                           ],
                         ),

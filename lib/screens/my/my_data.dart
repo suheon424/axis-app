@@ -49,7 +49,7 @@ class MyProfile {
 }
 
 final myProfile = ValueNotifier(
-  const MyProfile(nickname: '황수현', callName: '수현', intro: '계획은 작게, 실행은 꾸준히', character: 5, points: 1550),
+  const MyProfile(nickname: '수현', callName: '수현', intro: '계획은 작게, 실행은 꾸준히', character: 5, points: 1550),
 );
 
 /// 1,550 → "1,550P"
